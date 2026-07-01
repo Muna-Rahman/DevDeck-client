@@ -47,7 +47,7 @@ export default function RegisterPage() {
         
         {/* Card Header Identity */}
         <div className="text-center mb-6">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white shadow-[0_0_15px_rgba(233,79,209,0.4)] mb-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-r from-[#8c1372] to-[#c7589d] text-white shadow-[0_0_15px_rgba(233,79,209,0.4)] mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
@@ -122,7 +122,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] text-xs font-bold uppercase tracking-widest text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-[0.98] transition-all disabled:opacity-50"
+            className="w-full h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#cc35a6] to-[#9c245e] dark:from-[#3c082c] text-xs font-bold uppercase tracking-widest text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {loading ? "Registering Character..." : "Account created successfully! Redirecting..."}
           </button>
