@@ -1,7 +1,13 @@
-// src/lib/auth-client.js
+
 import { createAuthClient } from "better-auth/react";
 
-// 1. Core initialization for connected server execution environments
+// Automatically selects Vercel production API URL, or falls back to local port 3001
+const getBaseURL = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  return "http://localhost:3001"; 
+};
 const realClient = typeof window !== "undefined" 
   ? createAuthClient({ baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000" })
   : null;
