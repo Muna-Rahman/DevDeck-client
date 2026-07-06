@@ -1,7 +1,6 @@
 // src/lib/auth-client.js
 import { createAuthClient } from "better-auth/react";
 
-// Automatically selects the live Vercel environment API URL or falls back to local development port 3001
 const getBaseURL = () => {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
@@ -9,13 +8,11 @@ const getBaseURL = () => {
   return "http://localhost:3001";
 };
 
-// Initialize the real Better Auth client instance safely checking for the browser environment
 const realClient = typeof window !== "undefined" 
   ? createAuthClient({ 
       baseURL: getBaseURL(),
       fetchOptions: {
-        // Crucial for cross-subdomain cookie handling between detached Vercel domains
-        credentials: "include", 
+        credentials: "include", // MANDATORY for cross-domain Vercel cookies
       }
     })
   : null;
