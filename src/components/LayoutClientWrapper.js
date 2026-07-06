@@ -1,4 +1,4 @@
-// src/components/LayoutClientWrapper.js
+
 "use client";
 
 import { usePathname } from "next/navigation";
