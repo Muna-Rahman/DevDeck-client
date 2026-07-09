@@ -1,83 +1,185 @@
-/* src/app/globals.css */
 @import "tailwindcss";
 
-@theme {
-  /* Injecting your custom theme palette into Tailwind CSS v4 */
-  --color-deck-deep-wine: #45223B;
-  --color-deck-muted-plum: #443449;
-  --color-deck-midnight: #16173A;
-  --color-deck-ocean: #2A4E63;
-  --color-deck-sage: #697763;
-  --color-deck-amber: #b07d3a;
+@layer base {
+  :root {
+    /* Light Theme Settings (Lavender / Soothing Floral Portfolio) */
+    --bg-base: #faf7f2;
+    --bg-card: #ffffff;
+    --text-primary: #2d2a3a;
+    --text-secondary: #6b667a;
+    --accent-purple: #8b5cf6;
+    --accent-lavender: #c4b5fd;
+    --accent-blush: #fda4af;
+    --border-card: rgba(228, 222, 211, 0.6);
+    --shadow-card: 0 10px 30px -5px rgba(139, 92, 246, 0.06), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+    
+    /* Background textures */
+    --bg-texture-url: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1920&q=80'); /* Soft cream/lavender fluid abstract blobs */
+    --bg-overlay-opacity: 0.06;
+  }
+
+  .dark {
+    /* Dark Theme Settings (Cosmic Cyberpunk Dashboard) */
+    --bg-base: #0a0e1a;
+    --bg-card: rgba(18, 23, 43, 0.65);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent-purple: #8b5cf6;
+    --accent-blue: #3b82f6;
+    --accent-orange: #f97316;
+    --border-card: rgba(139, 92, 246, 0.2);
+    --shadow-card: 0 0 24px rgba(139, 92, 246, 0.15);
+    
+    /* Cosmic Background */
+    --bg-texture-url: url('https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?auto=format&fit=crop&w=1920&q=80'); /* Dark nebula/cosmic field */
+    --bg-overlay-opacity: 0.78;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-x: hidden;
+    transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
-@variant dark (&:where(.dark, .dark *));
-
-/* Global Base Layer Overrides */
-html, body {
-  background-color: #16173A;
-  /* Complex geometric background mesh to make the dark tones pop and look custom-built */
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(69, 34, 59, 0.45) 0px, transparent 55%),
-    radial-gradient(at 100% 100%, rgba(42, 78, 99, 0.35) 0px, transparent 60%),
-    radial-gradient(at 50% 15%, rgba(68, 52, 73, 0.4) 0px, transparent 50%);
-  background-attachment: fixed;
-  color: #f3f4f6;
-  min-height: 100vh;
+/* --- THEME ROOT ARCHITECTURE --- */
+.app-shell-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  background-image: var(--bg-texture-url);
+  background-size: cover;
+  background-position: center;
+  filter: blur(8px);
+  transform: scale(1.02);
+  transition: background-image 0.8s ease-in-out;
 }
 
-/* Unique Humanized UI Blocks (Non-generic layout system) */
-.brain-flex {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.app-shell-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -9;
+  background-color: var(--bg-base);
+  opacity: var(--bg-overlay-opacity);
+  transition: background-color 0.6s ease, opacity 0.6s ease;
 }
 
-/* Glassmorphic asymmetry container mechanics */
-.note-card {
-  background: rgba(68, 52, 73, 0.25);
-  border: 1px solid rgba(176, 125, 58, 0.12);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 1.25rem;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.note-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  border-color: rgba(176, 125, 58, 0.4);
-  background: rgba(69, 34, 59, 0.35);
-  box-shadow: 0 20px 40px -15px rgba(22, 23, 58, 0.8);
-}
-
-/* High-end Typographic Utilities */
-.deck-italic-display {
+/* --- TYPOGRAPHY SHIFT --- */
+.font-accent-serif {
+  font-family: 'Playfair Display', Georgia, serif;
   font-style: italic;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  background: linear-gradient(135deg, #ffffff 40%, #b07d3a 100%);
+}
+
+/* --- DARK THEME: Glassmorphism Cards & Glowing Accents --- */
+.dark .theme-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-card);
+  border-radius: 16px;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.dark .theme-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 32px rgba(139, 92, 246, 0.3), 0 0 12px rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* --- LIGHT THEME: Soothing Organic Cards --- */
+.theme-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-card);
+  border-radius: 24px;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
+}
+
+.theme-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px -10px rgba(139, 92, 246, 0.12);
+}
+
+/* --- TEXT GRADIENTS --- */
+.gradient-text-dark {
+  background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 50%, #f97316 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.deck-italic-sub {
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  color: #697763;
+.gradient-text-light {
+  background: linear-gradient(135deg, #a78bfa 0%, #fda4af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Scrollbar aesthetic matching the palette */
-::-webkit-scrollbar {
-  width: 8px;
+/* --- DARK MODE: RIPPLE BUTTONS --- */
+.dark .btn-primary-theme {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(13b, 92, 246, 0.4);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
-::-webkit-scrollbar-track {
-  background: #16173A;
+
+.dark .btn-primary-theme:hover {
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+  transform: translateY(-1px);
 }
-::-webkit-scrollbar-thumb {
-  background: #443449;
-  border-radius: 4px;
+
+.ripple-span {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple-effect 0.6s linear;
+  background-color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #45223B;
+
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* --- LIGHT MODE: SVG DRAW-IN BORDER BUTTONS --- */
+.btn-primary-theme {
+  position: relative;
+  background: transparent;
+  color: #6d28d9;
+  font-weight: 600;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: fill 0.4s ease, color 0.4s ease, background-color 0.4s ease;
+}
+
+.btn-primary-theme:hover {
+  background-color: rgba(196, 181, 253, 0.25);
+  color: #4c1d95;
+}
+
+.btn-primary-theme svg rect {
+  stroke: #c4b5fd;
+  stroke-width: 2;
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  transition: stroke-dashoffset 0.6s linear;
+}
+
+.btn-primary-theme:hover svg rect {
+  stroke-dashoffset: 0;
+  stroke: #a78bfa;
+}
+
+/* --- GLOWING DATA VISUALIZATIONS --- */
+.dark .glow-stroke {
+  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.7));
 }
