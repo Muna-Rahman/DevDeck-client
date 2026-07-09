@@ -1,163 +1,83 @@
 "use client";
-
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { authClient } from "@/lib/auth-client";
-
-import SunIcon from '@gravity-ui/icons/svgs/sun.svg';
-import MoonIcon from '@gravity-ui/icons/svgs/moon.svg';
+import React, { useState, useEffect } from "react";
 
 export default function Navbar() {
-  const router = useRouter();
-  const currentPath = usePathname();
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-  
-  const { data: session, isPending } = authClient.useSession();
+  const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDropdownOpen(false);
-      }
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isDark]);
 
-  const handleLogout = async () => {
-    try {
-      await authClient.signOut();
-      setDropdownOpen(false);
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error(err);
-    }
+  // JS Micro-Interaction Ripple System for Dark Mode Buttons
+  const handleDarkRipple = (e) => {
+    if (!isDark) return; // Light theme handles it natively via SVG draw-in
+    const btn = e.currentTarget;
+    const circle = document.createElement("span");
+    const diameter = Math.max(btn.clientWidth, btn.clientHeight);
+    const radius = diameter / 2;
+
+    const rect = btn.getBoundingClientRect();
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${e.clientX - rect.left - radius}px`;
+    circle.style.top = `${e.clientY - rect.top - radius}px`;
+    circle.classList.add("ripple-span");
+
+    const ripple = btn.getElementsByClassName("ripple-span")[0];
+    if (ripple) ripple.remove();
+
+    btn.appendChild(circle);
   };
 
-  const menuItems = [
-    { label: "Dashboard", target: "/" },
-    { label: "My Cards", target: "/cards" },
-    { label: "Snippets", target: "/snippets" },
-    { label: "Bookmarks", target: "/bookmarks" }
-  ];
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-deck-muted-plum bg-deck-midnight/65 backdrop-blur-md transition-colors duration-300">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        
-        {/* Branding (Asymmetric slanted style) */}
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2 transition-transform active:scale-95 group">
-            <span className="text-2xl font-black italic tracking-tighter text-white">
-              Dev<span className="text-deck-amber not-italic font-light">Deck</span>
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-1">
-            {menuItems.map((item) => {
-              const isActive = currentPath === item.target;
-              return (
-                <Link
-                  key={item.target}
-                  href={item.target}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-medium uppercase italic tracking-wider transition-all duration-200 ${
-                    isActive
-                      ? "bg-deck-deep-wine text-white border border-deck-amber/30 shadow-[0_0_15px_rgba(176,125,58,0.15)]"
-                      : "text-deck-sage hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Global Filter Search Module Bar */}
-        <div className="hidden sm:flex relative max-w-sm w-full mx-4">
-          <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-deck-sage">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-          </div>
-          <input
-            type="text"
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
-            placeholder="Search deck engine..."
-            className="w-full h-10 rounded-xl border border-deck-muted-plum bg-deck-midnight/40 pl-10 pr-12 text-xs italic tracking-wide text-white outline-none transition-all focus:border-deck-amber focus:ring-1 focus:ring-deck-amber/20"
-          />
-          <kbd className="absolute right-3 top-2.5 inline-flex h-5 select-none items-center gap-0.5 rounded border border-deck-muted-plum bg-deck-midnight px-1.5 font-sans text-[9px] text-deck-sage">
-            <span>⌘</span>K
-          </kbd>
-        </div>
-
-        {/* Interactive Actions Stack */}
-        <div className="flex items-center gap-3.5">
-          <button className="hidden sm:inline-flex h-9 items-center justify-center rounded-lg bg-deck-amber px-5 text-xs font-bold uppercase italic tracking-wider text-deck-midnight shadow-md hover:opacity-90 active:scale-95 transition-all">
-            Add Card
-          </button>
-
-          {mounted && !isPending && session?.user ? (
-            <div className="relative" ref={dropdownRef}>
-              <button 
-                onClick={() => setDropdownOpen(!dropdownOpen)} 
-                className="flex items-center outline-none cursor-pointer transition-transform active:scale-95"
-              >
-                <img
-                  src={session.user.image || `https://api.dicebear.com/7.x/open-peeps/svg?seed=${encodeURIComponent(session.user.name || 'default')}`}
-                  alt="User Profile"
-                  className="h-9 w-9 rounded-full border border-deck-amber object-cover"
-                />
-              </button>
-              
-              <div 
-                className={`absolute right-0 mt-2.5 w-52 origin-top-right rounded-xl border border-deck-muted-plum bg-deck-midnight/95 p-1.5 shadow-xl transition-all duration-150 ${
-                  dropdownOpen 
-                    ? "opacity-100 scale-100 pointer-events-auto" 
-                    : "opacity-0 scale-95 pointer-events-none"
-                }`}
-              >
-                <div className="px-3 py-2 border-b border-deck-muted-plum mb-1">
-                  <p className="text-xs font-semibold text-white truncate">{session.user.name}</p>
-                  <p className="text-[11px] text-deck-sage truncate">{session.user.email}</p>
-                </div>
-                <Link 
-                  href="/profile" 
-                  onClick={() => setDropdownOpen(false)}
-                  className="flex items-center w-full px-3 py-2 text-xs rounded-lg text-deck-sage hover:bg-deck-muted-plum/40 hover:text-white"
-                >
-                  Profile Settings
-                </Link>
-                <button 
-                  onClick={handleLogout} 
-                  className="flex items-center w-full px-3 py-2 text-xs font-medium rounded-lg text-red-400 hover:bg-red-950/20 cursor-pointer text-left"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          ) : (
-            mounted && !isPending && (
-              <Link href="/login" className="text-sm font-medium text-deck-sage hover:text-white italic">
-                Sign In
-              </Link>
-            )
-          )}
-        </div>
+    <nav className="w-full py-4 px-8 flex items-center justify-between border-b border-[var(--border-card)] backdrop-blur-md transition-colors duration-500">
+      <div className="flex items-center gap-2">
+        <span className="text-2xl font-bold tracking-tight">
+          Dev<span className={isDark ? "gradient-text-dark" : "gradient-text-light"}>Deck</span>
+        </span>
+        <span className="font-accent-serif text-xs px-2 py-0.5 rounded bg-opacity-10 bg-purple-500 text-[var(--accent-purple)] ml-2">
+          v2.0
+        </span>
       </div>
-    </header>
+
+      <div className="flex items-center gap-6">
+        {/* Dynamic Themed Action Button */}
+        <button
+          onClick={handleDarkRipple}
+          className="btn-primary-theme px-6 py-2.5 flex items-center justify-center relative group min-w-[140px]"
+        >
+          {/* Light Theme SVG Perimeter Mask */}
+          {!isDark && (
+            <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0" y="0" width="100%" height="100%" fill="none" rx="12" />
+            </svg>
+          )}
+          <span className="relative z-10 text-sm">Launch Deck</span>
+        </button>
+
+        {/* Theme Toggle Trigger */}
+        <button
+          onClick={() => setIsDark(!isDark)}
+          className="p-2.5 rounded-full border border-[var(--border-card)] bg-[var(--bg-card)] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer shadow-sm"
+          aria-label="Toggle Theme Mood"
+        >
+          {isDark ? (
+            /* Cosmic Sun/Elegant icon */
+            <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14.5 12a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+            </svg>
+          ) : (
+            /* Elegant Lavender Crescent Moon icon */
+            <svg className="w-5 h-5 text-purple-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          )}
+        </button>
+      </div>
+    </nav>
   );
 }
