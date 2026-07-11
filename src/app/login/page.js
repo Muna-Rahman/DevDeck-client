@@ -114,14 +114,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="mt-5 pt-4 border-t border-[rgba(20,20,40,0.1)] dark:border-white/5 text-center">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5]">
-            "hardcoded email and password since its not connected to backend yet "
-          </p>
-          <p className="text-[11px] font-mono mt-1 text-[#D6249F] dark:text-[#FF6FB5]">
-            devdeck@gmail.com // 12345678
-          </p>
-        </div>
       </div>
     </div>
   );

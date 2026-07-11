@@ -119,9 +119,7 @@ export default function Navbar() {
             placeholder="Search dashboard..."
             className="w-full h-10 rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/40 pl-10 pr-12 text-xs uppercase font-medium tracking-wide text-[#1A1D29] dark:text-[#F5F6FA] outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
           />
-          <kbd className="absolute right-3 top-2 inline-flex h-6 select-none items-center gap-0.5 rounded-md border border-[rgba(20,20,40,0.08)] bg-white px-1.5 font-sans text-[10px] font-medium text-[#5B5F72] dark:border-white/10 dark:bg-[#1A1D29] dark:text-[#9CA3B5]">
-            <span>⌘</span>K
-          </kbd>
+    
         </div>
 
         {/* Interactive Actions Stack */}
