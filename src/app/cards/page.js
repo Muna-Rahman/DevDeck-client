@@ -52,22 +52,23 @@ export default function CardsPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0E14] text-textPrimary p-8 flex flex-col gap-8">
-      <div className="flex justify-between items-center border-b border-white/6 pb-6">
-        <div>
-          <h1 className="text-2xl font-medium tracking-wide">Workspace Cards</h1>
-          <p className="text-sm text-textSecondary mt-1">
-            Manage your individual resource modules, active assets, and configurations.
-          </p>
-        </div>
+      <div className="relative flex justify-between items-center border-b border-white/6 pb-6 w-full">
+  
 
-        <Button
-          onPress={onOpen}
-          endContent={<Plus className="w-4 h-4" />}
-          className="bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white font-medium rounded-full px-6 shadow-[0_4px_20px_rgba(233,79,209,0.3)] hover:shadow-[0_4px_25px_rgba(233,79,209,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
-        >
-          Create Card
-        </Button>
-      </div>
+  {/* Perfectly Center-Aligned Button Bracket Container */}
+  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[calc(50%+0.75rem)] z-10">
+    <Button
+      onPress={onOpen}
+      endContent={<Plus className="w-4 h-4" />}
+      className="bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white font-medium rounded-full px-6 shadow-[0_4px_20px_rgba(233,79,209,0.3)] hover:shadow-[0_4px_25px_rgba(233,79,209,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+    >
+      Create Card
+    </Button>
+  </div>
+
+  {/* Right Spacing Layout Anchor (Keeps row balance intact if needed) */}
+  <div className="hidden sm:block w-[120px]" aria-hidden="true" />
+</div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
         {workspaceCards.length === 0 ? (
