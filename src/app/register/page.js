@@ -31,14 +31,15 @@ export default function RegisterPage() {
         image: uniqueAvatarUrl, // This saves the custom unique image directly to MongoDB!
       });
 
-      if (authError) {
-        setError(authError.message);
-      } else {
-        setSuccessMsg("Account created successfully! Redirecting...");
-        setTimeout(() => {
-          router.push("/login");
-        }, 1500);
-      }
+     // Inside your register path submit handler code
+// Inside your user account registration submission callback:
+if (authError) {
+  setError(authError.message);
+} else {
+  // Directs newly authorized accounts immediately into the dashboard
+  router.push("/dashboard");
+  router.refresh();
+}
     } catch (err) {
       setError("An error occurred during account deployment setup.");
     }

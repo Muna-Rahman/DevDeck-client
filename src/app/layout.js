@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0B0E14]`}>
         <Providers>
-          {/* RENDER RAW CHILDREN HERE ONLY. Public pages load completely clean. */}
+          {/* RENDER RAW children HERE ONLY. Public pages will load fully clean now. */}
           {children}
         </Providers>
       </body>

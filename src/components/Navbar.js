@@ -1,14 +1,10 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
-
-import SunIcon from '@gravity-ui/icons/svgs/sun.svg';
-import MoonIcon from '@gravity-ui/icons/svgs/moon.svg';
+import { Sun, Moon, Search, Plus } from "lucide-react"; // Changed MagnifyingGlass to Search
 
 export default function Navbar() {
   const router = useRouter();
@@ -16,8 +12,8 @@ export default function Navbar() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false); // Added state tracking for dropdown
-  const dropdownRef = useRef(null); // Reference to close dropdown when clicking outside
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   
   const { data: session, isPending } = authClient.useSession();
 
@@ -25,7 +21,6 @@ export default function Navbar() {
     setMounted(true);
   }, []);
 
-  // Close dropdown if user clicks anywhere else on the screen
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -59,7 +54,7 @@ export default function Navbar() {
   };
 
   const menuItems = [
-    { label: "Dashboard", target: "/" },
+    { label: "Dashboard", target: "/dashboard" },
     { label: "My Cards", target: "/cards" },
     { label: "Snippets", target: "/snippets" },
     { label: "Bookmarks", target: "/bookmarks" }
@@ -71,7 +66,7 @@ export default function Navbar() {
         
         {/* Branding */}
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2.5 transition-transform active:scale-95 group">
+          <Link href="/dashboard" className="flex items-center gap-2.5 transition-transform active:scale-95 group">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] text-white shadow-[0_0_15px_rgba(233,79,209,0.35)]">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m12 3-10 5 10 5 10-5-10-5Z" />
@@ -89,7 +84,7 @@ export default function Navbar() {
               const isActive = currentPath === item.target;
               return (
                 <Link
-                  key={item.target}
+                  key={item.label + item.target}
                   href={item.target}
                   className={`px-4 py-2 rounded-xl text-xs font-medium uppercase tracking-wider transition-all duration-200 ${
                     isActive
@@ -107,10 +102,7 @@ export default function Navbar() {
         {/* Global Filter Search Module Bar */}
         <div className="hidden sm:flex relative max-w-sm w-full mx-4">
           <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
+            <Search size={16} strokeWidth={2.5} />
           </div>
           <input
             type="text"
@@ -119,27 +111,21 @@ export default function Navbar() {
             placeholder="Search dashboard..."
             className="w-full h-10 rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/40 pl-10 pr-12 text-xs uppercase font-medium tracking-wide text-[#1A1D29] dark:text-[#F5F6FA] outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
           />
-    
         </div>
 
         {/* Interactive Actions Stack */}
         <div className="flex items-center gap-3.5">
-          <button className="hidden sm:inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-5 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-95 transition-all">
-            Add Card
+          <button className="hidden sm:inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-5 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5">
+            <Plus size={14} strokeWidth={3} />
+            <span>Add Card</span>
           </button>
 
           <button 
             onClick={() => setDarkMode(!darkMode)}
             aria-label="Toggle visual theme mode"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/60 dark:border-white/10 dark:bg-[#1A1D29]/60 hover:bg-white dark:hover:bg-[#1A1D29] transition-all duration-200 active:scale-90"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/60 dark:border-white/10 dark:bg-[#1A1D29]/60 hover:bg-white dark:hover:bg-[#1A1D29] transition-all duration-200 active:scale-90 text-[#5B5F72] dark:text-[#9CA3B5]"
           >
-            <Image 
-              src={darkMode ? SunIcon : MoonIcon} 
-              alt="Theme" 
-              width={18} 
-              height={18}
-              className="opacity-80 dark:invert transition-opacity"
-            />
+            {darkMode ? <Sun size={18} strokeWidth={2.5} /> : <Moon size={18} strokeWidth={2.5} />}
           </button>
 
           {/* Render Profile Section safely on client post-mount */}
@@ -150,13 +136,12 @@ export default function Navbar() {
                 className="flex items-center outline-none cursor-pointer transition-transform active:scale-95"
               >
                 <img
-  src={session.user.image || `https://api.dicebear.com/7.x/open-peeps/svg?seed=${encodeURIComponent(session.user.name || 'default')}`}
-  alt="User Profile"
-  className="h-9 w-9 rounded-full border-2 border-[#FF6FB5] dark:border-[#E94FD1] object-cover"
-/>
+                  src={session.user.image || `https://api.dicebear.com/7.x/open-peeps/svg?seed=${encodeURIComponent(session.user.name || 'default')}`}
+                  alt="User Profile"
+                  className="h-9 w-9 rounded-full border-2 border-[#FF6FB5] dark:border-[#E94FD1] object-cover"
+                />
               </button>
               
-              {/* Controlled dynamically via conditional rendering + transition checks */}
               <div 
                 className={`absolute right-0 mt-2.5 w-52 origin-top-right rounded-2xl border border-[rgba(20,20,40,0.08)] bg-white/95 backdrop-blur-glass p-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.3)] transition-all duration-150 dark:border-white/8 dark:bg-[#1A1D29]/95 ${
                   dropdownOpen 

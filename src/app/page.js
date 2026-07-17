@@ -40,7 +40,6 @@ export default function LandingPage() {
 
         {/* --- FEATURES SECTION CONTAINER --- */}
         <div className="relative rounded-[32px] border border-white/5 bg-[rgba(16,19,27,0.4)] backdrop-blur-md overflow-hidden shadow-2xl p-8 md:p-12">
-          {/* Newly added image with dark linear blending mask */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             <Image 
               src="https://i.pinimg.com/736x/72/78/23/727823989825224592.jpg"
@@ -76,7 +75,6 @@ export default function LandingPage() {
 
         {/* --- ABOUT SECTION CONTAINER --- */}
         <div className="relative rounded-[32px] border border-white/5 bg-[rgba(16,19,27,0.4)] backdrop-blur-md overflow-hidden shadow-2xl p-8 md:p-12">
-          {/* Newly added image with dual radial linear masking layers */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             <Image 
               src="https://i.pinimg.com/736x/57/7b/79/577b7983596d024a5c30ca380119193e.jpg"
@@ -95,7 +93,6 @@ export default function LandingPage() {
 
         {/* --- CTA SECTION CONTAINER --- */}
         <div className="relative rounded-[32px] border border-white/5 bg-[rgba(16,19,27,0.4)] backdrop-blur-md overflow-hidden shadow-2xl p-8 md:p-16 text-center max-w-5xl mx-auto">
-          {/* Newly added alternate imagery choice for optimized bottom layouts */}
           <div className="absolute inset-0 z-0 pointer-events-none">
             <Image 
               src="https://i.pinimg.com/736x/7f/4d/ab/7f4dabbbbb64f002a399c65832083aa1.jpg"

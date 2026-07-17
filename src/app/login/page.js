@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -13,29 +12,30 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      const { data, error: authError } = await authClient.signIn.email({
-        email,
-        password,
-      });
+  try {
+    const { data, error: authError } = await authClient.signIn.email({
+      email,
+      password,
+    });
 
-      if (authError) {
-        setError(authError.message);
-      } else {
-        router.push("/");
-        router.refresh();
-      }
-    } catch (err) {
-      setError("An unexpected system connection anomaly occurred.");
-    } finally {
-      setLoading(false);
+    if (authError) {
+      setError(authError.message);
+    } else {
+      // Connect successfully verified profile handles straight to the matrix view panel
+      router.push("/dashboard");
+      router.refresh();
     }
-  };
+  } catch (err) {
+    setError("An unexpected system connection anomaly occurred.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 relative">
@@ -57,7 +57,7 @@ export default function LoginPage() {
             </svg>
           </div>
           <h2 className="text-xl font-bold uppercase tracking-wider text-[#1A1D29] dark:text-[#F5F6FA]">
-             Initialization
+               Initialization
           </h2>
         </div>
 
