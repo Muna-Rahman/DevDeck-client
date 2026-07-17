@@ -1,69 +1,75 @@
 // src/components/landing/LandingNavbar.js
-"use client";
-import React, { useState } from "react";
-import Link from "next/link";
-import { Button } from "@heroui/react";
-import { Bars3Icon, XMarkIcon } from "@gravity-ui/icons"; 
+'use client';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { Button } from '@heroui/react';
+import { Bars, Xmark } from '@gravity-ui/icons'; // Fixed naming
 
 export default function LandingNavbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="fixed top-4 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8 max-w-[1440px] mx-auto">
-      <nav className="mx-auto flex items-center justify-between px-6 py-3 rounded-full border border-white/08 bg-[#1A1D29]/70 backdrop-blur-[20px] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] transition-all duration-300">
-        {/* Brand Logo Container */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#E94FD1] to-[#FF6FB5] flex items-center justify-center shadow-[0_0_15px_rgba(233,79,209,0.4)] transition-transform duration-300 group-hover:scale-105">
-            <span className="text-white font-bold text-lg select-none">D</span>
+    <nav className="fixed top-4 left-0 right-0 z-50 px-4 max-w-[1440px] mx-auto">
+      {/* Glass Pill Container */}
+      <div className="backdrop-filter backdrop-blur-[20px] bg-[rgba(26,29,41,0.7)] border border-white/5 rounded-full px-6 py-3 flex items-center justify-between shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] transition-all duration-300 hover:border-white/10">
+        
+        {/* Logo Section */}
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#E94FD1] to-[#FF6FB5] flex items-center justify-center shadow-[0_0_15px_rgba(233,79,209,0.4)] transition-transform duration-300 group-hover:scale-105">
+            <span className="text-white font-medium text-lg">D</span>
           </div>
-          <span className="font-medium text-lg tracking-wide bg-gradient-to-r from-[#F5F6FA] to-[#9CA3B5] bg-clip-text text-transparent">
+          <span className="text-xl font-medium tracking-tight bg-gradient-to-r from-[#F5F6FA] to-[#9CA3B5] bg-clip-text text-transparent">
             DevDeck
           </span>
         </Link>
 
-        {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-[#9CA3B5]">
-          <a href="#features" className="hover:text-[#F5F6FA] transition-colors duration-200">Features</a>
-          <a href="#why" className="hover:text-[#F5F6FA] transition-colors duration-200">Why DevDeck</a>
-          <a href="#about" className="hover:text-[#F5F6FA] transition-colors duration-200">About</a>
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-8">
+          <a href="#features" className="text-sm font-normal text-[#9CA3B5] hover:text-[#F5F6FA] transition-colors duration-200">Features</a>
+          <a href="#why" className="text-sm font-normal text-[#9CA3B5] hover:text-[#F5F6FA] transition-colors duration-200">Benefits</a>
+          <a href="#about" className="text-sm font-normal text-[#9CA3B5] hover:text-[#F5F6FA] transition-colors duration-200">About</a>
         </div>
 
-        {/* Desktop Actions */}
+        {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-4">
           <Button 
             as={Link} 
             href="/login" 
             variant="light" 
-            className="text-[#F5F6FA] border border-white/08 bg-white/05 hover:bg-white/10 rounded-full text-sm font-medium transition-all duration-200"
+            className="rounded-full text-sm font-normal border border-white/5 bg-white/5 text-[#F5F6FA] backdrop-blur-md hover:bg-white/10 hover:border-white/20 transition-all duration-300"
           >
             Login
           </Button>
           <Button 
             as={Link} 
             href="/register" 
-            className="bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white rounded-full text-sm font-medium px-6 shadow-[0_0_20px_rgba(233,79,209,0.3)] hover:shadow-[0_0_25px_rgba(233,79,209,0.5)] transition-all duration-200 hover:scale-[1.02]"
+            className="rounded-full text-sm font-normal bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white shadow-[0_4px_20px_rgba(233,79,209,0.3)] hover:shadow-[0_4px_25px_rgba(233,79,209,0.5)] hover:scale-[1.02] transition-all duration-300"
           >
             Register
           </Button>
         </div>
 
-        {/* Mobile Toggle Button */}
-        <button className="md:hidden text-[#F5F6FA]" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
-          {isOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
+        {/* Mobile Menu Button */}
+        <button className="md:hidden text-[#9CA3B5] hover:text-[#F5F6FA] transition-colors" onClick={() => setIsOpen(!isOpen)}>
+          {isOpen ? <Xmark className="w-6 h-6" /> : <Bars className="w-6 h-6" />}
         </button>
-      </nav>
+      </div>
 
-      {/* Mobile Menu Panel */}
+      {/* Mobile Glass Rail Dropdown */}
       {isOpen && (
-        <div className="md:hidden mt-2 p-6 rounded-2xl border border-white/08 bg-[#1A1D29]/95 backdrop-blur-[20px] flex flex-col gap-4 animate-fadeIn">
-          <a href="#features" onClick={() => setIsOpen(false)} className="text-[#9CA3B5] hover:text-[#F5F6FA] text-base font-medium py-1">Features</a>
-          <a href="#why" onClick={() => setIsOpen(false)} className="text-[#9CA3B5] hover:text-[#F5F6FA] text-base font-medium py-1">Why DevDeck</a>
-          <a href="#about" onClick={() => setIsOpen(false)} className="text-[#9CA3B5] hover:text-[#F5F6FA] text-base font-medium py-1">About</a>
-          <hr className="border-white/06 my-1" />
-          <Button as={Link} href="/login" className="w-full text-[#F5F6FA] bg-white/05 border border-white/08 rounded-full">Login</Button>
-          <Button as={Link} href="/register" className="w-full bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white rounded-full">Register</Button>
+        <div className="absolute top-20 left-4 right-4 backdrop-filter backdrop-blur-[20px] bg-[rgba(26,29,41,0.95)] border border-white/5 rounded-3xl p-6 flex flex-col gap-4 shadow-xl md:hidden animate-in fade-in slide-in-from-top-4 duration-200">
+          <a href="#features" onClick={() => setIsOpen(false)} className="text-base text-[#9CA3B5] hover:text-[#F5F6FA] py-2">Features</a>
+          <a href="#why" onClick={() => setIsOpen(false)} className="text-base text-[#9CA3B5] hover:text-[#F5F6FA] py-2">Benefits</a>
+          <a href="#about" onClick={() => setIsOpen(false)} className="text-base text-[#9CA3B5] hover:text-[#F5F6FA] py-2">About</a>
+          <hr className="border-white/5 my-2" />
+          <Button as={Link} href="/login" className="rounded-full border border-white/10 bg-white/5 text-[#F5F6FA] w-full">
+            Login
+          </Button>
+          <Button as={Link} href="/register" className="rounded-full bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white w-full">
+            Register
+          </Button>
         </div>
       )}
-    </header>
+    </nav>
   );
 }
