@@ -1,9 +1,8 @@
-// src/components/landing/LandingNavbar.js
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@heroui/react';
-import { Bars, Xmark } from '@gravity-ui/icons'; // Fixed naming
+import { Bars, Xmark } from '@gravity-ui/icons';
 
 export default function LandingNavbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,21 +31,22 @@ export default function LandingNavbar() {
 
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <Button 
-            as={Link} 
-            href="/login" 
-            variant="light" 
-            className="rounded-full text-sm font-normal border border-white/5 bg-white/5 text-[#F5F6FA] backdrop-blur-md hover:bg-white/10 hover:border-white/20 transition-all duration-300"
-          >
-            Login
-          </Button>
-          <Button 
-            as={Link} 
-            href="/register" 
-            className="rounded-full text-sm font-normal bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white shadow-[0_4px_20px_rgba(233,79,209,0.3)] hover:shadow-[0_4px_25px_rgba(233,79,209,0.5)] hover:scale-[1.02] transition-all duration-300"
-          >
-            Register
-          </Button>
+          <Link href="/login">
+            <Button 
+              variant="light" 
+              className="rounded-full text-sm font-normal border border-white/5 bg-white/5 text-[#F5F6FA] backdrop-blur-md hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+            >
+              Login
+            </Button>
+          </Link>
+          
+          <Link href="/register">
+            <Button 
+              className="rounded-full text-sm font-normal bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white shadow-[0_4px_20px_rgba(233,79,209,0.3)] hover:shadow-[0_4px_25px_rgba(233,79,209,0.5)] hover:scale-[1.02] transition-all duration-300"
+            >
+              Register
+            </Button>
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
@@ -62,12 +62,16 @@ export default function LandingNavbar() {
           <a href="#why" onClick={() => setIsOpen(false)} className="text-base text-[#9CA3B5] hover:text-[#F5F6FA] py-2">Benefits</a>
           <a href="#about" onClick={() => setIsOpen(false)} className="text-base text-[#9CA3B5] hover:text-[#F5F6FA] py-2">About</a>
           <hr className="border-white/5 my-2" />
-          <Button as={Link} href="/login" className="rounded-full border border-white/10 bg-white/5 text-[#F5F6FA] w-full">
-            Login
-          </Button>
-          <Button as={Link} href="/register" className="rounded-full bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white w-full">
-            Register
-          </Button>
+          <Link href="/login" onClick={() => setIsOpen(false)} className="w-full">
+            <Button className="rounded-full border border-white/10 bg-white/5 text-[#F5F6FA] w-full">
+              Login
+            </Button>
+          </Link>
+          <Link href="/register" onClick={() => setIsOpen(false)} className="w-full">
+            <Button className="rounded-full bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white w-full">
+              Register
+            </Button>
+          </Link>
         </div>
       )}
     </nav>

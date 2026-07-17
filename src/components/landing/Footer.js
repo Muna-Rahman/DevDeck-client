@@ -1,14 +1,13 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { LogoGithub, LogoLinkedin, Twitter, Envelope } from '@gravity-ui/icons';
 
 export default function Footer() {
   return (
     <footer className="w-full border-t border-white/5 bg-[rgba(11,14,20,0.8)] backdrop-blur-md mt-24">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
         
-        {/* Pitch Point */}
+        {/* Pitch Statement */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#E94FD1] to-[#FF6FB5] flex items-center justify-center">
@@ -39,18 +38,12 @@ export default function Footer() {
         <div className="space-y-4 md:text-right md:flex md:flex-col md:items-end">
           <div>
             <h4 className="text-xs uppercase font-medium tracking-widest text-[#8B5CF6] mb-3">Community Hub</h4>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 text-xs font-mono">
               <a href="https://github.com" target="_blank" rel="noreferrer" className="text-[#9CA3B5] hover:text-[#E94FD1] transition-colors">
-                <LogoGithub className="w-5 h-5" />
-              </a>
-              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="text-[#9CA3B5] hover:text-[#3FE0C5] transition-colors">
-                <LogoLinkedin className="w-5 h-5" />
-              </a>
-              <a href="https://x.com" target="_blank" rel="noreferrer" className="text-[#9CA3B5] hover:text-[#8B5CF6] transition-colors">
-                <Twitter className="w-4 h-4" />
+                [GitHub]
               </a>
               <a href="mailto:hello@devdeck.io" className="text-[#9CA3B5] hover:text-[#FFB84D] transition-colors">
-                <Envelope className="w-5 h-5" />
+                [Email]
               </a>
             </div>
           </div>

@@ -20,23 +20,24 @@ export default function HeroSection() {
 
         {/* Call to Actions */}
         <div className="flex flex-wrap items-center gap-4">
-          <Button 
-            as={Link} 
-            href="/register" 
-            size="lg"
-            className="rounded-full px-8 text-base font-normal bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white shadow-[0_4px_25px_rgba(233,79,209,0.35)] hover:shadow-[0_4px_30px_rgba(233,79,209,0.55)] hover:scale-[1.02] transition-all duration-300"
-          >
-            Get Started
-          </Button>
-          <Button 
-            as={Link} 
-            href="/login" 
-            size="lg"
-            variant="bordered"
-            className="rounded-full px-8 text-base font-normal text-[#F5F6FA] border-white/10 hover:border-white/20 hover:bg-white/5 transition-all duration-300"
-          >
-            Sign In
-          </Button>
+          <Link href="/register">
+            <Button 
+              size="lg"
+              className="rounded-full px-8 text-base font-normal bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white shadow-[0_4px_25px_rgba(233,79,209,0.35)] hover:shadow-[0_4px_30px_rgba(233,79,209,0.55)] hover:scale-[1.02] transition-all duration-300"
+            >
+              Get Started
+            </Button>
+          </Link>
+          
+          <Link href="/login">
+            <Button 
+              size="lg"
+              variant="bordered"
+              className="rounded-full px-8 text-base font-normal text-[#F5F6FA] border-white/10 hover:border-white/20 hover:bg-white/5 transition-all duration-300"
+            >
+              Sign In
+            </Button>
+          </Link>
         </div>
 
         {/* Feature Check Pillars */}
