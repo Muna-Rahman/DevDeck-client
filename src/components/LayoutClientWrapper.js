@@ -12,20 +12,19 @@ export default function LayoutClientWrapper({ children }) {
     setMounted(true);
   }, []);
 
-  // Strict check: if the path matches public endpoints, bypass dashboard rendering entirely
+  // Standard clean matching for the home, login, and registration screens
   const isPublicRoute = pathname === '/' || pathname === '/login' || pathname === '/register';
 
-  // Return a completely clean background canvas during server hydration
   if (!mounted) {
     return <div className="w-full min-h-screen bg-[#0B0E14]">{children}</div>;
   }
 
-  // FORCE completely clean landing page with zero sidebar markup injected
+  // If public route, completely bypass internal dashboard frame wrappers
   if (isPublicRoute) {
-    return <div className="w-full min-h-screen bg-[#0B0E14] relative z-10">{children}</div>;
+    return <div className="w-full min-h-screen bg-[#0B0E14]">{children}</div>;
   }
 
-  // Render dashboard layout chrome strictly on internal workspace screens only
+  // Render dashboard layout strictly on workspace internal screens
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#0B0E14]">
       <SidebarContainer />
