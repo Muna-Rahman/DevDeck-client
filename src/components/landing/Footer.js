@@ -1,8 +1,7 @@
-// src/components/landing/Footer.js
 'use client';
 import React from 'react';
 import Link from 'next/link';
-import { LogoGithub, LogoLinkedin, LogoTwitter, Envelope } from '@gravity-ui/icons'; // Fixed naming
+import { LogoGithub, LogoLinkedin, LogoX, Envelope } from '@gravity-ui/icons';
 
 export default function Footer() {
   return (
@@ -48,7 +47,7 @@ export default function Footer() {
                 <LogoLinkedin className="w-5 h-5" />
               </a>
               <a href="https://x.com" target="_blank" rel="noreferrer" className="text-[#9CA3B5] hover:text-[#8B5CF6] transition-colors">
-                <LogoTwitter className="w-4 h-4" />
+                <LogoX className="w-4 h-4" />
               </a>
               <a href="mailto:hello@devdeck.io" className="text-[#9CA3B5] hover:text-[#FFB84D] transition-colors">
                 <Envelope className="w-5 h-5" />

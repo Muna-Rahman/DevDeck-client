@@ -1,9 +1,8 @@
-// src/components/landing/HeroSection.js
 'use client';
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '@heroui/react';
-import { ShieldCheck, Database, LayoutGrid, Layers } from '@gravity-ui/icons'; // Fixed naming
+import { ShieldCheck, Database, LayoutCellsLarge, Layers } from '@gravity-ui/icons';
 
 export default function HeroSection() {
   return (
@@ -44,7 +43,7 @@ export default function HeroSection() {
         <div className="pt-6 border-t border-white/5 grid grid-cols-2 gap-y-4 gap-x-6 sm:flex sm:items-center sm:gap-8 text-xs text-[#9CA3B5]">
           <span className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-[#E94FD1]" /> Better Auth Powered</span>
           <span className="flex items-center gap-2"><Database className="w-4 h-4 text-[#3FE0C5]" /> MongoDB Architecture</span>
-          <span className="flex items-center gap-2"><LayoutGrid className="w-4 h-4 text-[#8B5CF6]" /> Fluid Drag & Drop</span>
+          <span className="flex items-center gap-2"><LayoutCellsLarge className="w-4 h-4 text-[#8B5CF6]" /> Fluid Drag & Drop</span>
           <span className="flex items-center gap-2"><Layers className="w-4 h-4 text-[#FFB84D]" /> Advanced Glass UI</span>
         </div>
       </div>
