@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
+import { BookmarkProvider } from "../context/BookmarkContext"; // Import your Bookmark system state layer
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,8 +23,10 @@ export default function RootLayout({ children }) {
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0B0E14]`}>
         <Providers>
-          {/* RENDER RAW children HERE ONLY. Public pages will load fully clean now. */}
-          {children}
+          {/* Nests the Bookmark context natively within the primary client global state providers */}
+          <BookmarkProvider>
+            {children}
+          </BookmarkProvider>
         </Providers>
       </body>
     </html>
