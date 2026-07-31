@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Editor from "@monaco-editor/react";
 import { X } from "lucide-react";
 
 import { 
@@ -34,6 +35,55 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
   const [errors, setErrors] = useState({});
 
+  // Expanded Language List
+  const LANGUAGE_OPTIONS = [
+    { value: "javascript", label: "JavaScript" },
+    { value: "typescript", label: "TypeScript" },
+    { value: "c", label: "C" },
+    { value: "cpp", label: "C++" },
+    { value: "csharp", label: "C#" },
+    { value: "python", label: "Python" },
+    { value: "html", label: "HTML" },
+    { value: "css", label: "CSS / Tailwind" },
+    { value: "java", label: "Java" },
+    { value: "go", label: "Go Lang" },
+    { value: "rust", label: "Rust" },
+    { value: "php", label: "PHP" },
+    { value: "ruby", label: "Ruby" },
+    { value: "swift", label: "Swift" },
+    { value: "kotlin", label: "Kotlin" },
+    { value: "sql", label: "SQL" },
+    { value: "json", label: "JSON" },
+    { value: "shell", label: "Shell / Bash" },
+  ];
+
+  // Define custom Monaco theme matching DevDeck palette
+  const handleEditorWillMount = (monaco) => {
+    monaco.editor.defineTheme("devdeck-theme", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "6272a4", fontStyle: "italic" },
+        { token: "keyword", foreground: "E94FD1", fontStyle: "bold" },
+        { token: "string", foreground: "3FE0C5" },
+        { token: "number", foreground: "FFB84D" },
+        { token: "variable", foreground: "F5F6FA" },
+        { token: "function", foreground: "2FD1FF" },
+      ],
+      colors: {
+        "editor.background": "#0B0E14",
+        "editor.foreground": "#F5F6FA",
+        "editor.lineHighlightBackground": "#1A1D2980",
+        "editorCursor.foreground": "#3FE0C5",
+        "editorLineNumber.foreground": "#9CA3B540",
+        "editorLineNumber.activeForeground": "#3FE0C5",
+        "editor.selectionBackground": "#E94FD140",
+        "editorIndentGuide.background": "#ffffff10",
+        "editorIndentGuide.activeBackground": "#3FE0C550",
+      },
+    });
+  };
+
   const validateForm = () => {
     let currentErrors = {};
 
@@ -56,7 +106,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
     if (activeTab === "snippets") {
       if (!formData.language) currentErrors.language = "Pick a language framework so syntax engines can shine.";
-      if (!formData.code) currentErrors.code = "A snippet card needs some code to hold onto!";
+      if (!formData.code || !formData.code.trim()) currentErrors.code = "A snippet card needs some code to hold onto!";
     }
 
     if (activeTab === "notes") {
@@ -143,7 +193,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       {/* Futuristic Glass HUD Container Frame */}
       <div className={`bg-[#12141C]/90 backdrop-filter backdrop-blur-xl border border-white/8 rounded-2xl ${getGlowColorClass()} transition-shadow duration-500 max-h-[90vh] overflow-y-auto p-6 text-[#F5F6FA] relative w-full max-w-2xl z-10 flex flex-col gap-6`}>
         
-        {/* Absolute Fast Escape Button HUD Bracket */}
+        {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
@@ -162,7 +212,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
         {/* Modal Body */}
         <div className="flex flex-col gap-6">
           
-          {/* Custom Glass Pill Selector Layout Navigation */}
+          {/* Navigation Tabs */}
           <div className="bg-white/5 backdrop-blur-sm p-1 border border-white/6 rounded-full w-full flex justify-between items-center gap-1">
             {navTabs.map((tab) => {
               const isSelected = activeTab === tab.id;
@@ -268,26 +318,49 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   onChange={(e) => handleInputChange("language", e.target.value)}
                   className="w-full bg-[#1A1D29]/60 text-[#F5F6FA] border border-white/8 hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl h-11 px-3 backdrop-blur-md transition-all duration-300"
                 >
-                  <option value="javascript">JavaScript</option>
-                  <option value="typescript">TypeScript</option>
-                  <option value="python">Python</option>
-                  <option value="rust">Rust</option>
-                  <option value="go">Go Lang</option>
-                  <option value="css">CSS / Tailwind</option>
+                  {LANGUAGE_OPTIONS.map((lang) => (
+                    <option key={lang.value} value={lang.value}>
+                      {lang.label}
+                    </option>
+                  ))}
                 </select>
                 {errors.language && <p className={errorClass}>{errors.language}</p>}
               </div>
 
               <div>
-                <label className={labelClass}>The Code</label>
-                <textarea
-                  placeholder="paste your code block here..."
-                  value={formData.code}
-                  onChange={(e) => handleInputChange("code", e.target.value)}
-                  className={`${textareaBaseClass} font-mono text-xs bg-black/20 min-h-[140px]`}
-                />
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className={labelClass}>The Code</label>
+                  <span className="text-[10px] font-mono text-[#3FE0C5]">VS Code Intellisense Engine</span>
+                </div>
+                
+                {/* MONACO EDITOR WITH AUTO-CLOSING TAGS & BRACKETS */}
+                <div className={`border rounded-xl overflow-hidden shadow-inner bg-[#0B0E14] ${errors.code ? "border-rose-500/60" : "border-white/10"}`}>
+                  <Editor
+                    height="240px"
+                    language={formData.language}
+                    theme="devdeck-theme"
+                    beforeMount={handleEditorWillMount}
+                    value={formData.code}
+                    onChange={(value) => handleInputChange("code", value || "")}
+                    options={{
+                      fontSize: 13,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      tabSize: 2,
+                      lineNumbers: "on",
+                      folding: true,
+                      autoClosingTags: true,       // Automatically closes HTML/XML tags (e.g. <div> -> </div>)
+                      autoClosingBrackets: "always", // Automatically closes ({[]})
+                      autoClosingQuotes: "always",   // Automatically closes quotes '' "" ``
+                      formatOnPaste: true,           // Formats pasted code blocks
+                      padding: { top: 12, bottom: 12 },
+                    }}
+                  />
+                </div>
                 {errors.code && <p className={errorClass}>{errors.code}</p>}
               </div>
+
               <div>
                 <label className={labelClass}>Purpose</label>
                 <input
