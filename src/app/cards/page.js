@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button } from "@heroui/react";
-import { Plus, TrashBin, Pencil } from "@gravity-ui/icons";
+import { Plus, TrashBin } from "@gravity-ui/icons";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CreateCardModal from "@/components/CreateCardModal";
@@ -97,42 +96,41 @@ export default function CardsPage() {
   };
 
   // DELETE CARD
- 
-const handleDeleteCard = async (card, e) => {
-  if (e) e.stopPropagation(); // Prevent opening modal on click
+  const handleDeleteCard = async (card, e) => {
+    if (e) e.stopPropagation();
 
-  // Handle both string IDs and object instances
-  const cardId = typeof card === "object" ? (card._id || card.id) : card;
+    const cardId = typeof card === "object" ? (card._id || card.id) : card;
 
-  if (!cardId) {
-    console.error("No valid Card ID found to delete.");
-    return;
-  }
-
-  if (!confirm("Are you sure you want to delete this card?")) return;
-
-  try {
-    const response = await fetch(`${backendUrl}/api/cards/${cardId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-
-    if (response.ok) {
-      setWorkspaceCards((prev) =>
-        prev.filter((c) => (c._id || c.id) !== cardId)
-      );
-      if (selectedCard && (selectedCard._id || selectedCard.id) === cardId) {
-        setSelectedCard(null);
-      }
-      console.log("Card deleted successfully!");
-    } else {
-      const errRes = await response.text().catch(() => "");
-      console.error(`Failed to delete card (Status ${response.status}):`, errRes);
+    if (!cardId) {
+      console.error("No valid Card ID found to delete.");
+      return;
     }
-  } catch (err) {
-    console.error("Error deleting card:", err);
-  }
-};
+
+    if (!confirm("Are you sure you want to delete this card?")) return;
+
+    try {
+      const response = await fetch(`${backendUrl}/api/cards/${cardId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        setWorkspaceCards((prev) =>
+          prev.filter((c) => (c._id || c.id) !== cardId)
+        );
+        if (selectedCard && (selectedCard._id || selectedCard.id) === cardId) {
+          setSelectedCard(null);
+        }
+        console.log("Card deleted successfully!");
+      } else {
+        const errRes = await response.text().catch(() => "");
+        console.error(`Failed to delete card (Status ${response.status}):`, errRes);
+      }
+    } catch (err) {
+      console.error("Error deleting card:", err);
+    }
+  };
+
   // EDIT CARD
   const handleEditCard = async (updatedCard) => {
     const cardId = updatedCard.id || updatedCard._id;
@@ -194,25 +192,37 @@ const handleDeleteCard = async (card, e) => {
   return (
     <div className="min-h-screen p-8 flex flex-col gap-8 transition-colors duration-300">
       {/* Header Bar */}
-      <div className="relative flex justify-between items-center border-b border-black/10 dark:border-white/6 pb-6 w-full">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-black/10 dark:border-white/6 pb-6 w-full">
         <button
           onClick={() => router.push("/dashboard")}
-          className="group flex items-center gap-2 px-4 py-2 rounded-xl border border-black/10 dark:border-white/8 bg-white/60 dark:bg-[#1A1D29]/60 backdrop-blur-md text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-black/20 dark:hover:border-white/20 transition-all duration-300 cursor-pointer"
+          className="group flex items-center gap-2 px-4 py-2 rounded-xl border border-black/10 dark:border-white/8 bg-white/60 dark:bg-[#1A1D29]/60 backdrop-blur-md text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:border-black/20 dark:hover:border-white/20 transition-all duration-300 cursor-pointer w-fit"
         >
           <ArrowLeft size={14} className="transform group-hover:-translate-x-0.5 transition-transform duration-200" />
           <span>Back to Dashboard</span>
         </button>
 
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-          <Button
-            onPress={onOpen}
-            endContent={<Plus className="w-4 h-4" />}
-            className="bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white font-medium rounded-full px-6 shadow-[0_4px_20px_rgba(233,79,209,0.3)] hover:shadow-[0_4px_25px_rgba(233,79,209,0.5)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
-          >
+        {/* 3D Glass Pill Button matching DevDeck's theme */}
+        <button
+          onClick={onOpen}
+          className="relative inline-flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-full font-semibold text-xs tracking-wider uppercase text-white transition-all duration-300 transform active:scale-95 hover:scale-[1.03] cursor-pointer
+            bg-gradient-to-r from-[#E94FD1]/90 via-[#FF6FB5]/80 to-[#D6249F]/90
+            backdrop-blur-xl backdrop-saturate-150
+            border border-white/40 dark:border-white/30
+            shadow-[inset_0_2px_4px_rgba(255,255,255,0.6),_inset_0_-2px_4px_rgba(0,0,0,0.3),_0_10px_25px_rgba(233,79,209,0.4)]
+            hover:shadow-[inset_0_2px_6px_rgba(255,255,255,0.8),_inset_0_-2px_6px_rgba(0,0,0,0.4),_0_12px_30px_rgba(233,79,209,0.6)]
+            overflow-hidden group"
+        >
+          {/* Top Edge Reflection / Inner Highlight */}
+          <span className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-80" />
+          
+          <Plus className="w-4 h-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] transition-transform group-hover:rotate-90 duration-300" />
+          <span className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] font-bold">
             Create Card
-          </Button>
-        </div>
-        <div className="hidden sm:block w-[120px]" aria-hidden="true" />
+          </span>
+          
+          {/* Bottom Sheen / Light Flare */}
+          <span className="absolute -bottom-2 -right-4 w-12 h-12 bg-white/20 blur-md rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+        </button>
       </div>
 
       {/* Cards Grid */}
@@ -222,13 +232,12 @@ const handleDeleteCard = async (card, e) => {
             <p className="text-zinc-600 dark:text-zinc-400 text-sm max-w-sm">
               Your deck ecosystem feels lighter than usual. Let&apos;s map out your dependencies.
             </p>
-            <Button
-              variant="light"
-              onPress={onOpen}
-              className="text-[#0FB8A6] dark:text-[#3FE0C5] hover:bg-[#0FB8A6]/10 dark:hover:bg-[#3FE0C5]/10 border border-[#0FB8A6]/20 dark:border-[#3FE0C5]/20 font-medium rounded-full px-5 transition-all duration-300"
+            <button
+              onClick={onOpen}
+              className="text-[#0FB8A6] dark:text-[#3FE0C5] hover:bg-[#0FB8A6]/10 dark:hover:bg-[#3FE0C5]/10 border border-[#0FB8A6]/20 dark:border-[#3FE0C5]/20 font-medium rounded-full px-5 py-2 text-xs transition-all duration-300 cursor-pointer"
             >
               Initialize First Card
-            </Button>
+            </button>
           </div>
         ) : (
           workspaceCards.map((card) => {
@@ -251,7 +260,7 @@ const handleDeleteCard = async (card, e) => {
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => handleDeleteCard(cardId, e)}
-                        className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all"
+                        className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all cursor-pointer"
                         title="Delete Card"
                       >
                         <TrashBin className="w-3.5 h-3.5" />

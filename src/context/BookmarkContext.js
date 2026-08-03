@@ -1,4 +1,5 @@
 'use client';
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const BookmarkContext = createContext();
@@ -31,22 +32,47 @@ export function BookmarkProvider({ children }) {
 
   const toggleBookmark = async (cardId) => {
     try {
-      const res = await fetch(`${backendUrl}/api/cards/${cardId}/bookmark`, { 
+      // 1. Check if the target item exists in current local state or is a snippet
+      const existingItem = bookmarkedCards.find(
+        (c) => (c._id || c.id)?.toString() === cardId?.toString()
+      );
+      
+      const isSnippet = existingItem?.type === 'Snippet' || existingItem?.type === 'snippets';
+      
+      // Determine the correct API endpoint and payload depending on item source
+      const endpoint = isSnippet
+        ? `${backendUrl}/api/snippets/${cardId}`
+        : `${backendUrl}/api/cards/${cardId}/bookmark`;
+
+      const currentBookmarkState = existingItem?.isBookmarked ?? existingItem?.bookmarked ?? false;
+
+      const res = await fetch(endpoint, { 
         method: 'PATCH',
         headers: { "Content-Type": "application/json" },
-        credentials: "include"
+        credentials: "include",
+        body: isSnippet ? JSON.stringify({ bookmarked: !currentBookmarkState }) : undefined
       });
+
       if (res.ok) {
         const updatedCard = await res.json();
         
-        if (updatedCard.isBookmarked) {
+        // Normalize properties for consistent UI state checks
+        const isNowBookmarked = updatedCard.isBookmarked ?? updatedCard.bookmarked ?? false;
+        
+        if (isNowBookmarked) {
           setBookmarkedCards((prev) => {
-            const exists = prev.some(c => (c._id || c.id) === (updatedCard._id || updatedCard.id));
+            const exists = prev.some(c => (c._id || c.id)?.toString() === (updatedCard._id || updatedCard.id)?.toString());
             return exists ? prev : [...prev, updatedCard];
           });
         } else {
-          setBookmarkedCards((prev) => prev.filter(card => (card._id || card.id) !== cardId));
+          setBookmarkedCards((prev) => 
+            prev.filter(card => (card._id || card.id)?.toString() !== cardId?.toString())
+          );
         }
+
+        // Re-fetch to guarantee complete server-state synchronization
+        await fetchBookmarks();
+
         return updatedCard;
       }
     } catch (err) {

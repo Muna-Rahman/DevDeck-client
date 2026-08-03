@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
-import { Sun, Moon, Search, Plus } from "lucide-react"; // Changed MagnifyingGlass to Search
+import { Sun, Moon, Search, Plus } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
@@ -64,7 +64,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-[rgba(20,20,40,0.06)] bg-white/80 backdrop-blur-glass dark:border-white/8 dark:bg-[#1A1D29]/65 transition-colors duration-300">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
-        {/* Branding */}
+        {/* Branding & Navigation */}
         <div className="flex items-center gap-8">
           <Link href="/dashboard" className="flex items-center gap-2.5 transition-transform active:scale-95 group">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] text-white shadow-[0_0_15px_rgba(233,79,209,0.35)]">
@@ -88,8 +88,8 @@ export default function Navbar() {
                   href={item.target}
                   className={`px-4 py-2 rounded-xl text-xs font-medium uppercase tracking-wider transition-all duration-200 ${
                     isActive
-                      ? "bg-black/5 dark:bg-white/10 text-[#D6249F] dark:text-[#FF6FB5] border border-[rgba(20,20,40,0.06)] dark:border-white/10"
-                      : "text-[#5B5F72] hover:text-[#1A1D29] dark:text-[#9CA3B5] dark:hover:text-[#F5F6FA]"
+                      ? "bg-black/5 dark:bg-white/10 text-[#D6249F] dark:text-[#FF6FB5] border border-[rgba(20,20,40,0.06)] dark:border-white/10 shadow-xs"
+                      : "text-[#5B5F72] hover:text-[#1A1D29] dark:text-[#9CA3B5] dark:hover:text-[#F5F6FA] hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   {item.label}
@@ -99,7 +99,7 @@ export default function Navbar() {
           </nav>
         </div>
 
-        {/* Global Filter Search Module Bar */}
+        {/* Global Search Input Bar */}
         <div className="hidden sm:flex relative max-w-sm w-full mx-4">
           <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
             <Search size={16} strokeWidth={2.5} />
@@ -108,14 +108,14 @@ export default function Navbar() {
             type="text"
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
-            placeholder="Search dashboard..."
+            placeholder="Search snippets & cards..."
             className="w-full h-10 rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/40 pl-10 pr-12 text-xs uppercase font-medium tracking-wide text-[#1A1D29] dark:text-[#F5F6FA] outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
           />
         </div>
 
-        {/* Interactive Actions Stack */}
+        {/* Action Controls */}
         <div className="flex items-center gap-3.5">
-          <button className="hidden sm:inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-5 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5">
+          <button className="hidden sm:inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-5 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
             <Plus size={14} strokeWidth={3} />
             <span>Add Card</span>
           </button>
@@ -123,12 +123,12 @@ export default function Navbar() {
           <button 
             onClick={() => setDarkMode(!darkMode)}
             aria-label="Toggle visual theme mode"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/60 dark:border-white/10 dark:bg-[#1A1D29]/60 hover:bg-white dark:hover:bg-[#1A1D29] transition-all duration-200 active:scale-90 text-[#5B5F72] dark:text-[#9CA3B5]"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/60 dark:border-white/10 dark:bg-[#1A1D29]/60 hover:bg-white dark:hover:bg-[#1A1D29] transition-all duration-200 active:scale-90 text-[#5B5F72] dark:text-[#9CA3B5] cursor-pointer"
           >
             {darkMode ? <Sun size={18} strokeWidth={2.5} /> : <Moon size={18} strokeWidth={2.5} />}
           </button>
 
-          {/* Render Profile Section safely on client post-mount */}
+          {/* User Profile / Auth State */}
           {mounted && !isPending && session?.user ? (
             <div className="relative" ref={dropdownRef}>
               <button 

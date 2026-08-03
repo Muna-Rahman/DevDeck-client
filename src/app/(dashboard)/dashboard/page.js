@@ -12,7 +12,9 @@ import {
   Bookmark,
   Star,
   ArrowUpRight,
-  Copy
+  Copy,
+  Terminal,
+  Check
 } from 'lucide-react'; 
 import { authClient } from "@/lib/auth-client";
 import { useBookmarks } from '@/context/BookmarkContext';
@@ -23,6 +25,7 @@ import CardDetailsDrawer from '@/components/CardDetailsDrawer';
    ========================================================================== */
 function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
   const { toggleBookmark } = useBookmarks();
+  const [copied, setCopied] = useState(false);
 
   const handleBookmarkClick = async (e) => {
     e.preventDefault();
@@ -39,8 +42,16 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
   };
 
   const titleText = card.title || card.content?.title || card.metadata?.url || card.content?.url || "Untitled Configuration";
-  const descText = card.metadata?.description || card.content?.notes || card.content?.body || "";
-  const isBookmarkedState = card.isBookmarked || false;
+  const descText = card.description || card.metadata?.description || card.content?.notes || card.content?.body || "";
+  const snippetCode = card.code || card.metadata?.code || descText;
+  const isBookmarkedState = card.isBookmarked || card.bookmarked || false;
+
+  const handleCopyCode = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(snippetCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const renderCardContent = () => {
     switch(card.type) {
@@ -65,20 +76,18 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
           <div className="space-y-2 min-w-0">
             <div className="flex justify-between items-center">
               <span className="text-[10px] text-[#3FE0C5] uppercase tracking-wider font-mono font-semibold truncate max-w-[120px]">
-                {card.metadata?.language || "Code"}
+                {card.language || card.metadata?.language || "Code"}
               </span>
               <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.clipboard.writeText(card.metadata?.code || descText);
-                }}
-                className="copy-action-trigger text-[#9CA3B5] hover:text-[#3FE0C5] transition-colors flex-shrink-0"
+                onClick={handleCopyCode}
+                className="copy-action-trigger text-[#9CA3B5] hover:text-[#3FE0C5] transition-colors flex-shrink-0 cursor-pointer"
+                title="Copy Code"
               >
-                <Copy className="w-3.5 h-3.5" />
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
-            <pre className="p-2.5 bg-[#0B0E14]/60 rounded-lg text-[11px] font-mono text-[#3FE0C5] overflow-x-auto border border-white/5 whitespace-pre-wrap break-all max-h-[100px]">
-              <code className="block truncate">{card.metadata?.code || descText}</code>
+            <pre className="p-2.5 bg-[#0B0E14]/80 rounded-lg text-[11px] font-mono text-[#3FE0C5] overflow-x-auto border border-white/5 whitespace-pre-wrap break-all max-h-[100px]">
+              <code className="block truncate">{snippetCode}</code>
             </pre>
           </div>
         );
@@ -117,7 +126,7 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
         
         <button 
           onClick={handleBookmarkClick}
-          className="p-1.5 rounded-lg bg-black/5 dark:bg-white/[0.04] border border-black/5 dark:border-white/[0.06] text-[#9CA3B5] hover:text-[#E94FD1] transition-all flex-shrink-0"
+          className="p-1.5 rounded-lg bg-black/5 dark:bg-white/[0.04] border border-black/5 dark:border-white/[0.06] text-[#9CA3B5] hover:text-[#E94FD1] transition-all flex-shrink-0 cursor-pointer"
         >
           {isBookmarkedState ? (
             <Bookmark className="w-3.5 h-3.5 text-[#E94FD1] drop-shadow-[0_0_6px_#E94FD1] fill-[#E94FD1]" />
@@ -156,8 +165,6 @@ export default function DashboardPage() {
   
   // HUD Runtime Monitoring States
   const [isSystemActive, setIsSystemActive] = useState(true);
-  
-  // FIX: Converted state from number to string to handle structural uptime formats ("1h 4m 12s")
   const [uptimeDisplay, setUptimeDisplay] = useState("0m 0s");
   
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -170,15 +177,45 @@ export default function DashboardPage() {
 
   const streamWorkspaceAssets = async () => {
     try {
-      const response = await fetch(`${backendUrl}/api/cards`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setDbCards(data);
+      const [cardsRes, snippetsRes] = await Promise.all([
+        fetch(`${backendUrl}/api/cards`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }),
+        fetch(`${backendUrl}/api/snippets`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        })
+      ]);
+
+      let cardsData = cardsRes.ok ? await cardsRes.json() : [];
+      let snippetsData = [];
+
+      if (snippetsRes.ok) {
+        const rawSnippets = await snippetsRes.json();
+        snippetsData = rawSnippets.map((s) => ({
+          ...s,
+          type: s.type || "Snippet",
+          category: "snippets"
+        }));
       }
+
+      // Deduplicate cards and snippets by unique ID using a Map
+      const unifiedMap = new Map();
+
+      cardsData.forEach((item) => {
+        const idKey = (item._id || item.id)?.toString();
+        if (idKey) unifiedMap.set(idKey, item);
+      });
+
+      snippetsData.forEach((item) => {
+        const idKey = (item._id || item.id)?.toString();
+        if (idKey) unifiedMap.set(idKey, item);
+      });
+
+      setDbCards(Array.from(unifiedMap.values()));
     } catch (err) {
       console.error("Ecosystem stream connection rejected by infrastructure link.", err);
     }
@@ -203,11 +240,18 @@ export default function DashboardPage() {
 
   const handleDrawerBookmarkToggle = async (cardId) => {
     try {
-      const res = await fetch(`${backendUrl}/api/cards/${cardId}/bookmark`, { 
+      const targetItem = dbCards.find(c => (c._id || c.id) === cardId);
+      const isSnippet = targetItem?.type === 'Snippet' || targetItem?.type === 'snippets';
+      
+      const endpoint = isSnippet ? `${backendUrl}/api/snippets/${cardId}` : `${backendUrl}/api/cards/${cardId}/bookmark`;
+
+      const res = await fetch(endpoint, { 
         method: 'PATCH',
         headers: { "Content-Type": "application/json" },
-        credentials: "include"
+        credentials: "include",
+        body: isSnippet ? JSON.stringify({ bookmarked: !targetItem.bookmarked }) : undefined
       });
+
       if (res.ok) {
         const updatedCard = await res.json();
         handleCardStateShift(updatedCard);
@@ -217,7 +261,7 @@ export default function DashboardPage() {
     }
   };
 
-  // FIXED: Precision interval calculator tracking dynamic strings matching 'Xh Ym Zs' or 'Ym Zs'
+  // Precision interval calculator tracking dynamic strings matching 'Xh Ym Zs' or 'Ym Zs'
   useEffect(() => {
     const runtimeInterval = setInterval(() => {
       if (isSystemActive) {
@@ -233,7 +277,7 @@ export default function DashboardPage() {
           setUptimeDisplay(`${minutes}m ${seconds}s`);
         }
       }
-    }, 1000); // Polling clock ticks strictly every second
+    }, 1000);
 
     const idleCheckInterval = setInterval(() => {
       const timeSinceLastAction = Date.now() - lastActivityTime.current;
@@ -346,7 +390,6 @@ export default function DashboardPage() {
                   {isSystemActive ? "SYS_ACTIVE" : "SYS_IDLE"}
                 </span>
                 <span className="text-[11px] font-mono text-zinc-500 dark:text-white/40 font-medium">
-                  {/* FIXED: Output string handles Hours/Minutes/Seconds accurately */}
                   Uptime: <span className="text-[#E94FD1] font-bold">{uptimeDisplay}</span>
                 </span>
               </div>
@@ -358,9 +401,9 @@ export default function DashboardPage() {
       {/* STAT MODULE CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Cards", value: dbCards.length.toString(), icon: Layers, color: "text-[#7C3AED] dark:text-[#8B5CF6]" },
+          { label: "Total Assets", value: dbCards.length.toString(), icon: Layers, color: "text-[#7C3AED] dark:text-[#8B5CF6]" },
           { label: "Repositories", value: dbCards.filter(c => c.type === 'repos' || c.type === 'GitHub Repository').length.toString(), icon: Code, color: "text-[#159FE0] dark:text-[#2FD1FF]" },
-          { label: "Snippets", value: dbCards.filter(c => c.type === 'snippets' || c.type === 'Snippet').length.toString(), icon: Code, color: "text-[#D6249F] dark:text-[#E94FD1]" },
+          { label: "Snippets", value: dbCards.filter(c => c.type === 'snippets' || c.type === 'Snippet').length.toString(), icon: Terminal, color: "text-[#D6249F] dark:text-[#E94FD1]" },
           { label: "Ideas", value: dbCards.filter(c => c.type === 'ideas' || c.type === 'Project Idea').length.toString(), icon: Lightbulb, color: "text-[#E8940F] dark:text-[#FFB84D]" },
         ].map((stat, i) => (
           <div key={i} className="rounded-2xl border border-white/40 dark:border-white/10 bg-white/85 dark:bg-black/60 backdrop-blur-2xl p-5 flex items-center justify-between shadow-2xl transition-all duration-300 hover:border-white/60 dark:hover:border-white/20">
@@ -403,7 +446,7 @@ export default function DashboardPage() {
           <div className="h-2 w-2 bg-[#3FE0C5] rounded-full animate-ping mx-auto mb-4" />
           <h3 className="text-sm font-black uppercase tracking-widest text-white/80">No active card assets found</h3>
           <p className="text-xs text-[#5B5F72] dark:text-white/40 font-medium uppercase mt-2">
-            Click "+ Add Card" in the control deck navigation container to initialize resource card objects.
+            Click "+ Add Card" in the control deck navigation container or create snippets in the Snippets section to initialize resource objects.
           </p>
         </div>
       ) : (
@@ -423,14 +466,17 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 h-auto transition-all duration-300 w-full min-w-0">
-                  {columnCards.map((card) => (
-                    <DashboardCardItem 
-                      key={card._id || card.id}
-                      card={card}
-                      onCardUpdate={handleCardStateShift}
-                      onSelectCard={(c) => setSelectedCard(c)}
-                    />
-                  ))}
+                  {columnCards.map((card, idx) => {
+                    const uniqueKey = `${card.type || 'card'}-${card._id || card.id}-${idx}`;
+                    return (
+                      <DashboardCardItem 
+                        key={uniqueKey}
+                        card={card}
+                        onCardUpdate={handleCardStateShift}
+                        onSelectCard={(c) => setSelectedCard(c)}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             );
