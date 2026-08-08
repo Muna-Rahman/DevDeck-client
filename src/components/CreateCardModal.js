@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Editor from "@monaco-editor/react";
-import { X } from "lucide-react";
+import { X, Sparkles, Loader2 } from "lucide-react";
 
 import { 
   Link as LinkIcon, 
@@ -15,10 +15,14 @@ import {
 
 export default function CreateCardModal({ isOpen, onClose, onSave }) {
   const [activeTab, setActiveTab] = useState("links");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiError, setAiError] = useState("");
+
   const [formData, setFormData] = useState({
     url: "",
     title: "",
     notes: "",
+    tags: [],
     repoUrl: "",
     customLabel: "",
     language: "javascript",
@@ -82,6 +86,56 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
         "editorIndentGuide.activeBackground": "#3FE0C550",
       },
     });
+  };
+
+  // AI Auto-Fill Handler using Grok
+  const handleAutoGenerate = async () => {
+    setAiError("");
+    
+    // Extract contextual data based on current tab
+    let titleToPass = formData.title || formData.customLabel || formData.noteTitle || formData.ideaTitle || "";
+    let repoToPass = formData.repoUrl || formData.url || "";
+    let codeToPass = formData.code || formData.markdownContent || "";
+
+    if (!titleToPass && !repoToPass && !codeToPass) {
+      setAiError("Provide a Title, URL, or Code snippet first to generate suggestions.");
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3001";
+      const response = await fetch(`${baseUrl}/api/generate-card-info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          title: titleToPass,
+          repoName: repoToPass,
+          codeSnippet: codeToPass,
+        }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to generate suggestions.");
+      }
+
+      const data = await response.json();
+
+      setFormData((prev) => ({
+        ...prev,
+        notes: prev.notes || data.description || "",
+        purpose: prev.purpose || data.description || "",
+        tags: Array.isArray(data.tags) ? data.tags : prev.tags,
+      }));
+    } catch (err) {
+      console.error("AI Auto-Fill Error:", err);
+      setAiError(err.message || "Something went wrong while connecting to AI service.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const validateForm = () => {
@@ -203,11 +257,38 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
           <X size={16} />
         </button>
 
-        {/* Modal Header */}
-        <div className="border-b border-white/6 pb-4 flex flex-col gap-1 pr-10">
-          <h2 className="text-xl font-medium tracking-wide">Add a Card to Workspace</h2>
-          <p className="text-sm text-[#9CA3B5] font-normal">Expand your dashboard ecosystem by storing a new unit.</p>
+        {/* Modal Header & Grok AI Trigger */}
+        <div className="border-b border-white/6 pb-4 flex items-center justify-between gap-4 pr-10">
+          <div>
+            <h2 className="text-xl font-medium tracking-wide">Add a Card to Workspace</h2>
+            <p className="text-sm text-[#9CA3B5] font-normal">Expand your dashboard ecosystem by storing a new unit.</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAutoGenerate}
+            disabled={isGenerating}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#3FE0C5]/30 bg-[#3FE0C5]/10 hover:bg-[#3FE0C5]/20 text-[#3FE0C5] text-xs font-semibold transition-all duration-300 shadow-[0_0_15px_rgba(63,224,197,0.15)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 size={14} className="animate-spin text-[#3FE0C5]" />
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles size={14} />
+                <span>Auto-Fill with AI</span>
+              </>
+            )}
+          </button>
         </div>
+
+        {aiError && (
+          <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-2 rounded-xl font-normal">
+            {aiError}
+          </p>
+        )}
 
         {/* Modal Body */}
         <div className="flex flex-col gap-6">
@@ -222,6 +303,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   onClick={() => {
                     setActiveTab(tab.id);
                     setErrors({});
+                    setAiError("");
                   }}
                   type="button"
                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
@@ -350,7 +432,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                       tabSize: 2,
                       lineNumbers: "on",
                       folding: true,
-                      autoClosingTags: true,       // Automatically closes HTML/XML tags (e.g. <div> -> </div>)
+                      autoClosingTags: true,       // Automatically closes HTML/XML tags
                       autoClosingBrackets: "always", // Automatically closes ({[]})
                       autoClosingQuotes: "always",   // Automatically closes quotes '' "" ``
                       formatOnPaste: true,           // Formats pasted code blocks
