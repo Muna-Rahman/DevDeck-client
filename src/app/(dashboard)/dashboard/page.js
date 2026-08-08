@@ -59,13 +59,13 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
       case 'repos':
         return (
           <div className="space-y-3 min-w-0">
-            <p className="text-[#9CA3B5] text-xs line-clamp-2 break-words">{descText}</p>
+            {descText && <p className="text-[#9CA3B5] text-xs line-clamp-2 break-words">{descText}</p>}
             <div className="flex flex-wrap items-center gap-2 text-[11px]">
-              <span className="px-2 py-0.5 max-w-[100px] truncate rounded bg-[#8B5CF6]/10 text-[#B084F5] border border-[#8B5CF6]/20 font-mono">
+              <span className="px-2.5 py-0.5 max-w-[120px] truncate rounded bg-[#8B5CF6]/10 text-[#B084F5] border border-[#8B5CF6]/20 font-mono">
                 {card.metadata?.language || "JavaScript"}
               </span>
               <span className="flex items-center gap-1 text-[#FFB84D] font-mono flex-shrink-0">
-                <Star className="w-3 h-3 fill-[#FFB84D]" /> {card.metadata?.stars || 0}
+                <Star className="w-3.5 h-3.5 fill-[#FFB84D]" /> {card.metadata?.stars || 0}
               </span>
             </div>
           </div>
@@ -86,8 +86,8 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
-            <pre className="p-2.5 bg-[#0B0E14]/80 rounded-lg text-[11px] font-mono text-[#3FE0C5] overflow-x-auto border border-white/5 whitespace-pre-wrap break-all max-h-[100px]">
-              <code className="block truncate">{snippetCode}</code>
+            <pre className="p-3 bg-[#0B0E14]/80 rounded-lg text-[11px] font-mono text-[#3FE0C5] overflow-x-auto border border-white/5 whitespace-pre-wrap break-all max-h-[120px]">
+              <code className="block">{snippetCode}</code>
             </pre>
           </div>
         );
@@ -95,13 +95,13 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
       case 'apis':
         return (
           <div className="space-y-1.5 min-w-0">
-            <div className="flex items-center gap-1.5 font-mono text-[11px] w-full">
-              <span className={`px-1.5 py-0.5 rounded font-extrabold text-[10px] flex-shrink-0 ${
+            <div className="flex items-center gap-2 font-mono text-[11px] w-full">
+              <span className={`px-2 py-0.5 rounded font-extrabold text-[10px] flex-shrink-0 ${
                 card.metadata?.httpMethod === 'POST' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'
               }`}>
                 {card.metadata?.httpMethod || 'GET'}
               </span>
-              <span className="text-[#F5F6FA] dark:text-[#F5F6FA] truncate block flex-1 break-all">
+              <span className="text-[#F5F6FA] truncate block flex-1 break-all">
                 {card.metadata?.url || card.content?.url}
               </span>
             </div>
@@ -109,45 +109,45 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
           </div>
         );
       default:
-        return <p className="text-[#9CA3B5] text-xs line-clamp-2 break-words">{descText}</p>;
+        return descText ? <p className="text-[#9CA3B5] text-xs line-clamp-2 break-words">{descText}</p> : null;
     }
   };
 
   return (
     <div 
       onClick={handleCardClick}
-      className="group relative rounded-xl border border-white/[0.08] bg-white/85 dark:bg-[#1A1D29]/60 backdrop-blur-xl p-4 shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(233,79,209,0.12)] cursor-pointer min-w-0 overflow-hidden w-full"
+      className="group relative rounded-xl border border-white/[0.08] bg-[#12141C]/90 hover:bg-[#1A1D29]/90 backdrop-blur-xl p-5 shadow-md transition-all duration-300 hover:border-white/20 cursor-pointer min-w-0 overflow-hidden w-full"
     >
-      <div className="flex justify-between items-start gap-2 mb-2 w-full">
+      <div className="flex justify-between items-start gap-4 mb-3 w-full">
         <div className="min-w-0 flex-1">
-          <span className="text-[9px] uppercase font-bold tracking-widest text-[#9CA3B5]/60 block mb-0.5 font-mono truncate">{card.type}</span>
-          <h4 className="text-sm font-semibold text-[#1A1D29] dark:text-[#F5F6FA] tracking-tight truncate w-full">{titleText}</h4>
+          <span className="text-[10px] uppercase font-bold tracking-widest text-[#9CA3B5]/60 block mb-1 font-mono truncate">{card.type}</span>
+          <h4 className="text-base font-semibold text-white tracking-tight truncate w-full">{titleText}</h4>
         </div>
         
         <button 
           onClick={handleBookmarkClick}
-          className="p-1.5 rounded-lg bg-black/5 dark:bg-white/[0.04] border border-black/5 dark:border-white/[0.06] text-[#9CA3B5] hover:text-[#E94FD1] transition-all flex-shrink-0 cursor-pointer"
+          className="p-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-[#9CA3B5] hover:text-[#E94FD1] transition-all flex-shrink-0 cursor-pointer"
         >
           {isBookmarkedState ? (
-            <Bookmark className="w-3.5 h-3.5 text-[#E94FD1] drop-shadow-[0_0_6px_#E94FD1] fill-[#E94FD1]" />
+            <Bookmark className="w-4 h-3.5 text-[#E94FD1] drop-shadow-[0_0_6px_#E94FD1] fill-[#E94FD1]" />
           ) : (
-            <Bookmark className="w-3.5 h-3.5" />
+            <Bookmark className="w-4 h-3.5" />
           )}
         </button>
       </div>
 
       {renderCardContent()}
 
-      <div className="mt-3 pt-2 border-t border-black/5 dark:border-white/[0.06] flex justify-between items-center text-[10px] text-[#5B5F72]/60 dark:text-white/30 font-mono w-full">
+      <div className="mt-4 pt-3 border-t border-white/[0.06] flex justify-between items-center text-[11px] text-white/30 font-mono w-full">
         <span className="truncate">ID: {(card._id || card.id || "SYNC").substring(0, 6)}</span>
         {(card.metadata?.url || card.content?.url) && (
           <a 
             href={card.metadata?.url || card.content?.url} 
             target="_blank" 
             rel="noreferrer" 
-            className="text-[#3FE0C5] hover:underline flex items-center gap-0.5 font-sans flex-shrink-0 ml-1"
+            className="text-[#3FE0C5] hover:underline flex items-center gap-1 font-sans flex-shrink-0 ml-1"
           >
-            Launch <ArrowUpRight className="w-3 h-3" />
+            Launch <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
         )}
       </div>
@@ -315,12 +315,12 @@ export default function DashboardPage() {
   ];
 
   const allCategories = [
-    { id: 'links', ids: ['links', 'Resource Link'], title: 'Links / Docs', accent: 'border-t-4 border-rosepink' },
-    { id: 'repos', ids: ['repos', 'GitHub Repository'], title: 'Repositories', accent: 'border-t-4 border-seagreen' },
-    { id: 'snippets', ids: ['snippets', 'Snippet'], title: 'Snippets', accent: 'border-t-4 border-mauve' },
-    { id: 'notes', ids: ['notes', 'Markdown Note'], title: 'Notes', accent: 'border-t-4 border-[#159FE0]' },
-    { id: 'apis', ids: ['apis', 'API Endpoint'], title: 'APIs', accent: 'border-t-4 border-[#E8940F]' },
-    { id: 'ideas', ids: ['ideas', 'Project Idea'], title: 'Ideas', accent: 'border-t-4 border-rosepink' },
+    { id: 'links', ids: ['links', 'Resource Link'], title: 'Links / Docs' },
+    { id: 'repos', ids: ['repos', 'GitHub Repository'], title: 'Repositories' },
+    { id: 'snippets', ids: ['snippets', 'Snippet'], title: 'Snippets' },
+    { id: 'notes', ids: ['notes', 'Markdown Note'], title: 'Notes' },
+    { id: 'apis', ids: ['apis', 'API Endpoint'], title: 'APIs' },
+    { id: 'ideas', ids: ['ideas', 'Project Idea'], title: 'Ideas' },
   ];
 
   const username = session?.user?.name || session?.user?.email || "User";
@@ -334,15 +334,6 @@ export default function DashboardPage() {
     }
     return belongsToActiveFilter;
   });
-
-  const getGridColumnClass = () => {
-    const columnsCount = visibleCategories.length;
-    if (columnsCount === 1) return "grid-cols-1 w-full max-w-4xl mx-auto";
-    if (columnsCount === 2) return "grid-cols-1 md:grid-cols-2 max-w-5xl mx-auto";
-    if (columnsCount === 3) return "grid-cols-1 md:grid-cols-3 max-w-7xl mx-auto";
-    if (columnsCount === 4) return "grid-cols-1 md:grid-cols-2 lg:grid-cols-4";
-    return "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6";
-  };
 
   return (
     <div className="w-full flex flex-col justify-start relative z-10 space-y-6 min-w-0">
@@ -440,7 +431,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* COLUMNS MATRIX GRID */}
+      {/* STACKED FULL-WIDTH SERIAL CATEGORY PANELS */}
       {visibleCategories.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 backdrop-blur-2xl p-12 text-center max-w-xl mx-auto w-full shadow-2xl">
           <div className="h-2 w-2 bg-[#3FE0C5] rounded-full animate-ping mx-auto mb-4" />
@@ -450,22 +441,24 @@ export default function DashboardPage() {
           </p>
         </div>
       ) : (
-        <div className={`grid gap-5 w-full items-start transition-all duration-500 min-w-0 ${getGridColumnClass()}`}>
+        <div className="flex flex-col gap-6 w-full">
           {visibleCategories.map((col) => {
             const columnCards = dbCards.filter(card => col.ids.map(id => id.toLowerCase()).includes(card.type?.toLowerCase()));
 
             return (
               <div 
                 key={col.id} 
-                className={`rounded-2xl bg-white/85 dark:bg-black/60 backdrop-blur-2xl border border-white/40 dark:border-white/10 p-4 flex flex-col h-auto transition-all duration-300 hover:border-white/60 dark:hover:border-white/20 shadow-2xl deck-column min-w-0 overflow-hidden w-full ${col.accent}`}
+                className="rounded-2xl bg-black/40 backdrop-blur-2xl border border-white/10 p-6 flex flex-col gap-4 shadow-2xl w-full"
               >
-                <div className="flex items-center justify-between mb-4 pb-2 border-b border-black/5 dark:border-white/5">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#1A1D29] dark:text-white/80 font-sans truncate">
-                    {col.title} ({columnCards.length})
+                {/* Category Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-white/90 font-mono">
+                    {col.title.toUpperCase()} ({columnCards.length})
                   </h3>
                 </div>
 
-                <div className="flex flex-col gap-3 h-auto transition-all duration-300 w-full min-w-0">
+                {/* Vertical Stack of Full-Width Cards */}
+                <div className="flex flex-col gap-4 w-full">
                   {columnCards.map((card, idx) => {
                     const uniqueKey = `${card.type || 'card'}-${card._id || card.id}-${idx}`;
                     return (
