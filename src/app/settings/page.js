@@ -20,7 +20,7 @@ import {
 export default function SettingsPage() {
   const router = useRouter();
   const { data: session, isPending, refetch } = authClient.useSession();
-  const { language: activeLanguage, setLanguage, t } = useLanguage();
+  const { language: activeLanguage, setLanguage, fontSize: activeFontSize, setFontSize, t } = useLanguage();
 
   // Form selections (Updated locally first, applied on Save)
   const [username, setUsername] = useState("");
@@ -49,29 +49,12 @@ export default function SettingsPage() {
     }
   }, [session]);
 
+  // Keep the form in sync with the Language Context, which is the single
+  // source of truth (it loads the real saved values from the backend).
   useEffect(() => {
-    const storedLang = localStorage.getItem("devdeck_lang") || "en";
-    const storedFont = localStorage.getItem("devdeck_fontsize") || "medium";
-    
-    setSelectedLanguage(storedLang);
-    setSelectedFontSize(storedFont);
-  }, []);
-
-  const applyFontSizeToRoot = (size) => {
-    const root = document.documentElement;
-    switch (size) {
-      case "small":
-        root.style.fontSize = "14px";
-        break;
-      case "large":
-        root.style.fontSize = "18px";
-        break;
-      case "medium":
-      default:
-        root.style.fontSize = "16px";
-        break;
-    }
-  };
+    setSelectedLanguage(activeLanguage || "en");
+    setSelectedFontSize(activeFontSize || "medium");
+  }, [activeLanguage, activeFontSize]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -131,10 +114,10 @@ export default function SettingsPage() {
         throw new Error(errData.error || "Failed to save settings to backend.");
       }
 
-      // 4. Commit Language & Font Size to Global Context & LocalStorage AFTER saving
+      // 4. Commit Language & Font Size to the Global Context (applies them
+      //    everywhere in the app immediately, not just on this page)
       setLanguage(selectedLanguage);
-      localStorage.setItem("devdeck_fontsize", selectedFontSize);
-      applyFontSizeToRoot(selectedFontSize);
+      setFontSize(selectedFontSize);
 
       if (refetch) await refetch();
 

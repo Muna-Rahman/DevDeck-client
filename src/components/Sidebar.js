@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSidebar } from "@/context/SidebarContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { 
   FolderPlus, 
   Folder, 
@@ -16,6 +17,7 @@ import {
 export default function Sidebar() {
   // Grab state directly from the context provider framework
   const { isSidebarCollapsed, setIsSidebarCollapsed } = useSidebar();
+  const { t } = useLanguage();
 
   return (
     <div 
@@ -83,7 +85,7 @@ export default function Sidebar() {
             className="flex items-center gap-4 px-3 py-2.5 rounded-xl hover:bg-white/10 font-medium transition-all duration-200 group"
           >
             <Settings size={20} className="group-hover:rotate-45 transition-transform duration-300 ease-out text-white/70" />
-            {!isSidebarCollapsed && <span className="whitespace-nowrap text-white/90">Settings</span>}
+            {!isSidebarCollapsed && <span className="whitespace-nowrap text-white/90">{t("settings")}</span>}
           </Link>
         </div>
 

@@ -128,8 +128,26 @@ const translations = {
 
 const LanguageContext = createContext();
 
+const applyFontSizeToRoot = (size) => {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  switch (size) {
+    case "small":
+      root.style.fontSize = "14px";
+      break;
+    case "large":
+      root.style.fontSize = "18px";
+      break;
+    case "medium":
+    default:
+      root.style.fontSize = "16px";
+      break;
+  }
+};
+
 export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState("en");
+  const [fontSize, setFontSizeState] = useState("medium");
   const { data: session } = authClient.useSession();
 
   useEffect(() => {
@@ -144,20 +162,28 @@ export function LanguageProvider({ children }) {
           });
           if (res.ok) {
             const data = await res.json();
-            if (data.language) {
-              setLanguageState(data.language);
-              localStorage.setItem("devdeck_lang", data.language);
-              return;
-            }
+            const nextLang = data.language || localStorage.getItem("devdeck_lang") || "en";
+            const nextFontSize = data.fontSize || localStorage.getItem("devdeck_fontsize") || "medium";
+
+            setLanguageState(nextLang);
+            localStorage.setItem("devdeck_lang", nextLang);
+
+            setFontSizeState(nextFontSize);
+            localStorage.setItem("devdeck_fontsize", nextFontSize);
+            applyFontSizeToRoot(nextFontSize);
+            return;
           }
         } catch (err) {
           console.error("Failed to load settings from server:", err);
         }
       }
 
-      // Local fallback
+      // Local fallback (not signed in, or the backend call failed)
       const savedLang = localStorage.getItem("devdeck_lang") || "en";
+      const savedFontSize = localStorage.getItem("devdeck_fontsize") || "medium";
       setLanguageState(savedLang);
+      setFontSizeState(savedFontSize);
+      applyFontSizeToRoot(savedFontSize);
     }
 
     loadBackendSettings();
@@ -168,12 +194,18 @@ export function LanguageProvider({ children }) {
     localStorage.setItem("devdeck_lang", lang);
   };
 
+  const setFontSize = (size) => {
+    setFontSizeState(size);
+    localStorage.setItem("devdeck_fontsize", size);
+    applyFontSizeToRoot(size);
+  };
+
   const t = (key) => {
     return translations[language]?.[key] || translations["en"]?.[key] || key;
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, fontSize, setFontSize, t }}>
       {children}
     </LanguageContext.Provider>
   );
