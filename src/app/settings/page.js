@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { useLanguage } from "@/context/LanguageContext";
 import { 
   User, 
   Globe, 
@@ -18,25 +19,29 @@ import {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, refetch } = authClient.useSession();
+  const { language: activeLanguage, setLanguage, t } = useLanguage();
 
-  // Profile States
+  // Form selections (Updated locally first, applied on Save)
   const [username, setUsername] = useState("");
-  const [language, setLanguage] = useState("en");
-  const [fontSize, setFontSize] = useState("medium");
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [selectedFontSize, setSelectedFontSize] = useState("medium");
 
   // Password States
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [profileError, setProfileError] = useState("");
 
-  // UI Feedback States
+  // Feedback States
   const [saved, setSaved] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Delete Account Modal States
-  const [deleteStep, setDeleteStep] = useState(0); // 0 = closed, 1 = first confirmation, 2 = second confirmation
+  // Delete Modal States
+  const [deleteStep, setDeleteStep] = useState(0); 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     if (session?.user) {
@@ -44,24 +49,103 @@ export default function SettingsPage() {
     }
   }, [session]);
 
+  useEffect(() => {
+    const storedLang = localStorage.getItem("devdeck_lang") || "en";
+    const storedFont = localStorage.getItem("devdeck_fontsize") || "medium";
+    
+    setSelectedLanguage(storedLang);
+    setSelectedFontSize(storedFont);
+  }, []);
+
+  const applyFontSizeToRoot = (size) => {
+    const root = document.documentElement;
+    switch (size) {
+      case "small":
+        root.style.fontSize = "14px";
+        break;
+      case "large":
+        root.style.fontSize = "18px";
+        break;
+      case "medium":
+      default:
+        root.style.fontSize = "16px";
+        break;
+    }
+  };
+
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setPasswordError("");
+    setProfileError("");
 
-    if (password && password !== confirmPassword) {
-      setPasswordError("Passwords do not match.");
-      return;
+    if (password || confirmPassword) {
+      if (!currentPassword) {
+        setPasswordError("Current password is required to set a new password.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setPasswordError("Passwords do not match.");
+        return;
+      }
+      if (password.length < 8) {
+        setPasswordError("New password must be at least 8 characters.");
+        return;
+      }
     }
 
     setIsUpdating(true);
     try {
-      // Save settings logic goes here
+      // 1. Update Username via Auth Backend
+      if (username !== session?.user?.name) {
+        const { error: nameErr } = await authClient.updateUser({
+          name: username,
+        });
+        if (nameErr) throw new Error(nameErr.message || "Failed to update username");
+      }
+
+      // 2. Change Password via Auth Backend
+      if (password && currentPassword) {
+        const { error: passErr } = await authClient.changePassword({
+          currentPassword,
+          newPassword: password,
+          revokeOtherSessions: true,
+        });
+        if (passErr) throw new Error(passErr.message || "Failed to change password");
+      }
+
+      // 3. Persist settings (Language & Font Size) directly to your MongoDB Backend Database
+      const settingsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/user/settings`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          language: selectedLanguage,
+          fontSize: selectedFontSize,
+        }),
+      });
+
+      if (!settingsRes.ok) {
+        const errData = await settingsRes.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to save settings to backend.");
+      }
+
+      // 4. Commit Language & Font Size to Global Context & LocalStorage AFTER saving
+      setLanguage(selectedLanguage);
+      localStorage.setItem("devdeck_fontsize", selectedFontSize);
+      applyFontSizeToRoot(selectedFontSize);
+
+      if (refetch) await refetch();
+
       setSaved(true);
+      setCurrentPassword("");
       setPassword("");
       setConfirmPassword("");
-      setTimeout(() => setSaved(false), 3000);
+      setTimeout(() => setSaved(false), 3500);
     } catch (err) {
-      console.error(err);
+      console.error("Settings update error:", err);
+      setProfileError(err.message || "An error occurred while saving settings.");
     } finally {
       setIsUpdating(false);
     }
@@ -69,12 +153,15 @@ export default function SettingsPage() {
 
   const handlePermanentDelete = async () => {
     setIsDeleting(true);
+    setDeleteError("");
     try {
-      // Execute deletion endpoint logic here
-      await authClient.signOut();
-      window.location.href = "/login";
+      const { error } = await authClient.deleteUser();
+      if (error) throw new Error(error.message || "Failed to delete account.");
+      router.push("/login");
+      router.refresh();
     } catch (err) {
-      console.error(err);
+      console.error("Delete account error:", err);
+      setDeleteError(err.message || "Could not delete account.");
       setIsDeleting(false);
     }
   };
@@ -87,44 +174,50 @@ export default function SettingsPage() {
     );
   }
 
+  const glassCardStyle = 
+    "relative overflow-hidden rounded-3xl border border-white/20 dark:border-white/10 bg-white/20 dark:bg-white/[0.02] backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:via-transparent before:to-transparent before:pointer-events-none";
+
+  const glassInputStyle = 
+    "w-full h-11 rounded-xl border border-white/30 dark:border-white/10 bg-white/15 dark:bg-white/[0.04] backdrop-blur-xl px-4 text-sm text-[#1A1D29] dark:text-[#F5F6FA] outline-none transition-all placeholder:text-[#5B5F72]/60 dark:placeholder:text-[#9CA3B5]/50 focus:border-[#E94FD1] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/20";
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#F5F6FA] dark:bg-[#1A1D29] text-[#1A1D29] dark:text-[#F5F6FA] transition-colors duration-300 py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
         
-        {/* Back Button & Page Header */}
+        {/* Back Button & Header */}
         <div className="space-y-4">
           <button
             type="button"
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-black/10 dark:border-white/15 bg-white/10 dark:bg-white/[0.04] backdrop-blur-xl hover:bg-white/20 dark:hover:bg-white/10 text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] transition-all active:scale-95 cursor-pointer shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-white/30 dark:border-white/10 bg-white/20 dark:bg-white/[0.03] backdrop-blur-2xl hover:bg-white/40 dark:hover:bg-white/[0.08] text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] transition-all active:scale-95 cursor-pointer shadow-sm"
           >
             <ArrowLeft size={14} strokeWidth={2.5} />
-            <span>Back</span>
+            <span>{t("back")}</span>
           </button>
 
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] dark:to-[#FF6FB5] bg-clip-text text-transparent inline-block">
-              Settings
+              {t("settings")}
             </h1>
             <p className="text-xs sm:text-sm text-[#5B5F72] dark:text-[#9CA3B5] mt-1">
-              Manage your account preferences, system behavior, and security options.
+              {t("accountSettings")}
             </p>
           </div>
         </div>
 
         <form onSubmit={handleUpdateProfile} className="space-y-8">
           
-          {/* Gravatar / Profile Image Section */}
-          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/10 dark:bg-white/[0.03] backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.12)]">
+          {/* Gravatar Section */}
+          <div className={`${glassCardStyle} p-6 sm:p-8`}>
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-black/5 dark:border-white/5">
               <ImageIcon className="text-[#E94FD1] dark:text-[#FF6FB5]" size={20} />
               <h2 className="text-base font-semibold">Gravatar / Profile Image</h2>
             </div>
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-5 relative z-10">
               <img
                 src={session?.user?.image || `https://www.gravatar.com/avatar/${session?.user?.email}?d=identicon`}
                 alt="Gravatar Profile"
-                className="h-20 w-20 rounded-2xl border-2 border-[#FF6FB5] dark:border-[#E94FD1] object-cover shadow-[0_0_20px_rgba(233,79,209,0.3)]"
+                className="h-20 w-20 rounded-2xl border-2 border-[#FF6FB5]/80 dark:border-[#E94FD1]/80 object-cover shadow-[0_0_25px_rgba(233,79,209,0.35)] shrink-0"
               />
               <div>
                 <p className="text-xs font-semibold text-[#1A1D29] dark:text-[#F5F6FA]">Profile Avatar</p>
@@ -135,17 +228,16 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Profile Settings */}
-          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/10 dark:bg-white/[0.03] backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.12)] space-y-6">
+          {/* Credentials */}
+          <div className={`${glassCardStyle} p-6 sm:p-8 space-y-6`}>
             <div className="flex items-center gap-3 pb-4 border-b border-black/5 dark:border-white/5">
               <User className="text-[#E94FD1] dark:text-[#FF6FB5]" size={20} />
-              <h2 className="text-base font-semibold">Profile & Credentials</h2>
+              <h2 className="text-base font-semibold">{t("profileCredentials")}</h2>
             </div>
 
-            {/* Change Username */}
-            <div>
+            <div className="relative z-10">
               <label className="block text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] mb-2">
-                Change Username
+                {t("changeUsername")}
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
@@ -155,17 +247,16 @@ export default function SettingsPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter username"
-                  className="w-full h-11 rounded-xl border border-black/10 dark:border-white/10 bg-white/10 dark:bg-white/[0.05] backdrop-blur-md pl-10 pr-4 text-sm outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
+                  placeholder="Username"
+                  className={`${glassInputStyle} pl-10`}
                 />
               </div>
             </div>
 
-            {/* Change Password */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="space-y-4 pt-2 relative z-10">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] mb-2">
-                  Change Password
+                  {t("currentPassword")}
                 </label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
@@ -173,83 +264,95 @@ export default function SettingsPage() {
                   </div>
                   <input
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="New password"
-                    className="w-full h-11 rounded-xl border border-black/10 dark:border-white/10 bg-white/10 dark:bg-white/[0.05] backdrop-blur-md pl-10 pr-4 text-sm outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder={t("currentPassword")}
+                    className={`${glassInputStyle} pl-10`}
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] mb-2">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
-                    <Key size={16} strokeWidth={2.5} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] mb-2">
+                    {t("changePassword")}
+                  </label>
+                  <div className="relative">
+                    <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
+                      <Key size={16} strokeWidth={2.5} />
+                    </div>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={t("changePassword")}
+                      className={`${glassInputStyle} pl-10`}
+                    />
                   </div>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm password"
-                    className="w-full h-11 rounded-xl border border-black/10 dark:border-white/10 bg-white/10 dark:bg-white/[0.05] backdrop-blur-md pl-10 pr-4 text-sm outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
-                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] mb-2">
+                    {t("confirmPassword")}
+                  </label>
+                  <div className="relative">
+                    <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
+                      <Key size={16} strokeWidth={2.5} />
+                    </div>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder={t("confirmPassword")}
+                      className={`${glassInputStyle} pl-10`}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
-            {passwordError && (
-              <p className="text-xs text-red-500 font-medium">{passwordError}</p>
-            )}
+            {passwordError && <p className="text-xs text-red-500 font-medium">{passwordError}</p>}
+            {profileError && <p className="text-xs text-red-500 font-medium">{profileError}</p>}
           </div>
 
-          {/* Preferences (Language & Font Size) */}
-          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white/10 dark:bg-white/[0.03] backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.12)] space-y-6">
+          {/* Preferences */}
+          <div className={`${glassCardStyle} p-6 sm:p-8 space-y-6`}>
             
-            {/* Language */}
-            <div>
+            {/* Language Selection */}
+            <div className="relative z-10">
               <div className="flex items-center gap-3 mb-2">
                 <Globe className="text-[#E94FD1] dark:text-[#FF6FB5]" size={20} />
-                <h2 className="text-base font-semibold">Language</h2>
+                <h2 className="text-base font-semibold">{t("language")}</h2>
               </div>
-              <p className="text-xs text-[#5B5F72] dark:text-[#9CA3B5] mb-3">Select preferred language</p>
               <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full h-11 rounded-xl border border-black/10 dark:border-white/10 bg-white/10 dark:bg-[#1A1D29]/90 backdrop-blur-md px-4 text-sm outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 cursor-pointer"
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className={`${glassInputStyle} cursor-pointer [&>option]:bg-white [&>option]:dark:bg-[#1A1D29] [&>option]:text-[#1A1D29] [&>option]:dark:text-[#F5F6FA]`}
               >
                 <option value="en">English (US)</option>
+                <option value="bn">বাংলা (Bangla)</option>
                 <option value="es">Español (Spanish)</option>
                 <option value="fr">Français (French)</option>
                 <option value="de">Deutsch (German)</option>
-                <option value="it">Italiano (Italian)</option>
-                <option value="pt">Português (Portuguese)</option>
-                <option value="ja">日本語 (Japanese)</option>
-                <option value="zh">简体中文 (Chinese Simplified)</option>
-                <option value="ar">العربية (Arabic)</option>
-                <option value="hi">हिन्दी (Hindi)</option>
               </select>
             </div>
 
-            {/* Font Size */}
-            <div className="pt-4 border-t border-black/5 dark:border-white/5">
+            {/* Font Size Selector */}
+            <div className="pt-4 border-t border-black/5 dark:border-white/5 relative z-10">
               <div className="flex items-center gap-3 mb-2">
                 <Type className="text-[#E94FD1] dark:text-[#FF6FB5]" size={20} />
-                <h2 className="text-base font-semibold">Font Size</h2>
+                <h2 className="text-base font-semibold">{t("fontSize")}</h2>
               </div>
-              <p className="text-xs text-[#5B5F72] dark:text-[#9CA3B5] mb-3">Adjust display text scale</p>
               <div className="grid grid-cols-3 gap-3">
                 {["small", "medium", "large"].map((size) => (
                   <button
                     key={size}
                     type="button"
-                    onClick={() => setFontSize(size)}
-                    className={`h-10 rounded-xl text-xs font-semibold uppercase tracking-wider border backdrop-blur-md transition-all cursor-pointer ${
-                      fontSize === size
-                        ? "bg-black/15 dark:bg-white/20 text-[#D6249F] dark:text-[#FF6FB5] border-[#E94FD1] dark:border-[#FF6FB5] shadow-sm"
-                        : "border-black/10 dark:border-white/10 text-[#5B5F72] dark:text-[#9CA3B5] hover:bg-white/20 dark:hover:bg-white/10"
+                    onClick={() => setSelectedFontSize(size)}
+                    className={`h-11 rounded-xl text-xs font-semibold uppercase tracking-wider border backdrop-blur-2xl transition-all cursor-pointer ${
+                      selectedFontSize === size
+                        ? "bg-white/40 dark:bg-white/20 text-[#D6249F] dark:text-[#FF6FB5] border-[#E94FD1] dark:border-[#FF6FB5] shadow-[0_0_15px_rgba(233,79,209,0.2)]"
+                        : "border-white/30 dark:border-white/10 bg-white/10 dark:bg-white/[0.02] text-[#5B5F72] dark:text-[#9CA3B5] hover:bg-white/30 dark:hover:bg-white/10"
                     }`}
                   >
                     {size}
@@ -265,10 +368,10 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={isUpdating}
-              className="h-11 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-6 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(233,79,209,0.35)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="h-11 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-6 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(233,79,209,0.4)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Save size={16} strokeWidth={2.5} />
-              <span>{isUpdating ? "Saving..." : "Save Settings"}</span>
+              <span>{isUpdating ? t("saving") : t("saveSettings")}</span>
             </button>
 
             {saved && (
@@ -281,90 +384,51 @@ export default function SettingsPage() {
 
         </form>
 
-        {/* Delete Account (Dangerous Area) */}
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/5 dark:border-red-500/30 dark:bg-red-950/10 backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_32px_0_rgba(239,68,68,0.08)]">
-          <div className="flex items-center gap-3 mb-2 text-red-500">
+        {/* Danger Zone */}
+        <div className="relative overflow-hidden rounded-3xl border border-red-500/30 bg-red-500/10 dark:border-red-500/40 dark:bg-red-950/20 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_8px_32px_0_rgba(239,68,68,0.15)]">
+          <div className="flex items-center gap-3 mb-2 text-red-500 relative z-10">
             <AlertTriangle size={20} />
-            <h2 className="text-base font-semibold">Danger Zone</h2>
+            <h2 className="text-base font-semibold">{t("dangerZone")}</h2>
           </div>
-          <p className="text-xs text-[#5B5F72] dark:text-[#9CA3B5] mb-5">
-            Permanently remove your account and all associated snippet decks and data.
-          </p>
-
           <button
             type="button"
             onClick={() => setDeleteStep(1)}
-            className="h-10 inline-flex items-center justify-center rounded-xl bg-red-500 hover:bg-red-600 text-white px-4 text-xs font-semibold uppercase tracking-wider transition-all gap-2 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.25)] active:scale-95"
+            className="relative z-10 h-10 inline-flex items-center justify-center rounded-xl bg-red-500 hover:bg-red-600 text-white px-4 text-xs font-semibold uppercase tracking-wider transition-all gap-2 cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.35)] active:scale-95"
           >
             <Trash2 size={14} strokeWidth={2.5} />
-            <span>Delete Account</span>
+            <span>{t("deleteAccount")}</span>
           </button>
         </div>
 
       </div>
 
-      {/* Confirmation Modals Flow */}
+      {/* Confirmation Modals */}
       {deleteStep > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl p-4">
-          <div className="w-full max-w-md rounded-2xl border border-black/10 dark:border-white/15 bg-white/20 dark:bg-[#1A1D29]/80 backdrop-blur-2xl p-6 shadow-2xl space-y-4">
-            
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-2xl p-4">
+          <div className="w-full max-w-md rounded-3xl border border-white/30 dark:border-white/20 bg-white/30 dark:bg-[#1A1D29]/70 backdrop-blur-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] space-y-4">
             {deleteStep === 1 && (
               <>
-                <div className="flex items-center gap-3 text-red-500">
-                  <AlertTriangle size={24} />
-                  <h3 className="text-lg font-bold">Delete Account</h3>
-                </div>
-                <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5]">
-                  Do you want to delete your account?
-                </p>
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
-                  <button
-                    type="button"
-                    onClick={() => setDeleteStep(0)}
-                    className="h-10 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] hover:bg-white/20 dark:hover:bg-white/10 transition-all cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteStep(2)}
-                    className="h-10 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider bg-red-500 hover:bg-red-600 text-white transition-all cursor-pointer"
-                  >
-                    Continue
-                  </button>
+                <h3 className="text-lg font-bold text-red-500">{t("deleteAccount")}</h3>
+                <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5]">Do you want to delete your account?</p>
+                <div className="flex justify-end gap-3 pt-4">
+                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">Cancel</button>
+                  <button type="button" onClick={() => setDeleteStep(2)} className="px-4 py-2 text-xs bg-red-500 text-white rounded-xl">Continue</button>
                 </div>
               </>
             )}
-
             {deleteStep === 2 && (
               <>
-                <div className="flex items-center gap-3 text-red-500">
-                  <AlertTriangle size={24} />
-                  <h3 className="text-lg font-bold">Final Confirmation</h3>
-                </div>
-                <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5]">
-                  Are you absolutely sure? This action cannot be undone.
-                </p>
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-black/5 dark:border-white/5">
-                  <button
-                    type="button"
-                    onClick={() => setDeleteStep(0)}
-                    className="h-10 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] hover:bg-white/20 dark:hover:bg-white/10 transition-all cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isDeleting}
-                    onClick={handlePermanentDelete}
-                    className="h-10 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white transition-all cursor-pointer disabled:opacity-50"
-                  >
+                <h3 className="text-lg font-bold text-red-500">Final Confirmation</h3>
+                <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5]">Are you absolutely sure?</p>
+                {deleteError && <p className="text-xs text-red-500 font-medium">{deleteError}</p>}
+                <div className="flex justify-end gap-3 pt-4">
+                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">Cancel</button>
+                  <button type="button" disabled={isDeleting} onClick={handlePermanentDelete} className="px-4 py-2 text-xs bg-red-600 text-white rounded-xl">
                     {isDeleting ? "Deleting..." : "Permanently Delete"}
                   </button>
                 </div>
               </>
             )}
-
           </div>
         </div>
       )}

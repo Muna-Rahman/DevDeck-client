@@ -1,7 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-import { BookmarkProvider } from "../context/BookmarkContext"; // Import your Bookmark system state layer
+import { BookmarkProvider } from "../context/BookmarkContext";
+import FontInitializer from "@/components/FontInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,8 +23,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0B0E14]`}>
+        <FontInitializer />
         <Providers>
-          {/* Nests the Bookmark context natively within the primary client global state providers */}
           <BookmarkProvider>
             {children}
           </BookmarkProvider>
