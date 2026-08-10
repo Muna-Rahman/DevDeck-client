@@ -136,7 +136,7 @@ export default function Navbar() {
                 className="flex items-center outline-none cursor-pointer transition-transform active:scale-95"
               >
                 <img
-                  src={session.user.image || `https://api.dicebear.com/7.x/open-peeps/svg?seed=${encodeURIComponent(session.user.name || 'default')}`}
+                  src={session.user.image || `https://www.gravatar.com/avatar/${session.user.email}?d=identicon`}
                   alt="User Profile"
                   className="h-9 w-9 rounded-full border-2 border-[#FF6FB5] dark:border-[#E94FD1] object-cover"
                 />
@@ -153,13 +153,6 @@ export default function Navbar() {
                   <p className="text-xs font-semibold text-[#1A1D29] dark:text-[#F5F6FA] truncate">{session.user.name}</p>
                   <p className="text-[11px] text-[#5B5F72] dark:text-[#9CA3B5] truncate">{session.user.email}</p>
                 </div>
-                <Link 
-                  href="/profile" 
-                  onClick={() => setDropdownOpen(false)}
-                  className="flex items-center w-full px-3 py-2 text-xs rounded-xl text-[#5B5F72] dark:text-[#9CA3B5] hover:bg-black/5 dark:hover:bg-white/10"
-                >
-                  Profile Settings
-                </Link>
                 <button 
                   onClick={handleLogout} 
                   className="flex items-center w-full px-3 py-2 text-xs font-medium rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer text-left"
