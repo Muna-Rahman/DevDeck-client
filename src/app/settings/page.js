@@ -129,7 +129,7 @@ export default function SettingsPage() {
     } catch (err) {
       console.error("Settings update error:", err);
       setProfileError(err.message || "An error occurred while saving settings.");
-    } finally {
+    } fontIsUpdating: {
       setIsUpdating(false);
     }
   };
@@ -230,7 +230,7 @@ export default function SettingsPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Username"
+                  placeholder="username"
                   className={`${glassInputStyle} pl-10`}
                 />
               </div>
@@ -249,7 +249,7 @@ export default function SettingsPage() {
                     type="password"
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder={t("currentPassword")}
+                    placeholder="password"
                     className={`${glassInputStyle} pl-10`}
                   />
                 </div>
@@ -268,7 +268,7 @@ export default function SettingsPage() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder={t("changePassword")}
+                      placeholder="password"
                       className={`${glassInputStyle} pl-10`}
                     />
                   </div>
@@ -286,7 +286,7 @@ export default function SettingsPage() {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder={t("confirmPassword")}
+                      placeholder="password"
                       className={`${glassInputStyle} pl-10`}
                     />
                   </div>
@@ -312,11 +312,11 @@ export default function SettingsPage() {
                 onChange={(e) => setSelectedLanguage(e.target.value)}
                 className={`${glassInputStyle} cursor-pointer [&>option]:bg-white [&>option]:dark:bg-[#1A1D29] [&>option]:text-[#1A1D29] [&>option]:dark:text-[#F5F6FA]`}
               >
-                <option value="en">English (US)</option>
-                <option value="bn">বাংলা (Bangla)</option>
-                <option value="es">Español (Spanish)</option>
-                <option value="fr">Français (French)</option>
-                <option value="de">Deutsch (German)</option>
+                <option value="en">{t("english")}</option>
+                <option value="bn">{t("bengali")}</option>
+                <option value="es">{t("spanish")}</option>
+                <option value="fr">{t("french")}</option>
+                <option value="de">{t("german")}</option>
               </select>
             </div>
 
@@ -394,7 +394,7 @@ export default function SettingsPage() {
                 <h3 className="text-lg font-bold text-red-500">{t("deleteAccount")}</h3>
                 <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5]">Do you want to delete your account?</p>
                 <div className="flex justify-end gap-3 pt-4">
-                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">Cancel</button>
+                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">{t("cancel")}</button>
                   <button type="button" onClick={() => setDeleteStep(2)} className="px-4 py-2 text-xs bg-red-500 text-white rounded-xl">Continue</button>
                 </div>
               </>
@@ -405,7 +405,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5]">Are you absolutely sure?</p>
                 {deleteError && <p className="text-xs text-red-500 font-medium">{deleteError}</p>}
                 <div className="flex justify-end gap-3 pt-4">
-                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">Cancel</button>
+                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">{t("cancel")}</button>
                   <button type="button" disabled={isDeleting} onClick={handlePermanentDelete} className="px-4 py-2 text-xs bg-red-600 text-white rounded-xl">
                     {isDeleting ? "Deleting..." : "Permanently Delete"}
                   </button>
