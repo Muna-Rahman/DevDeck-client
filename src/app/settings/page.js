@@ -6,7 +6,6 @@ import { authClient } from "@/lib/auth-client";
 import { useLanguage } from "@/context/LanguageContext";
 import { 
   User, 
-  Globe, 
   Type, 
   Key, 
   Save, 
@@ -20,11 +19,10 @@ import {
 export default function SettingsPage() {
   const router = useRouter();
   const { data: session, isPending, refetch } = authClient.useSession();
-  const { language: activeLanguage, setLanguage, fontSize: activeFontSize, setFontSize, t } = useLanguage();
+  const { fontSize: activeFontSize, setFontSize } = useLanguage();
 
   // Form selections (Updated locally first, applied on Save)
   const [username, setUsername] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [selectedFontSize, setSelectedFontSize] = useState("medium");
 
   // Password States
@@ -49,12 +47,11 @@ export default function SettingsPage() {
     }
   }, [session]);
 
-  // Keep the form in sync with the Language Context, which is the single
+  // Keep the form in sync with the Font Size Context, which is the single
   // source of truth (it loads the real saved values from the backend).
   useEffect(() => {
-    setSelectedLanguage(activeLanguage || "en");
     setSelectedFontSize(activeFontSize || "medium");
-  }, [activeLanguage, activeFontSize]);
+  }, [activeFontSize]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -96,7 +93,7 @@ export default function SettingsPage() {
         if (passErr) throw new Error(passErr.message || "Failed to change password");
       }
 
-      // 3. Persist settings (Language & Font Size) directly to your MongoDB Backend Database
+      // 3. Persist settings (Font Size) directly to your MongoDB Backend Database
       const settingsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/user/settings`, {
         method: "PUT",
         headers: {
@@ -104,7 +101,6 @@ export default function SettingsPage() {
         },
         credentials: "include",
         body: JSON.stringify({
-          language: selectedLanguage,
           fontSize: selectedFontSize,
         }),
       });
@@ -114,9 +110,8 @@ export default function SettingsPage() {
         throw new Error(errData.error || "Failed to save settings to backend.");
       }
 
-      // 4. Commit Language & Font Size to the Global Context (applies them
+      // 4. Commit Font Size to the Global Context (applies it
       //    everywhere in the app immediately, not just on this page)
-      setLanguage(selectedLanguage);
       setFontSize(selectedFontSize);
 
       if (refetch) await refetch();
@@ -175,15 +170,15 @@ export default function SettingsPage() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-white/30 dark:border-white/10 bg-white/20 dark:bg-white/[0.03] backdrop-blur-2xl hover:bg-white/40 dark:hover:bg-white/[0.08] text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] transition-all active:scale-95 cursor-pointer shadow-sm"
           >
             <ArrowLeft size={14} strokeWidth={2.5} />
-            <span>{t("back")}</span>
+            <span>{"Back"}</span>
           </button>
 
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] dark:to-[#FF6FB5] bg-clip-text text-transparent inline-block">
-              {t("settings")}
+              {"Settings"}
             </h1>
             <p className="text-xs sm:text-sm text-[#5B5F72] dark:text-[#9CA3B5] mt-1">
-              {t("accountSettings")}
+              {"Account Settings"}
             </p>
           </div>
         </div>
@@ -215,12 +210,12 @@ export default function SettingsPage() {
           <div className={`${glassCardStyle} p-6 sm:p-8 space-y-6`}>
             <div className="flex items-center gap-3 pb-4 border-b border-black/5 dark:border-white/5">
               <User className="text-[#E94FD1] dark:text-[#FF6FB5]" size={20} />
-              <h2 className="text-base font-semibold">{t("profileCredentials")}</h2>
+              <h2 className="text-base font-semibold">{"Profile & Credentials"}</h2>
             </div>
 
             <div className="relative z-10">
               <label className="block text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] mb-2">
-                {t("changeUsername")}
+                {"Change Username"}
               </label>
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
@@ -239,7 +234,7 @@ export default function SettingsPage() {
             <div className="space-y-4 pt-2 relative z-10">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] mb-2">
-                  {t("currentPassword")}
+                  {"Current Password"}
                 </label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
@@ -258,7 +253,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] mb-2">
-                    {t("changePassword")}
+                    {"Change Password"}
                   </label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
@@ -276,7 +271,7 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] mb-2">
-                    {t("confirmPassword")}
+                    {"Confirm Password"}
                   </label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
@@ -300,31 +295,12 @@ export default function SettingsPage() {
 
           {/* Preferences */}
           <div className={`${glassCardStyle} p-6 sm:p-8 space-y-6`}>
-            
-            {/* Language Selection */}
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-2">
-                <Globe className="text-[#E94FD1] dark:text-[#FF6FB5]" size={20} />
-                <h2 className="text-base font-semibold">{t("language")}</h2>
-              </div>
-              <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className={`${glassInputStyle} cursor-pointer [&>option]:bg-white [&>option]:dark:bg-[#1A1D29] [&>option]:text-[#1A1D29] [&>option]:dark:text-[#F5F6FA]`}
-              >
-                <option value="en">{t("english")}</option>
-                <option value="bn">{t("bengali")}</option>
-                <option value="es">{t("spanish")}</option>
-                <option value="fr">{t("french")}</option>
-                <option value="de">{t("german")}</option>
-              </select>
-            </div>
 
             {/* Font Size Selector */}
-            <div className="pt-4 border-t border-black/5 dark:border-white/5 relative z-10">
+            <div className="relative z-10">
               <div className="flex items-center gap-3 mb-2">
                 <Type className="text-[#E94FD1] dark:text-[#FF6FB5]" size={20} />
-                <h2 className="text-base font-semibold">{t("fontSize")}</h2>
+                <h2 className="text-base font-semibold">Font Size</h2>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {["small", "medium", "large"].map((size) => (
@@ -354,7 +330,7 @@ export default function SettingsPage() {
               className="h-11 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-6 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_25px_rgba(233,79,209,0.4)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Save size={16} strokeWidth={2.5} />
-              <span>{isUpdating ? t("saving") : t("saveSettings")}</span>
+              <span>{isUpdating ? "Saving..." : "Save Settings"}</span>
             </button>
 
             {saved && (
@@ -371,7 +347,7 @@ export default function SettingsPage() {
         <div className="relative overflow-hidden rounded-3xl border border-red-500/30 bg-red-500/10 dark:border-red-500/40 dark:bg-red-950/20 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_8px_32px_0_rgba(239,68,68,0.15)]">
           <div className="flex items-center gap-3 mb-2 text-red-500 relative z-10">
             <AlertTriangle size={20} />
-            <h2 className="text-base font-semibold">{t("dangerZone")}</h2>
+            <h2 className="text-base font-semibold">{"Danger Zone"}</h2>
           </div>
           <button
             type="button"
@@ -379,7 +355,7 @@ export default function SettingsPage() {
             className="relative z-10 h-10 inline-flex items-center justify-center rounded-xl bg-red-500 hover:bg-red-600 text-white px-4 text-xs font-semibold uppercase tracking-wider transition-all gap-2 cursor-pointer shadow-[0_0_20px_rgba(239,68,68,0.35)] active:scale-95"
           >
             <Trash2 size={14} strokeWidth={2.5} />
-            <span>{t("deleteAccount")}</span>
+            <span>{"Delete Account"}</span>
           </button>
         </div>
 
@@ -391,10 +367,10 @@ export default function SettingsPage() {
           <div className="w-full max-w-md rounded-3xl border border-white/30 dark:border-white/20 bg-white/30 dark:bg-[#1A1D29]/70 backdrop-blur-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] space-y-4">
             {deleteStep === 1 && (
               <>
-                <h3 className="text-lg font-bold text-red-500">{t("deleteAccount")}</h3>
+                <h3 className="text-lg font-bold text-red-500">{"Delete Account"}</h3>
                 <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5]">Do you want to delete your account?</p>
                 <div className="flex justify-end gap-3 pt-4">
-                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">{t("cancel")}</button>
+                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">{"Cancel"}</button>
                   <button type="button" onClick={() => setDeleteStep(2)} className="px-4 py-2 text-xs bg-red-500 text-white rounded-xl">Continue</button>
                 </div>
               </>
@@ -405,7 +381,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5]">Are you absolutely sure?</p>
                 {deleteError && <p className="text-xs text-red-500 font-medium">{deleteError}</p>}
                 <div className="flex justify-end gap-3 pt-4">
-                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">{t("cancel")}</button>
+                  <button type="button" onClick={() => setDeleteStep(0)} className="px-4 py-2 text-xs">{"Cancel"}</button>
                   <button type="button" disabled={isDeleting} onClick={handlePermanentDelete} className="px-4 py-2 text-xs bg-red-600 text-white rounded-xl">
                     {isDeleting ? "Deleting..." : "Permanently Delete"}
                   </button>

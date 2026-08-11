@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
-import { useLanguage } from "@/context/LanguageContext";
 import { Sun, Moon, Search, Plus } from "lucide-react";
 
 export default function Navbar() {
@@ -17,7 +16,6 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   
   const { data: session, isPending } = authClient.useSession();
-  const { t } = useLanguage();
 
   useEffect(() => {
     setMounted(true);
@@ -56,10 +54,10 @@ export default function Navbar() {
   };
 
   const menuItems = [
-    { label: t("dashboard"), target: "/dashboard" },
-    { label: t("myCards"), target: "/cards" },
-    { label: t("snippets"), target: "/snippets" },
-    { label: t("bookmarks"), target: "/bookmarks" }
+    { label: "Dashboard", target: "/dashboard" },
+    { label: "My Cards", target: "/cards" },
+    { label: "Snippets", target: "/snippets" },
+    { label: "Bookmarks", target: "/bookmarks" }
   ];
 
   return (
@@ -110,7 +108,7 @@ export default function Navbar() {
             type="text"
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
-            placeholder={t("searchPlaceholder")}
+            placeholder="Search snippets & cards..."
             className="w-full h-10 rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/40 pl-10 pr-12 text-xs uppercase font-medium tracking-wide text-[#1A1D29] dark:text-[#F5F6FA] outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
           />
         </div>
@@ -119,7 +117,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3.5">
           <button className="hidden sm:inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-5 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
             <Plus size={14} strokeWidth={3} />
-            <span>{t("addCard")}</span>
+            <span>Add Card</span>
           </button>
 
           <button 
@@ -159,14 +157,14 @@ export default function Navbar() {
                   onClick={handleLogout} 
                   className="flex items-center w-full px-3 py-2 text-xs font-medium rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer text-left"
                 >
-                  {t("signOut")}
+                  Sign Out
                 </button>
               </div>
             </div>
           ) : (
             mounted && !isPending && (
               <Link href="/login" className="text-sm font-medium text-[#5B5F72] hover:text-[#1A1D29] dark:text-[#9CA3B5] dark:hover:text-[#F5F6FA]">
-                {t("signIn")}
+                Sign In
               </Link>
             )
           )}
