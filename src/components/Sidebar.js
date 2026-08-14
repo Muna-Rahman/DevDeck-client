@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSidebar } from "@/context/SidebarContext";
+import CreateCategoryModal from "@/components/CreateCategoryModal";
 import {
   FolderPlus,
   Folder,
@@ -24,12 +25,13 @@ export default function Sidebar() {
   const router = useRouter();
 
   const [workspaceCards, setWorkspaceCards] = useState([]);
+  const [savedCategories, setSavedCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [tagsOpen, setTagsOpen] = useState(false);
+  const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
 
-  // Pull live workspace data from the backend so the sidebar reflects
-  // the user's real cards instead of static placeholder links.
+ 
   useEffect(() => {
     let isMounted = true;
 
@@ -55,17 +57,45 @@ export default function Sidebar() {
     return () => { isMounted = false; };
   }, []);
 
-  // Derive live categories with counts from the fetched cards
+  // Pull categories the user has explicitly created via "Create Category",
+  // independent of whether a card has been assigned to them yet.
+  const fetchSavedCategories = async () => {
+    try {
+      const response = await fetch(`${backendUrl}/api/categories`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSavedCategories(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error("Sidebar: failed to sync categories from backend.", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSavedCategories();
+  }, []);
+
+
   const categories = useMemo(() => {
     const counts = new Map();
+
+    savedCategories.forEach((cat) => {
+      if (cat?.name) counts.set(cat.name, 0);
+    });
+
     workspaceCards.forEach((card) => {
       const key = card.category || card.type || "Uncategorized";
       counts.set(key, (counts.get(key) || 0) + 1);
     });
+
     return Array.from(counts.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
-  }, [workspaceCards]);
+  }, [workspaceCards, savedCategories]);
 
   // Derive live tags with counts from the fetched cards
   const tags = useMemo(() => {
@@ -88,15 +118,40 @@ export default function Sidebar() {
 
   const recentCount = workspaceCards.length;
 
-  // There is no standalone "categories" collection in the backend — a
-  // category only exists once a card is created with that category value.
-  // So "Create Category" opens the real create-card flow on /cards, where
-  // the user picks/types a category as part of saving a new card.
+  
   const handleCreateCategory = () => {
-    router.push("/cards?openModal=true");
+    if (isSidebarCollapsed) {
+      setIsSidebarCollapsed(false);
+    }
+    setCategoriesOpen(true);
+    setIsCreateCategoryOpen(true);
+  };
+
+  const handleCategoryCreated = async (name) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        return { error: data?.error || "Failed to create category." };
+      }
+
+      setSavedCategories((prev) => [data, ...prev]);
+      return { category: data };
+    } catch (err) {
+      console.error("Sidebar: failed to create category.", err);
+      return { error: "Failed to create category. Please try again." };
+    }
   };
 
   return (
+    <>
     <div
       className={`fixed top-16 left-0 h-[calc(100vh-4rem)] border-r transition-all duration-300 ease-in-out z-40 glass-rail
         bg-black/10 dark:bg-black/30 backdrop-blur-xl border-white/10 shadow-2xl text-white
@@ -248,5 +303,12 @@ export default function Sidebar() {
 
       </div>
     </div>
+
+    <CreateCategoryModal
+      isOpen={isCreateCategoryOpen}
+      onClose={() => setIsCreateCategoryOpen(false)}
+      onCreate={handleCategoryCreated}
+    />
+    </>
   );
 }
