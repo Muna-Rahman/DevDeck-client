@@ -18,6 +18,17 @@ export default function CardsPage() {
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
 
+  // Auto-open the create card modal when navigated here via the navbar's
+  // global "Add Card" button (/cards?openModal=true), then clean the URL.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("openModal") === "true") {
+      setIsOpen(true);
+      router.replace("/cards");
+    }
+  }, [router]);
+
   useEffect(() => {
     const fetchDatabaseCards = async () => {
       try {
