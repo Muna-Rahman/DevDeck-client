@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { X } from "lucide-react";
 
@@ -13,10 +13,13 @@ import {
   Bulb as IdeaIcon 
 } from "@gravity-ui/icons";
 
+const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 export default function CreateCardModal({ isOpen, onClose, onSave }) {
   const [activeTab, setActiveTab] = useState("links");
 
   const [formData, setFormData] = useState({
+    category: "",
     url: "",
     title: "",
     notes: "",
@@ -36,6 +39,38 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
   });
 
   const [errors, setErrors] = useState({});
+
+  // Live list of categories the user has created (via the sidebar's
+  // "Create Category" or previous cards), so a card can actually be
+  // assigned into one instead of always falling back to its type.
+  const [availableCategories, setAvailableCategories] = useState([]);
+  const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [categoryError, setCategoryError] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let isMounted = true;
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${backendUrl}/api/categories`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (response.ok && isMounted) {
+          const data = await response.json();
+          setAvailableCategories(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error("CreateCardModal: failed to load categories.", err);
+      }
+    };
+
+    fetchCategories();
+    return () => { isMounted = false; };
+  }, [isOpen]);
 
   // Expanded Language List
   const LANGUAGE_OPTIONS = [
@@ -149,11 +184,48 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
     setFormData((prev) => ({ ...prev, apiAuth: updatedAuth }));
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      onSave({ type: activeTab, data: formData });
-      onClose();
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    let finalCategory = formData.category;
+
+    // If the user typed a brand-new category name, persist it as a real
+    // category first (same endpoint the sidebar's "Create Category" uses),
+    // then attach it to this card.
+    if (isAddingNewCategory) {
+      const trimmedName = newCategoryName.trim();
+      if (!trimmedName) {
+        setCategoryError("Category name is required.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${backendUrl}/api/categories`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ name: trimmedName }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (response.ok) {
+          finalCategory = data.name;
+        } else if (response.status === 409) {
+          // Category already exists — just use it.
+          finalCategory = data.category?.name || trimmedName;
+        } else {
+          setCategoryError(data?.error || "Failed to create category.");
+          return;
+        }
+      } catch (err) {
+        console.error("CreateCardModal: failed to create category.", err);
+        setCategoryError("Failed to create category. Please try again.");
+        return;
+      }
     }
+
+    onSave({ type: activeTab, data: { ...formData, category: finalCategory } });
+    onClose();
   };
 
   const getGlowColorClass = () => {
@@ -213,7 +285,63 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
         {/* Modal Body */}
         <div className="flex flex-col gap-6">
-          
+
+          {/* Category Picker — assigns this card into a real, saved category */}
+          <div>
+            <label className={labelClass}>Category</label>
+            {!isAddingNewCategory ? (
+              <div className="flex gap-2">
+                <select
+                  value={formData.category}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "__new__") {
+                      setIsAddingNewCategory(true);
+                      setCategoryError("");
+                      return;
+                    }
+                    handleInputChange("category", value);
+                  }}
+                  className="w-full bg-[#1A1D29]/60 backdrop-blur-md text-[#F5F6FA] border border-white/8 hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl h-11 px-4 transition-all duration-300"
+                >
+                  <option value="">Uncategorized (use card type)</option>
+                  {availableCategories.map((cat) => (
+                    <option key={cat._id || cat.id || cat.name} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                  <option value="__new__">+ Create new category…</option>
+                </select>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="e.g. Interview Prep"
+                  value={newCategoryName}
+                  onChange={(e) => {
+                    setNewCategoryName(e.target.value);
+                    if (categoryError) setCategoryError("");
+                  }}
+                  className={`${inputBaseClass} ${categoryError ? "border-rose-500/60 focus:border-rose-500" : ""}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingNewCategory(false);
+                    setNewCategoryName("");
+                    setCategoryError("");
+                  }}
+                  className="shrink-0 px-4 h-11 rounded-xl text-sm font-medium text-[#9CA3B5] hover:text-[#F5F6FA] hover:bg-white/5 border border-white/8 transition-all duration-200 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            {categoryError && <p className={errorClass}>{categoryError}</p>}
+          </div>
+
           {/* Navigation Tabs */}
           <div className="bg-white/5 backdrop-blur-sm p-1 border border-white/6 rounded-full w-full flex justify-between items-center gap-1">
             {navTabs.map((tab) => {
