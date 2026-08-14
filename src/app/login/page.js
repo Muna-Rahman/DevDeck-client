@@ -38,14 +38,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[100vh] flex items-center justify-center px-4 relative bg-[#0B0E14]">
+    <div className="min-h-[100vh] flex items-center justify-center px-4 relative bg-[#FAF9F6] dark:bg-[#0B0E14] transition-colors duration-300">
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-all duration-500"
         style={{
           backgroundImage: `url('https://plus.unsplash.com/premium_photo-1661877737564-3dfd7282efcb?q=80&w=900&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')`
         }}
       >
-        <div className="absolute inset-0 bg-[#0B0E14]/40 backdrop-brightness-[0.75] dark:backdrop-brightness-[0.45]" />
+        <div className="absolute inset-0 bg-white/50 dark:bg-[#0B0E14]/40 backdrop-brightness-100 dark:backdrop-brightness-[0.45]" />
       </div>
 
       <div className="w-full max-w-md rounded-2xl border border-[rgba(20,20,40,0.12)] dark:border-white/10 bg-white/70 dark:bg-[#1A1D29]/65 backdrop-blur-xl p-8 shadow-[0_0_40px_rgba(0,0,0,0.3)] relative z-10">

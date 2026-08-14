@@ -69,7 +69,7 @@ export default function ProfilePage() {
 
   if (!mounted || isPending || !session) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#0B0E14] text-[#F5F6FA] font-mono text-xs">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-[#FAF9F6] dark:bg-[#0B0E14] text-[#1A1D29] dark:text-[#F5F6FA] font-mono text-xs transition-colors duration-300">
         RETRIEVING ENCRYPTED SESSION VARIABLES...
       </div>
     );
@@ -78,14 +78,14 @@ export default function ProfilePage() {
   const previewAvatarUrl = `https://api.dicebear.com/7.x/open-peeps/svg?seed=${encodeURIComponent(avatarSeed || 'default')}`;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 relative bg-[#0B0E14]">
-      <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-[#1A1D29]/65 backdrop-blur-glass p-8 shadow-[0_0_40px_rgba(0,0,0,0.3)] z-10">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 relative bg-[#FAF9F6] dark:bg-[#0B0E14] transition-colors duration-300">
+      <div className="w-full max-w-xl rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-[#1A1D29]/65 backdrop-blur-glass p-8 shadow-[0_0_40px_rgba(0,0,0,0.15)] dark:shadow-[0_0_40px_rgba(0,0,0,0.3)] z-10">
         
         <div className="text-center mb-8">
-          <h2 className="text-xl font-bold uppercase tracking-wider text-[#F5F6FA]">
+          <h2 className="text-xl font-bold uppercase tracking-wider text-[#1A1D29] dark:text-[#F5F6FA]">
             Profile Settings
           </h2>
-          <p className="text-xs font-medium uppercase tracking-widest text-[#9CA3B5] mt-1">
+          <p className="text-xs font-medium uppercase tracking-widest text-[#5B5F72] dark:text-[#9CA3B5] mt-1">
             Modify environment operational parameters
           </p>
         </div>
@@ -102,19 +102,19 @@ export default function ProfilePage() {
           )}
 
           {/* Profile Picture & Live Seed Interaction Panel */}
-          <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-xl border border-white/5 bg-[#0B0E14]/40">
+          <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-xl border border-black/5 dark:border-white/5 bg-black/[0.02] dark:bg-[#0B0E14]/40">
             <div className="relative group">
               <img
                 src={previewAvatarUrl}
                 alt="Avatar Live Frame"
-                className="h-20 w-20 rounded-full border-2 border-[#E94FD1] object-cover bg-[#1A1D29]"
+                className="h-20 w-20 rounded-full border-2 border-[#E94FD1] object-cover bg-white dark:bg-[#1A1D29]"
               />
               <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all text-[9px] font-bold tracking-widest text-white uppercase pointer-events-none">
                 Live View
               </div>
             </div>
             <div className="flex-1 w-full">
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-[#9CA3B5] mb-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-[#5B5F72] dark:text-[#9CA3B5] mb-1.5">
                 Avatar Generation Seed (Change text to change image style)
               </label>
               <input
@@ -123,17 +123,17 @@ export default function ProfilePage() {
                 value={avatarSeed}
                 onChange={(e) => setAvatarSeed(e.target.value)}
                 placeholder="Type anything to morph..."
-                className="w-full h-10 rounded-xl border border-white/5 bg-[#0B0E14]/60 px-4 text-xs font-medium tracking-wide text-[#F5F6FA] outline-none transition-all focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
+                className="w-full h-10 rounded-xl border border-black/10 dark:border-white/5 bg-white/60 dark:bg-[#0B0E14]/60 px-4 text-xs font-medium tracking-wide text-[#1A1D29] dark:text-[#F5F6FA] outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
               />
             </div>
           </div>
 
-          <hr className="border-white/5" />
+          <hr className="border-black/10 dark:border-white/5" />
 
           {/* Account Form Input Values */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-[#9CA3B5] mb-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-[#5B5F72] dark:text-[#9CA3B5] mb-1.5">
                 Display Name
               </label>
               <input
@@ -141,19 +141,19 @@ export default function ProfilePage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full h-10 rounded-xl border border-white/5 bg-[#0B0E14]/60 px-4 text-xs font-medium tracking-wide text-[#F5F6FA] outline-none transition-all focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
+                className="w-full h-10 rounded-xl border border-black/10 dark:border-white/5 bg-white/60 dark:bg-[#0B0E14]/60 px-4 text-xs font-medium tracking-wide text-[#1A1D29] dark:text-[#F5F6FA] outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-[#9CA3B5] mb-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-[#5B5F72] dark:text-[#9CA3B5] mb-1.5">
                 System Registration Email (Read-Only)
               </label>
               <input
                 type="email"
                 disabled
                 value={email}
-                className="w-full h-10 rounded-xl border border-white/5 bg-white/5 px-4 text-xs font-medium tracking-wide text-[#5B5F72] cursor-not-allowed outline-none"
+                className="w-full h-10 rounded-xl border border-black/10 dark:border-white/5 bg-black/[0.03] dark:bg-white/5 px-4 text-xs font-medium tracking-wide text-[#5B5F72] cursor-not-allowed outline-none"
               />
             </div>
           </div>

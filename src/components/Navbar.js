@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
+import { useTheme } from "@/context/ThemeContext";
 import { Sun, Moon, Search, Plus } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
   const currentPath = usePathname();
   const [searchFocused, setSearchFocused] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+  const { isDark: darkMode, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -30,17 +31,6 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (darkMode) {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    }
-  }, [darkMode]);
 
   const handleLogout = async () => {
     try {
@@ -121,7 +111,7 @@ export default function Navbar() {
           </button>
 
           <button 
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={toggleTheme}
             aria-label="Toggle visual theme mode"
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/60 dark:border-white/10 dark:bg-[#1A1D29]/60 hover:bg-white dark:hover:bg-[#1A1D29] transition-all duration-200 active:scale-90 text-[#5B5F72] dark:text-[#9CA3B5] cursor-pointer"
           >

@@ -3,29 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sun, Moon } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import Footer from "@/components/landing/Footer";
 
 export default function LandingPage() {
-  const [darkMode, setDarkMode] = useState(true);
+  const { isDark: darkMode, toggleTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const root = window.document.documentElement;
-    setDarkMode(root.classList.contains("dark") || !root.classList.contains("light"));
   }, []);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    if (darkMode) {
-      root.classList.add("dark");
-      root.classList.remove("light");
-    } else {
-      root.classList.add("light");
-      root.classList.remove("dark");
-    }
-  }, [darkMode]);
 
   return (
     <div className="relative min-h-screen w-full flex flex-col justify-between bg-[#FAF9F6] dark:bg-[#07090E] text-[#1A1D29] dark:text-[#F5F6FA] overflow-x-hidden font-sans antialiased selection:bg-[#E94FD1]/30 selection:text-[#FF6FB5]">
@@ -59,7 +47,7 @@ export default function LandingPage() {
       {mounted && (
         <div className="fixed bottom-6 right-6 z-50">
           <button
-            onClick={() => setDarkMode(!darkMode)}
+            onClick={toggleTheme}
             aria-label="Toggle layout theme look"
             className="flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#12141C]/85 backdrop-blur-xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white cursor-pointer"
           >

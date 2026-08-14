@@ -200,7 +200,7 @@ export default function SnippetsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0F1117] text-[#F5F6FA] px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-300">
+    <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#0F1117] text-[#1A1D29] dark:text-[#F5F6FA] px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-300">
       <div className="mx-auto max-w-7xl space-y-8">
         
         {/* Header Section with Back Button */}
@@ -209,7 +209,7 @@ export default function SnippetsPage() {
             {/* Back Button */}
             <button
               onClick={() => router.back()}
-              className="mt-1 flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[#9CA3B5] hover:bg-white/10 hover:text-white transition-all active:scale-95 cursor-pointer shrink-0"
+              className="mt-1 flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 text-[#5B5F72] dark:text-[#9CA3B5] hover:bg-black/[0.08] dark:hover:bg-white/10 hover:text-[#1A1D29] dark:hover:text-white transition-all active:scale-95 cursor-pointer shrink-0"
               title="Go Back"
               aria-label="Go back"
             >
@@ -217,12 +217,12 @@ export default function SnippetsPage() {
             </button>
 
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#FF6FB5] mb-1">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#D6249F] dark:text-[#FF6FB5] mb-1">
                 <Sparkles size={14} />
                 <span>IDE Workspace</span>
               </div>
-              <h1 className="text-3xl font-bold tracking-tight text-white">Code Snippets</h1>
-              <p className="text-sm text-[#9CA3B5] mt-1">
+              <h1 className="text-3xl font-bold tracking-tight text-[#1A1D29] dark:text-white">Code Snippets</h1>
+              <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5] mt-1">
                 VS Code-powered snippet editor with IntelliSense, auto-suggestions, and linting.
               </p>
             </div>
@@ -238,9 +238,9 @@ export default function SnippetsPage() {
         </div>
 
         {/* Filter & Search Bar */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-[#1A1D29]/65 border border-white/8 rounded-2xl p-4 backdrop-blur-glass">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white/70 dark:bg-[#1A1D29]/65 border border-black/10 dark:border-white/8 rounded-2xl p-4 backdrop-blur-glass">
           <div className="relative flex-1">
-            <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#9CA3B5]">
+            <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
               <Search size={16} strokeWidth={2.5} />
             </div>
             <input
@@ -248,12 +248,12 @@ export default function SnippetsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search snippets by title, tag, or description..."
-              className="w-full h-10 rounded-xl border border-white/10 bg-white/5 pl-10 pr-4 text-xs tracking-wide text-[#F5F6FA] outline-none transition-all focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
+              className="w-full h-10 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/5 pl-10 pr-4 text-xs tracking-wide text-[#1A1D29] dark:text-[#F5F6FA] outline-none transition-all focus:border-[#D6249F] dark:focus:border-[#FF6FB5]/50 focus:ring-2 focus:ring-[#FF6FB5]/10"
             />
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 max-w-full scrollbar-thin scrollbar-thumb-white/10">
-            <Filter size={14} className="text-[#9CA3B5] mr-1 hidden sm:block shrink-0" />
+            <Filter size={14} className="text-[#5B5F72] dark:text-[#9CA3B5] mr-1 hidden sm:block shrink-0" />
             {LANGUAGES.map((lang) => (
               <button
                 key={lang}
@@ -261,7 +261,7 @@ export default function SnippetsPage() {
                 className={`px-3 py-1.5 rounded-xl text-xs font-medium uppercase tracking-wide transition-all whitespace-nowrap cursor-pointer ${
                   selectedLanguage === lang
                     ? "bg-[#D6249F] text-white shadow-[0_0_10px_rgba(214,36,159,0.3)]"
-                    : "bg-white/5 text-[#9CA3B5] hover:bg-white/10 hover:text-white"
+                    : "bg-black/[0.03] dark:bg-white/5 text-[#5B5F72] dark:text-[#9CA3B5] hover:bg-black/[0.08] dark:hover:bg-white/10 hover:text-[#1A1D29] dark:hover:text-white"
                 }`}
               >
                 {lang}
@@ -272,7 +272,7 @@ export default function SnippetsPage() {
 
         {/* Snippets Grid */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-[#9CA3B5]">
+          <div className="flex flex-col items-center justify-center py-20 text-[#5B5F72] dark:text-[#9CA3B5]">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#FF6FB5] border-t-transparent mb-3" />
             <p className="text-xs font-medium">Loading snippets from database...</p>
           </div>
@@ -281,15 +281,15 @@ export default function SnippetsPage() {
             {filteredSnippets.map((snippet) => (
               <div
                 key={snippet.id || snippet._id}
-                className="group relative flex flex-col justify-between rounded-2xl border border-white/8 bg-[#1A1D29]/65 p-5 backdrop-blur-glass transition-all hover:border-white/15 hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]"
+                className="group relative flex flex-col justify-between rounded-2xl border border-black/10 dark:border-white/8 bg-white/70 dark:bg-[#1A1D29]/65 p-5 backdrop-blur-glass transition-all hover:border-black/20 dark:hover:border-white/15 hover:shadow-[0_8px_30px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 text-[#FF6FB5] border border-white/10">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/[0.03] dark:bg-white/5 text-[#D6249F] dark:text-[#FF6FB5] border border-black/10 dark:border-white/10">
                         <Code2 size={15} />
                       </div>
-                      <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#FF6FB5] bg-[#FF6FB5]/10 px-2 py-0.5 rounded-md">
+                      <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#D6249F] dark:text-[#FF6FB5] bg-[#FF6FB5]/10 px-2 py-0.5 rounded-md">
                         {snippet.language}
                       </span>
                     </div>
@@ -299,8 +299,8 @@ export default function SnippetsPage() {
                         onClick={() => toggleBookmark(snippet.id || snippet._id)}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                           snippet.bookmarked
-                            ? "text-[#FF6FB5] bg-[#FF6FB5]/10"
-                            : "text-[#9CA3B5] hover:text-white hover:bg-white/5"
+                            ? "text-[#D6249F] dark:text-[#FF6FB5] bg-[#FF6FB5]/10"
+                            : "text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white hover:bg-black/[0.05] dark:hover:bg-white/5"
                         }`}
                         title="Bookmark"
                       >
@@ -308,7 +308,7 @@ export default function SnippetsPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(snippet.id || snippet._id)}
-                        className="p-1.5 rounded-lg text-[#9CA3B5] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-[#5B5F72] dark:text-[#9CA3B5] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
                         title="Delete"
                       >
                         <Trash2 size={15} />
@@ -316,16 +316,16 @@ export default function SnippetsPage() {
                     </div>
                   </div>
 
-                  <h3 className="text-base font-semibold text-white group-hover:text-[#FF6FB5] transition-colors line-clamp-1">
+                  <h3 className="text-base font-semibold text-[#1A1D29] dark:text-white group-hover:text-[#D6249F] dark:group-hover:text-[#FF6FB5] transition-colors line-clamp-1">
                     {snippet.title}
                   </h3>
-                  <p className="text-xs text-[#9CA3B5] mt-1 line-clamp-2 h-8">
+                  <p className="text-xs text-[#5B5F72] dark:text-[#9CA3B5] mt-1 line-clamp-2 h-8">
                     {snippet.description}
                   </p>
                 </div>
 
-                {/* Monaco Read-Only Terminal Box */}
-                <div className="my-4 rounded-xl border border-white/10 bg-[#1e1e1e] shadow-inner overflow-hidden">
+                {/* Monaco Read-Only Terminal Box — kept dark (vs-dark editor theme) intentionally, like any code editor */}
+                <div className="my-4 rounded-xl border border-black/10 dark:border-white/10 bg-[#1e1e1e] shadow-inner overflow-hidden">
                   <div className="flex items-center justify-between border-b border-white/10 bg-[#252526] px-3 py-1.5 text-[11px]">
                     <div className="flex items-center gap-1.5">
                       <div className="h-2.5 w-2.5 rounded-full bg-red-500/80"></div>
@@ -377,18 +377,18 @@ export default function SnippetsPage() {
                 </div>
 
                 {/* Card Footer */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                <div className="flex items-center justify-between pt-2 border-t border-black/5 dark:border-white/5">
                   <div className="flex flex-wrap gap-1.5">
                     {snippet.tags?.map((tag) => (
                       <span
                         key={tag}
-                        className="text-[10px] text-[#9CA3B5] bg-white/5 px-2 py-0.5 rounded-md"
+                        className="text-[10px] text-[#5B5F72] dark:text-[#9CA3B5] bg-black/[0.03] dark:bg-white/5 px-2 py-0.5 rounded-md"
                       >
                         #{tag}
                       </span>
                     ))}
                   </div>
-                  <span className="text-[10px] text-[#5B5F72]">
+                  <span className="text-[10px] text-[#5B5F72] dark:text-[#9CA3B5]">
                     {snippet.createdAt ? new Date(snippet.createdAt).toLocaleDateString() : ""}
                   </span>
                 </div>
@@ -397,12 +397,12 @@ export default function SnippetsPage() {
           </div>
         ) : (
           /* Empty State */
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-[#1A1D29]/40 py-16 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-[#9CA3B5] mb-4">
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-[#1A1D29]/40 py-16 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/[0.03] dark:bg-white/5 text-[#5B5F72] dark:text-[#9CA3B5] mb-4">
               <Terminal size={24} />
             </div>
-            <h3 className="text-base font-semibold text-white">No snippets yet</h3>
-            <p className="text-xs text-[#9CA3B5] mt-1 max-w-sm">
+            <h3 className="text-base font-semibold text-[#1A1D29] dark:text-white">No snippets yet</h3>
+            <p className="text-xs text-[#5B5F72] dark:text-[#9CA3B5] mt-1 max-w-sm">
               Click &quot;Create Snippet&quot; to save your first code snippet to the database.
             </p>
           </div>
@@ -410,7 +410,7 @@ export default function SnippetsPage() {
 
       </div>
 
-      {/* Interactive VS Code Editor Modal */}
+      {/* Interactive VS Code Editor Modal — kept as a dark IDE-style panel intentionally, consistent with the Monaco editor it hosts */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
           <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#1A1D29] p-6 shadow-2xl space-y-4">
