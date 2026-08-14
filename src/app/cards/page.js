@@ -79,6 +79,10 @@ export default function CardsPage() {
       case "notes": return "Markdown Note";
       case "apis": return "API Endpoint";
       case "ideas": return "Project Idea";
+      // Custom-category entries don't have their own backend type — they
+      // carry a freeform title/content, so store them as a Markdown Note
+      // under the hood. The real grouping happens via `category` below.
+      case "custom": return "Markdown Note";
       default: return typeKey;
     }
   };
@@ -201,6 +205,8 @@ export default function CardsPage() {
         return { title: `${data.apiMethod} ${data.apiUrl}`, method: data.apiMethod, url: data.apiUrl, auth: data.apiAuth };
       case "ideas":
         return { title: data.ideaTitle, status: data.ideaStatus };
+      case "custom":
+        return { title: data.customCategoryTitle, body: data.customCategoryContent };
       default:
         return {};
     }

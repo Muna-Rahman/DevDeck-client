@@ -14,7 +14,8 @@ import {
   ArrowUpRight,
   Copy,
   Terminal,
-  Check
+  Check,
+  Folder
 } from 'lucide-react'; 
 import { authClient } from "@/lib/auth-client";
 import { useBookmarks } from '@/context/BookmarkContext';
@@ -166,6 +167,11 @@ export default function DashboardPage() {
   // HUD Runtime Monitoring States
   const [isSystemActive, setIsSystemActive] = useState(true);
   const [uptimeDisplay, setUptimeDisplay] = useState("0m 0s");
+
+  // Categories the user has explicitly created via "Create Category" —
+  // fetched so they render as real panels/filters alongside the built-in
+  // ones (Links, Snippets, etc.) instead of only living in the sidebar.
+  const [customCategories, setCustomCategories] = useState([]);
   
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   
@@ -223,6 +229,25 @@ export default function DashboardPage() {
 
   useEffect(() => {
     streamWorkspaceAssets();
+  }, [backendUrl]);
+
+  useEffect(() => {
+    const fetchCustomCategories = async () => {
+      try {
+        const res = await fetch(`${backendUrl}/api/categories`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCustomCategories(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error("Failed to load custom categories.", err);
+      }
+    };
+    fetchCustomCategories();
   }, [backendUrl]);
 
   const handleCardStateShift = (updatedCard) => {
@@ -304,17 +329,7 @@ export default function DashboardPage() {
     };
   }, [isSystemActive]);
 
-  const filters = [
-    { id: 'All', label: 'All', icon: Layers },
-    { id: 'links', label: 'Links', icon: Link2 },
-    { id: 'repos', label: 'Repositories', icon: Code },
-    { id: 'snippets', label: 'Snippets', icon: Code },
-    { id: 'notes', label: 'Notes', icon: FileText },
-    { id: 'apis', label: 'APIs', icon: Cpu },
-    { id: 'ideas', label: 'Ideas', icon: Lightbulb },
-  ];
-
-  const allCategories = [
+  const baseCategories = [
     { id: 'links', ids: ['links', 'Resource Link'], title: 'Links / Docs' },
     { id: 'repos', ids: ['repos', 'GitHub Repository'], title: 'Repositories' },
     { id: 'snippets', ids: ['snippets', 'Snippet'], title: 'Snippets' },
@@ -323,11 +338,42 @@ export default function DashboardPage() {
     { id: 'ideas', ids: ['ideas', 'Project Idea'], title: 'Ideas' },
   ];
 
+  const baseCategoryNames = new Set(
+    baseCategories.flatMap((c) => c.ids.map((id) => id.toLowerCase()))
+  );
+
+  // Fold user-created categories into the exact same shape as the built-in
+  // ones so they render as just another panel/filter chip, not a separate
+  // system. Skip any that collide with a built-in name.
+  const customCategoryEntries = customCategories
+    .filter((cat) => cat?.name && !baseCategoryNames.has(cat.name.toLowerCase()))
+    .map((cat) => ({ id: cat.name, ids: [cat.name], title: cat.name }));
+
+  const allCategories = [...baseCategories, ...customCategoryEntries];
+
+  const filters = [
+    { id: 'All', label: 'All', icon: Layers },
+    { id: 'links', label: 'Links', icon: Link2 },
+    { id: 'repos', label: 'Repositories', icon: Code },
+    { id: 'snippets', label: 'Snippets', icon: Code },
+    { id: 'notes', label: 'Notes', icon: FileText },
+    { id: 'apis', label: 'APIs', icon: Cpu },
+    { id: 'ideas', label: 'Ideas', icon: Lightbulb },
+    ...customCategoryEntries.map((cat) => ({ id: cat.id, label: cat.title, icon: Folder })),
+  ];
+
   const username = session?.user?.name || session?.user?.email || "User";
+
+  // A card belongs to whatever category it was explicitly assigned; cards
+  // saved without picking a custom category still carry their type as the
+  // category (see cards/page.js), and legacy cards with neither just fall
+  // back to type. This is what lets a brand-new category actually collect
+  // cards instead of every card staying grouped by type only.
+  const getCardGroupKey = (card) => (card.category && card.category.trim()) || card.type || "";
 
   const visibleCategories = allCategories.filter((col) => {
     const belongsToActiveFilter = activeFilter === 'All' || col.id.toLowerCase() === activeFilter.toLowerCase();
-    const columnCardsCount = dbCards.filter(card => col.ids.map(id => id.toLowerCase()).includes(card.type?.toLowerCase())).length;
+    const columnCardsCount = dbCards.filter(card => col.ids.map(id => id.toLowerCase()).includes(getCardGroupKey(card).toLowerCase())).length;
     
     if (activeFilter === 'All') {
       return columnCardsCount > 0; 
@@ -443,7 +489,7 @@ export default function DashboardPage() {
       ) : (
         <div className="flex flex-col gap-6 w-full">
           {visibleCategories.map((col) => {
-            const columnCards = dbCards.filter(card => col.ids.map(id => id.toLowerCase()).includes(card.type?.toLowerCase()));
+            const columnCards = dbCards.filter(card => col.ids.map(id => id.toLowerCase()).includes(getCardGroupKey(card).toLowerCase()));
 
             return (
               <div 

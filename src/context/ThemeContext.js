@@ -20,12 +20,24 @@ const applyThemeToRoot = (theme) => {
 
 export function ThemeProvider({ children }) {
 
-  const [theme, setThemeState] = useState(() => {
-    if (typeof document !== "undefined") {
-      return document.documentElement.classList.contains("light") ? "light" : "dark";
-    }
-    return "dark";
-  });
+  // IMPORTANT: always start from the same value the server used ("dark"),
+  // even though layout.js's inline script may have already applied the
+  // real theme class to <html> before hydration. Reading the live DOM
+  // class here would make the client's first render diverge from the
+  // server-rendered HTML and trigger a hydration mismatch (e.g. Navbar's
+  // Sun/Moon icon flipping). The real theme is picked up right after
+  // mount in the effect below instead.
+  const [theme, setThemeState] = useState("dark");
+
+  // Sync state to whatever theme is actually on <html> (set by the
+  // pre-hydration inline script in layout.js) once we're mounted on the
+  // client. This runs after hydration, so it can't cause a mismatch —
+  // it just corrects the icon/state on the very next paint.
+  useEffect(() => {
+    const root = document.documentElement;
+    const actual = root.classList.contains("light") ? "light" : "dark";
+    setThemeState((prev) => (prev !== actual ? actual : prev));
+  }, []);
 
   // Keep in sync if the class is ever changed by something else (defensive).
   useEffect(() => {
