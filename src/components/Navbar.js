@@ -105,7 +105,10 @@ export default function Navbar() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-3.5">
-          <button className="hidden sm:inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-5 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
+          <button
+            onClick={() => router.push("/cards?openModal=true")}
+            className="hidden sm:inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-5 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+          >
             <Plus size={14} strokeWidth={3} />
             <span>Add Card</span>
           </button>
