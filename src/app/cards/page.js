@@ -12,6 +12,8 @@ export default function CardsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [workspaceCards, setWorkspaceCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeTag, setActiveTag] = useState(null);
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -19,15 +21,35 @@ export default function CardsPage() {
   const onClose = () => setIsOpen(false);
 
   // Auto-open the create card modal when navigated here via the navbar's
-  // global "Add Card" button (/cards?openModal=true), then clean the URL.
+  // global "Add Card" button (/cards?openModal=true), and honor the sidebar's
+  // "Categories" / "Tags" filter links (/cards?category=... / /cards?tag=...).
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
+
     if (params.get("openModal") === "true") {
       setIsOpen(true);
       router.replace("/cards");
+      return;
     }
+
+    const category = params.get("category");
+    const tag = params.get("tag");
+    if (category) setActiveCategory(category);
+    if (tag) setActiveTag(tag);
   }, [router]);
+
+  const clearFilters = () => {
+    setActiveCategory(null);
+    setActiveTag(null);
+    router.replace("/cards");
+  };
+
+  const visibleCards = workspaceCards.filter((card) => {
+    if (activeCategory && card.category !== activeCategory) return false;
+    if (activeTag && !(Array.isArray(card.tags) && card.tags.includes(activeTag))) return false;
+    return true;
+  });
 
   useEffect(() => {
     const fetchDatabaseCards = async () => {
