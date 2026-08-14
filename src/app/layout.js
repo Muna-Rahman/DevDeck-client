@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Providers from "./providers";
 import { BookmarkProvider } from "../context/BookmarkContext";
@@ -42,7 +43,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {/* next/script with strategy="beforeInteractive" is the supported
+            way to run an inline script before hydration — a raw <script>
+            tag rendered by a React component triggers React's "scripts are
+            never executed when rendering on the client" warning. */}
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeInitScript}
+        </Script>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#FAF9F6] dark:bg-[#07090E] transition-colors duration-300`}>
         <FontInitializer />

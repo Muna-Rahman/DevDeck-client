@@ -1,39 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import SidebarContainer from "@/components/SidebarContainer";
 import Navbar from "@/components/Navbar";
 import { useSidebar } from "@/context/SidebarContext";
 
 export default function DashboardLayout({ children }) {
   const { isSidebarCollapsed } = useSidebar();
-  
-  // 🔑 FIX 1: Safely check if window is defined (SSR safety) and initialize 
-  // based on the REAL presence of the 'dark' class instead of forcing 'true'
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      return document.documentElement.classList.contains('dark');
-    }
-    return true; // Fallback for Server-Side Rendering
-  });
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    
-    // Explicit sync check right on mount to capture theme toggle clicks
-    setIsDark(root.classList.contains('dark'));
-
-    const observer = new MutationObserver(() => {
-      setIsDark(root.classList.contains('dark'));
-    });
-
-    observer.observe(root, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden relative font-sans antialiased text-[#1A1D29] dark:text-[#F5F6FA] transition-colors duration-300">
@@ -41,27 +14,27 @@ export default function DashboardLayout({ children }) {
       {/* 100% SHARP BACKDROP IMAGES */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
         
-        {/* Light Mode Wallpaper — Zero Blur */}
-        {!isDark && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fade-in"
-            style={{ backgroundImage: `url('https://i.pinimg.com/1200x/58/c9/0f/58c90fc7915681c2894fb639a19ec5e3.jpg')` }}
-          >
-            <div className="absolute inset-0 bg-[#F4F5FA]/15" />
-          </div>
-        )}
+        {/* Light Mode Wallpaper — rendered unconditionally (identical markup
+            on server and client) and shown/hidden purely with the `dark:`
+            CSS variant. Branching this on a JS `isDark` state instead caused
+            a hydration mismatch, because the theme-init script can already
+            have set the real class before React's first client render. */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fade-in dark:hidden"
+          style={{ backgroundImage: `url('https://i.pinimg.com/1200x/58/c9/0f/58c90fc7915681c2894fb639a19ec5e3.jpg')` }}
+        >
+          <div className="absolute inset-0 bg-[#F4F5FA]/15" />
+        </div>
 
-        {/* Dark Mode Wallpaper — Zero Blur */}
-        {isDark && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fade-in"
-            style={{ backgroundImage: `url('https://i.pinimg.com/736x/67/e9/60/67e960e46c4010b585d4eac3f4382654.jpg')` }}
-          >
-            <div className="absolute inset-0 bg-[#0B0E14]/25" />
-            <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#E94FD1] opacity-[0.15] blur-[160px]" />
-            <div className="absolute bottom-[5%] left-[-5%] w-[550px] h-[550px] rounded-full bg-[#3FE0C5] opacity-[0.12] blur-[180px]" />
-          </div>
-        )}
+        {/* Dark Mode Wallpaper — visible only when the `dark` class is present */}
+        <div 
+          className="hidden dark:block absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fade-in"
+          style={{ backgroundImage: `url('https://i.pinimg.com/736x/67/e9/60/67e960e46c4010b585d4eac3f4382654.jpg')` }}
+        >
+          <div className="absolute inset-0 bg-[#0B0E14]/25" />
+          <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#E94FD1] opacity-[0.15] blur-[160px]" />
+          <div className="absolute bottom-[5%] left-[-5%] w-[550px] h-[550px] rounded-full bg-[#3FE0C5] opacity-[0.12] blur-[180px]" />
+        </div>
       </div>
 
       {/* SIDEBAR NAVIGATION PANEL FRAME */}
