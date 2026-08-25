@@ -49,14 +49,19 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
         repoUrl: repoUrl,
         url: repoUrl,
       },
+    
+      metadata: {
+        ...card.metadata,
+        description: descText,
+        code: codeText,
+        url: repoUrl,
+      },
     };
     if (onUpdate) onUpdate(updatedCard);
     setIsEditing(false);
   };
 
-  // Tailwind's `dark:` variant automatically follows the real site theme
-  // (the same pattern Navbar.js uses) — no manual DOM class checking needed,
-  // and it can never drift out of sync with the light/dark toggle.
+
   const inputBaseClass = "w-full p-2.5 rounded-xl border text-sm bg-black/[0.02] dark:bg-white/5 border-black/10 dark:border-white/10 text-[#1A1D29] dark:text-[#F5F6FA] focus:border-[#0FB8A6] dark:focus:border-[#3FE0C5] focus:outline-none transition-colors";
 
   return (
@@ -64,8 +69,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
 
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* CENTERED MODAL — wider on large screens so long code / URLs have
-          more room to breathe instead of wrapping aggressively. */}
+    
       <div className="relative w-full max-w-2xl lg:max-w-3xl border rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col justify-between max-h-[90vh] z-10 transition-all duration-300 bg-white/90 dark:bg-[#1A1D29]/85 border-black/[0.08] dark:border-white/[0.08] backdrop-blur-[40px] shadow-[0_20px_50px_rgba(20,20,40,0.12)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] text-[#1A1D29] dark:text-[#F5F6FA]">
 
         <div className="flex flex-col min-h-0">
@@ -102,7 +106,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
 
               {/* BOOKMARK BUTTON */}
               <button
-                onClick={() => onToggleBookmark && onToggleBookmark(cardId)}
+                onClick={() => onToggleBookmark && onToggleBookmark(cardId, card.type)}
                 className="p-2 rounded-lg border transition-all cursor-pointer bg-black/[0.02] dark:bg-white/[0.02] border-black/[0.06] dark:border-white/[0.06] text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#D6249F] dark:hover:text-[#E94FD1]"
               >
                 {isBookmarkedState ? (

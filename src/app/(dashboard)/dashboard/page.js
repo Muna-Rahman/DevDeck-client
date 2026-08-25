@@ -21,9 +21,7 @@ import { authClient } from "@/lib/auth-client";
 import { useBookmarks } from '@/context/BookmarkContext';
 import CardDetailsDrawer from '@/components/CardDetailsDrawer';
 
-/* ==========================================================================
-   REUSABLE SYSTEM INTERFACE DESIGN COMPONENT: CARDITEM
-   ========================================================================== */
+
 function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
   const { toggleBookmark } = useBookmarks();
   const [copied, setCopied] = useState(false);
@@ -33,7 +31,7 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
     e.stopPropagation();
     
     const activeTargetId = card._id || card.id;
-    const updated = await toggleBookmark(activeTargetId);
+        const updated = await toggleBookmark(activeTargetId, card.type);
     if (onCardUpdate && updated) onCardUpdate(updated);
   };
 
@@ -156,9 +154,7 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
   );
 }
 
-/* ==========================================================================
-   PRIMARY WORKSPACE MANAGEMENT ARCHITECTURE (CORE CONTROLLER PAGE)
-   ========================================================================== */
+
 export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [dbCards, setDbCards] = useState([]);
@@ -168,9 +164,7 @@ export default function DashboardPage() {
   const [isSystemActive, setIsSystemActive] = useState(true);
   const [uptimeDisplay, setUptimeDisplay] = useState("0m 0s");
 
-  // Categories the user has explicitly created via "Create Category" —
-  // fetched so they render as real panels/filters alongside the built-in
-  // ones (Links, Snippets, etc.) instead of only living in the sidebar.
+
   const [customCategories, setCustomCategories] = useState([]);
   
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -342,9 +336,7 @@ export default function DashboardPage() {
     baseCategories.flatMap((c) => c.ids.map((id) => id.toLowerCase()))
   );
 
-  // Fold user-created categories into the exact same shape as the built-in
-  // ones so they render as just another panel/filter chip, not a separate
-  // system. Skip any that collide with a built-in name.
+ 
   const customCategoryEntries = customCategories
     .filter((cat) => cat?.name && !baseCategoryNames.has(cat.name.toLowerCase()))
     .map((cat) => ({ id: cat.name, ids: [cat.name], title: cat.name }));
@@ -364,11 +356,6 @@ export default function DashboardPage() {
 
   const username = session?.user?.name || session?.user?.email || "User";
 
-  // A card belongs to whatever category it was explicitly assigned; cards
-  // saved without picking a custom category still carry their type as the
-  // category (see cards/page.js), and legacy cards with neither just fall
-  // back to type. This is what lets a brand-new category actually collect
-  // cards instead of every card staying grouped by type only.
   const getCardGroupKey = (card) => (card.category && card.category.trim()) || card.type || "";
 
   const visibleCategories = allCategories.filter((col) => {

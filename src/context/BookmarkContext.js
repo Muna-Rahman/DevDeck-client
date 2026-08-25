@@ -30,15 +30,17 @@ export function BookmarkProvider({ children }) {
     }
   };
 
-  const toggleBookmark = async (cardId) => {
+  const toggleBookmark = async (cardId, itemType) => {
     try {
-      // 1. Check if the target item exists in current local state or is a snippet
+      // 1. Check if the target item exists in current local state
       const existingItem = bookmarkedCards.find(
         (c) => (c._id || c.id)?.toString() === cardId?.toString()
       );
-      
-      const isSnippet = existingItem?.type === 'Snippet' || existingItem?.type === 'snippets';
-      
+
+      const isSnippet = itemType !== undefined
+        ? (itemType === 'Snippet' || itemType === 'snippets')
+        : (existingItem?.type === 'Snippet' || existingItem?.type === 'snippets');
+
       // Determine the correct API endpoint and payload depending on item source
       const endpoint = isSnippet
         ? `${backendUrl}/api/snippets/${cardId}`

@@ -10,7 +10,7 @@ export default function CardItem({ card, onCardUpdate, onSelectCard }) {
     e.preventDefault();
     e.stopPropagation(); // CRITICAL: Stops the detail drawer from sliding open when just toggling bookmark status
     const activeTargetId = card._id || card.id;
-    const updated = await toggleBookmark(activeTargetId);
+    const updated = await toggleBookmark(activeTargetId, card.type);
     if (onCardUpdate && updated) onCardUpdate(updated);
   };
 
