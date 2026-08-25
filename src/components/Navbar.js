@@ -5,7 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useTheme } from "@/context/ThemeContext";
-import { Sun, Moon, Search, Plus, Code2, FileText, Link2, Cpu, Lightbulb, Github, Loader2 } from "lucide-react";
+import { Sun, Moon, Search, Plus, Code2, FileText, Link2, Cpu, Lightbulb, Loader2 } from "lucide-react";
+import { LogoGithub } from "@gravity-ui/icons";
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -14,7 +15,7 @@ const typeIcon = (type) => {
   switch (type) {
     case "GitHub Repository":
     case "repos":
-      return Github;
+      return LogoGithub;
     case "Snippet":
     case "snippets":
       return Code2;
@@ -263,7 +264,7 @@ export default function Navbar() {
                           onClick={() => handleSelectResult(result)}
                           className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-medium text-[#1A1D29] dark:text-[#F5F6FA] hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
                         >
-                          <Icon size={14} className="text-[#D6249F] dark:text-[#FF6FB5] flex-shrink-0" />
+                          <Icon width={14} height={14} className="text-[#D6249F] dark:text-[#FF6FB5] flex-shrink-0" />
                           <span className="truncate flex-1">{result.title}</span>
                           <span className="text-[10px] uppercase tracking-wider text-[#5B5F72] dark:text-[#9CA3B5] flex-shrink-0">
                             {result.isSnippet ? "Snippet" : result.type}
