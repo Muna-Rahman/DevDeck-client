@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useTheme } from "@/context/ThemeContext";
-import { Sun, Moon, Search, Plus, Code2, FileText, Link2, Cpu, Lightbulb, LogoGithub, Loader2 } from "lucide-react";
+import { Sun, Moon, Search, Plus, Code2, FileText, Link2, Cpu, Lightbulb, Github, Loader2 } from "lucide-react";
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -14,7 +14,7 @@ const typeIcon = (type) => {
   switch (type) {
     case "GitHub Repository":
     case "repos":
-      return LogoGithub;
+      return Github;
     case "Snippet":
     case "snippets":
       return Code2;
