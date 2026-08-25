@@ -124,7 +124,7 @@ export default function SettingsPage() {
     } catch (err) {
       console.error("Settings update error:", err);
       setProfileError(err.message || "An error occurred while saving settings.");
-    } fontIsUpdating: {
+    } finally {
       setIsUpdating(false);
     }
   };
