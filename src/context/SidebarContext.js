@@ -7,9 +7,8 @@ const STORAGE_KEY = "devdeck:sidebarCollapsed";
 
 export function SidebarProvider({ children }) {
 
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [hasHydrated, setHasHydrated] = useState(false);
-
 
   useEffect(() => {
     try {
@@ -22,8 +21,7 @@ export function SidebarProvider({ children }) {
     }
   }, []);
 
-  // Persist every change after the initial hydration so we don't
-  // immediately overwrite a saved "true" with the default "false".
+
   useEffect(() => {
     if (!hasHydrated) return;
     try {
