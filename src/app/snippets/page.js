@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Editor from "@monaco-editor/react";
+import AiAssistButton from "@/components/AiAssistButton";
 import { 
   Search, 
   Plus, 
@@ -470,7 +471,21 @@ export default function SnippetsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Description</label>
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-1">
+                  <label className="text-xs font-medium text-[#9CA3B5]">Description</label>
+                  <AiAssistButton
+                    mode="description"
+                    label="Generate Description"
+                    disabled={!newCode.trim()}
+                    buildPayload={() => ({ code: newCode, language: newLang })}
+                    onResult={(generated) => {
+                      if (newDesc.trim().length > 3 && !window.confirm("This will replace your current description. Continue?")) {
+                        return;
+                      }
+                      setNewDesc(generated);
+                    }}
+                  />
+                </div>
                 <input
                   type="text"
                   value={newDesc}
@@ -482,14 +497,28 @@ export default function SnippetsPage() {
 
               {/* Real-time Monaco Code Editor */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-[#9CA3B5]">Code Editor (IntelliSense & Syntax Linting Enabled)</label>
-                  {editorErrors.length > 0 && (
-                    <span className="flex items-center gap-1 text-[11px] text-amber-400 font-medium">
-                      <AlertTriangle size={12} />
-                      {editorErrors.length} Syntax Error(s)
-                    </span>
-                  )}
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                  <label className="text-xs font-medium text-[#9CA3B5]">Code Editor (IntelliSense &amp; Syntax Linting Enabled)</label>
+                  <div className="flex items-center gap-2">
+                    {editorErrors.length > 0 && (
+                      <span className="flex items-center gap-1 text-[11px] text-amber-400 font-medium">
+                        <AlertTriangle size={12} />
+                        {editorErrors.length} Syntax Error(s)
+                      </span>
+                    )}
+                    <AiAssistButton
+                      mode="code"
+                      label="Generate Code"
+                      disabled={!newDesc.trim()}
+                      buildPayload={() => ({ description: newDesc, language: newLang })}
+                      onResult={(generated) => {
+                        if (newCode.trim().length > 3 && !window.confirm("This will replace your current code. Continue?")) {
+                          return;
+                        }
+                        setNewCode(generated);
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <div className="rounded-xl border border-white/10 overflow-hidden bg-[#1e1e1e]">

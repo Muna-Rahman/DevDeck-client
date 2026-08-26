@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { X, Folder, Plus } from "lucide-react";
+import AiAssistButton from "@/components/AiAssistButton";
 
 import { 
   Link as LinkIcon, 
@@ -525,9 +526,23 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
               </div>
 
               <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className={labelClass}>The Code</label>
-                  <span className="text-[10px] font-mono text-[#3FE0C5]">VS Code Intellisense Engine</span>
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <label className={labelClass}>The Code</label>
+                    <span className="text-[10px] font-mono text-[#3FE0C5]">VS Code Intellisense Engine</span>
+                  </div>
+                  <AiAssistButton
+                    mode="code"
+                    label="Generate Code"
+                    disabled={!formData.purpose.trim()}
+                    buildPayload={() => ({ description: formData.purpose, language: formData.language })}
+                    onResult={(generated) => {
+                      if (formData.code.trim().length > 3 && !window.confirm("This will replace your current code. Continue?")) {
+                        return;
+                      }
+                      handleInputChange("code", generated);
+                    }}
+                  />
                 </div>
                 
                 {/* MONACO EDITOR WITH AUTO-CLOSING TAGS & BRACKETS */}
@@ -559,7 +574,21 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
               </div>
 
               <div>
-                <label className={labelClass}>Purpose</label>
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-1.5">
+                  <label className={`${labelClass} mb-0`}>Purpose</label>
+                  <AiAssistButton
+                    mode="description"
+                    label="Generate Description"
+                    disabled={!formData.code.trim()}
+                    buildPayload={() => ({ code: formData.code, language: formData.language })}
+                    onResult={(generated) => {
+                      if (formData.purpose.trim().length > 3 && !window.confirm("This will replace your current purpose text. Continue?")) {
+                        return;
+                      }
+                      handleInputChange("purpose", generated);
+                    }}
+                  />
+                </div>
                 <input
                   type="text"
                   placeholder="What does this script solve?"
