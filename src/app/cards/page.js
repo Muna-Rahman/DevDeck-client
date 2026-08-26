@@ -264,22 +264,58 @@ export default function CardsPage() {
         </button>
       </div>
 
+      {/* Active Filter Indicator */}
+      {(activeCategory || activeTag) && (
+        <div className="flex items-center gap-3 -mt-4 flex-wrap">
+          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            Filtering by:
+          </span>
+          {activeCategory && (
+            <span className="text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full bg-[#0FB8A6]/10 text-[#0FB8A6] dark:bg-[#3FE0C5]/10 dark:text-[#3FE0C5] border border-[#0FB8A6]/20 dark:border-[#3FE0C5]/20">
+              Category: {activeCategory}
+            </span>
+          )}
+          {activeTag && (
+            <span className="text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full bg-[#D6249F]/10 text-[#D6249F] dark:bg-[#FF6FB5]/10 dark:text-[#FF6FB5] border border-[#D6249F]/20 dark:border-[#FF6FB5]/20">
+              Tag: {activeTag}
+            </span>
+          )}
+          <button
+            onClick={clearFilters}
+            className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white underline underline-offset-2 cursor-pointer"
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 items-start">
-        {workspaceCards.length === 0 ? (
+        {visibleCards.length === 0 ? (
           <div className="col-span-full h-64 border border-dashed border-black/10 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-4 bg-white/40 dark:bg-white/[0.02] backdrop-blur-sm p-6 text-center shadow-md">
             <p className="text-zinc-600 dark:text-zinc-400 text-sm max-w-sm">
-              Your deck ecosystem feels lighter than usual. Let&apos;s map out your dependencies.
+              {activeCategory || activeTag
+                ? "No cards match this filter."
+                : "Your deck ecosystem feels lighter than usual. Let\u2019s map out your dependencies."}
             </p>
-            <button
-              onClick={onOpen}
-              className="text-[#0FB8A6] dark:text-[#3FE0C5] hover:bg-[#0FB8A6]/10 dark:hover:bg-[#3FE0C5]/10 border border-[#0FB8A6]/20 dark:border-[#3FE0C5]/20 font-medium rounded-full px-5 py-2 text-xs transition-all duration-300 cursor-pointer"
-            >
-              Initialize First Card
-            </button>
+            {activeCategory || activeTag ? (
+              <button
+                onClick={clearFilters}
+                className="text-[#0FB8A6] dark:text-[#3FE0C5] hover:bg-[#0FB8A6]/10 dark:hover:bg-[#3FE0C5]/10 border border-[#0FB8A6]/20 dark:border-[#3FE0C5]/20 font-medium rounded-full px-5 py-2 text-xs transition-all duration-300 cursor-pointer"
+              >
+                Clear filters
+              </button>
+            ) : (
+              <button
+                onClick={onOpen}
+                className="text-[#0FB8A6] dark:text-[#3FE0C5] hover:bg-[#0FB8A6]/10 dark:hover:bg-[#3FE0C5]/10 border border-[#0FB8A6]/20 dark:border-[#3FE0C5]/20 font-medium rounded-full px-5 py-2 text-xs transition-all duration-300 cursor-pointer"
+              >
+                Initialize First Card
+              </button>
+            )}
           </div>
         ) : (
-          workspaceCards.map((card) => {
+          visibleCards.map((card) => {
             const cardId = card.id || card._id;
             return (
               <div

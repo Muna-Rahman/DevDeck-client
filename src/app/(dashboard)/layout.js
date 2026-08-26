@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }) {
         {/* Core Layout Workspace Target Area */}
         <main 
           className={`flex-1 overflow-y-auto px-6 md:px-12 pb-16 pt-28 transition-all duration-300 min-w-0
-            ${isSidebarCollapsed ? 'pl-24' : 'pl-24 lg:pl-72'}`}
+            ${isSidebarCollapsed ? 'pl-24' : 'pl-72'}`}
         >
           <div className="max-w-[1440px] mx-auto w-full">
             {children}
