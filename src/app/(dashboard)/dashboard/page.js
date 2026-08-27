@@ -602,6 +602,7 @@ export default function DashboardPage() {
         onToggleBookmark={handleDrawerBookmarkToggle}
         onDelete={handleDeleteCard}
         onUpdate={handleUpdateCard}
+        existingItems={dbCards}
       />
 
     </div>

@@ -1,10 +1,16 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import Editor from '@monaco-editor/react';
 import { Bookmark, BookmarkFill, Xmark, ArrowUpRight, Copy, ArrowLeft, Check, TrashBin, Pencil } from '@gravity-ui/icons';
 
 // Auth options and display labels matching CreateCardModal
 const AUTH_OPTIONS = ["none", "bearer", "apikey", "basic"];
 const AUTH_LABELS = { none: "None", bearer: "Bearer Token", apikey: "API Key", basic: "Basic" };
+
+// Languages that Monaco natively parses and reports syntax errors for — keep in
+// sync with CreateCardModal so "no linting available" languages behave the same
+// way in both the create and edit paths.
+const MONACO_VALIDATED_LANGUAGES = ["javascript", "typescript", "json"];
 
 // Color mapping for HTTP method badges
 const METHOD_BADGE_CLASSES = {
@@ -15,7 +21,7 @@ const METHOD_BADGE_CLASSES = {
   DELETE: "bg-rose-500/20 text-rose-400",
 };
 
-export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onDelete, onUpdate }) {
+export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onDelete, onUpdate, existingItems = [] }) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -33,6 +39,9 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
   // Check if the card includes code content (prevents false validation errors on notes/ideas)
   const [hasCodeField, setHasCodeField] = useState(false);
 
+  // Capture Monaco editor diagnostics for the code being edited, same as CreateCardModal
+  const [codeSyntaxErrors, setCodeSyntaxErrors] = useState([]);
+
   // Sync state with incoming card prop
   useEffect(() => {
     if (card) {
@@ -46,6 +55,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
       setApiAuth(Array.isArray(card.metadata?.auth) ? card.metadata.auth : (Array.isArray(card.content?.auth) ? card.content.auth : []));
       setIsEditing(false);
       setIsSaving(false);
+      setCodeSyntaxErrors([]);
     }
   }, [card]);
 
@@ -78,6 +88,66 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
     }
   };
 
+  // Custom editor theme — kept identical to CreateCardModal so snippets look
+  // the same whether you're creating or editing one.
+  const handleEditorWillMount = (monaco) => {
+    monaco.editor.defineTheme("devdeck-theme", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "6272a4", fontStyle: "italic" },
+        { token: "keyword", foreground: "E94FD1", fontStyle: "bold" },
+        { token: "string", foreground: "3FE0C5" },
+        { token: "number", foreground: "FFB84D" },
+        { token: "variable", foreground: "F5F6FA" },
+        { token: "function", foreground: "2FD1FF" },
+      ],
+      colors: {
+        "editor.background": "#0B0E14",
+        "editor.foreground": "#F5F6FA",
+        "editor.lineHighlightBackground": "#1A1D2980",
+        "editorCursor.foreground": "#3FE0C5",
+        "editorLineNumber.foreground": "#9CA3B540",
+        "editorLineNumber.activeForeground": "#3FE0C5",
+        "editor.selectionBackground": "#E94FD140",
+        "editorIndentGuide.background": "#ffffff10",
+        "editorIndentGuide.activeBackground": "#3FE0C550",
+      },
+    });
+  };
+
+  // Capture Monaco editor diagnostics
+  const handleCodeValidate = (markers) => {
+    setCodeSyntaxErrors(markers.filter((m) => m.severity === 8)); // 8 is Monaco's MarkerSeverity.Error
+  };
+
+  // Look for another already-saved item with the exact same code (and
+  // language, when known) so we can block the save client-side instead of
+  // only finding out after a round trip to the server.
+  const findDuplicateSibling = () => {
+    if (!hasCodeField || !Array.isArray(existingItems) || existingItems.length === 0) return null;
+
+    const normalizedCode = codeText.trim();
+    if (!normalizedCode) return null;
+
+    const normalizedLanguage = (languageText || '').trim().toLowerCase();
+
+    return existingItems.find((item) => {
+      const itemId = (item._id || item.id)?.toString();
+      if (itemId && itemId === cardId?.toString()) return false; // skip self
+
+      const itemType = item.type;
+      const isSnippetLike = itemType === 'Snippet' || itemType === 'snippets';
+      if (!isSnippetLike) return false;
+
+      const itemCode = (item.content?.code || item.content?.snippet || item.metadata?.code || item.code || '').trim();
+      if (!itemCode || itemCode !== normalizedCode) return false;
+
+      const itemLanguage = (item.content?.language || item.metadata?.language || item.language || '').trim().toLowerCase();
+      return itemLanguage === normalizedLanguage;
+    }) || null;
+  };
+
   const handleSaveEdit = async () => {
     if (!titleText.trim()) {
       alert("Title can't be empty.");
@@ -93,6 +163,19 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
     // Validate code only if this card type uses code snippets
     if (hasCodeField && !codeText.trim()) {
       alert("Code snippet can't be empty.");
+      return;
+    }
+
+    // Block saving code that Monaco has flagged as having syntax errors —
+    // same gate CreateCardModal applies when a snippet is first added.
+    if (hasCodeField && MONACO_VALIDATED_LANGUAGES.includes((languageText || '').toLowerCase()) && codeSyntaxErrors.length > 0) {
+      alert(`Fix ${codeSyntaxErrors.length} syntax error(s) in the code before saving.`);
+      return;
+    }
+
+    // Block saving if the edited code is identical to another snippet already saved.
+    if (findDuplicateSibling()) {
+      alert("A snippet with this exact code already exists — it wasn't saved again.");
       return;
     }
 
@@ -266,13 +349,42 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
 
               {hasCodeField && (
                 <div>
-                  <label className="text-xs font-mono text-[#5B5F72] dark:text-[#9CA3B5] block mb-1">Code Snippet</label>
-                  <textarea
-                    rows={5}
-                    value={codeText}
-                    onChange={(e) => setCodeText(e.target.value)}
-                    className={`${inputBaseClass} font-mono text-xs resize-y max-h-96`}
-                  />
+                  <div className="flex flex-wrap justify-between items-center gap-2 mb-1">
+                    <label className="text-xs font-mono text-[#5B5F72] dark:text-[#9CA3B5] block">Code Snippet</label>
+                    <span className="text-[10px] font-mono text-[#0FB8A6] dark:text-[#3FE0C5]">
+                      {MONACO_VALIDATED_LANGUAGES.includes((languageText || '').toLowerCase()) ? "VS Code Intellisense Engine" : "Syntax highlighting only — not linted"}
+                    </span>
+                  </div>
+                  <div className="border rounded-xl overflow-hidden shadow-inner bg-[#0B0E14] border-black/10 dark:border-white/10">
+                    <Editor
+                      height="220px"
+                      language={languageText || 'javascript'}
+                      theme="devdeck-theme"
+                      beforeMount={handleEditorWillMount}
+                      value={codeText}
+                      onChange={(value) => setCodeText(value || '')}
+                      onValidate={handleCodeValidate}
+                      options={{
+                        fontSize: 13,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true,
+                        tabSize: 2,
+                        lineNumbers: "on",
+                        folding: true,
+                        autoClosingTags: true,
+                        autoClosingBrackets: "always",
+                        autoClosingQuotes: "always",
+                        formatOnPaste: true,
+                        padding: { top: 12, bottom: 12 },
+                      }}
+                    />
+                  </div>
+                  {MONACO_VALIDATED_LANGUAGES.includes((languageText || '').toLowerCase()) && codeSyntaxErrors.length > 0 && (
+                    <p className="text-xs text-rose-500 mt-1.5 font-normal">
+                      {codeSyntaxErrors.length} syntax error(s) — fix these before saving.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -296,10 +408,11 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  disabled={isSaving}
+                  disabled={isSaving || (hasCodeField && MONACO_VALIDATED_LANGUAGES.includes((languageText || '').toLowerCase()) && codeSyntaxErrors.length > 0)}
+                  title={hasCodeField && codeSyntaxErrors.length > 0 ? "Fix the syntax errors in the editor first" : undefined}
                   className="px-4 py-2 text-xs font-bold rounded-xl bg-[#0FB8A6] dark:bg-[#3FE0C5] text-white dark:text-[#12141C] hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSaving ? "Saving…" : "Save Changes"}
+                  {isSaving ? "Saving…" : codeSyntaxErrors.length > 0 && hasCodeField ? "Fix Errors to Save" : "Save Changes"}
                 </button>
               </div>
             </div>
