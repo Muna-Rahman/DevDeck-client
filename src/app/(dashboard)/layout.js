@@ -20,7 +20,7 @@ export default function DashboardLayout({ children }) {
             a hydration mismatch, because the theme-init script can already
             have set the real class before React's first client render. */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fade-in dark:hidden"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fadeIn dark:hidden"
           style={{ backgroundImage: `url('https://i.pinimg.com/1200x/58/c9/0f/58c90fc7915681c2894fb639a19ec5e3.jpg')` }}
         >
           <div className="absolute inset-0 bg-[#F4F5FA]/15" />
@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }) {
 
         {/* Dark Mode Wallpaper — visible only when the `dark` class is present */}
         <div 
-          className="hidden dark:block absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fade-in"
+          className="hidden dark:block absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fadeIn"
           style={{ backgroundImage: `url('https://i.pinimg.com/736x/67/e9/60/67e960e46c4010b585d4eac3f4382654.jpg')` }}
         >
           <div className="absolute inset-0 bg-[#0B0E14]/25" />

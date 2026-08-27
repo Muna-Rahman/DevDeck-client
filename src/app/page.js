@@ -23,7 +23,7 @@ export default function LandingPage() {
         {/* Light Mode Specific Artwork Layer */}
         {!darkMode && (
           <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fade-in"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fadeIn"
             style={{ backgroundImage: `url('https://i.pinimg.com/736x/19/6c/8e/196c8e1b5682ea37d9c42ca85fec4b14.jpg')` }}
           >
             <div className="absolute inset-0 bg-white/20" />
@@ -33,7 +33,7 @@ export default function LandingPage() {
         {/* Dark Mode Specific Artwork Layer */}
         {darkMode && (
           <div 
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fade-in"
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed animate-fadeIn"
             style={{ backgroundImage: `url('https://i.pinimg.com/1200x/f2/64/d5/f264d5349c9e0ee907ba65172c63e54d.jpg')` }}
           >
             <div className="absolute inset-0 bg-black/50" />

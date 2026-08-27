@@ -1,5 +1,6 @@
 /* src/app/globals.css */
 @import "tailwindcss";
+@config "../../tailwind.config.mjs";
 
 @variant dark (&:where(.dark, .dark *));
 

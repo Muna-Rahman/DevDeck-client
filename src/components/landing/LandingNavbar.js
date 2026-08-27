@@ -67,7 +67,7 @@ export default function LandingNavbar() {
 
       {/* Mobile Glass Dropdown System */}
       {isOpen && (
-        <div className="absolute top-20 left-4 right-4 backdrop-blur-2xl bg-white/90 dark:bg-[rgba(11,13,19,0.95)] border border-white/40 dark:border-white/10 rounded-3xl p-6 flex flex-col gap-4 md:hidden shadow-2xl animate-fade-in">
+        <div className="absolute top-20 left-4 right-4 backdrop-blur-2xl bg-white/90 dark:bg-[rgba(11,13,19,0.95)] border border-white/40 dark:border-white/10 rounded-3xl p-6 flex flex-col gap-4 md:hidden shadow-2xl animate-fadeIn">
           <a href="#features" onClick={() => setIsOpen(false)} className="text-xs font-bold uppercase tracking-widest text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white">Features</a>
           <a href="#why" onClick={() => setIsOpen(false)} className="text-xs font-bold uppercase tracking-widest text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white">Benefits</a>
           <a href="#about" onClick={() => setIsOpen(false)} className="text-xs font-bold uppercase tracking-widest text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white">About</a>
