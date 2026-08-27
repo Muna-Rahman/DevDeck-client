@@ -21,6 +21,21 @@ import { authClient } from "@/lib/auth-client";
 import { useBookmarks } from '@/context/BookmarkContext';
 import CardDetailsDrawer from '@/components/CardDetailsDrawer';
 
+// Kept in sync with the same maps in CardItem.js — this dashboard grid uses
+// its own local DashboardCardItem instead of importing CardItem, so it
+// needs the same method/auth handling duplicated here. Previously this
+// component still had the pre-fix logic (POST vs everything-else coloring,
+// no auth display at all) even after CardItem.js itself was corrected,
+// since nothing here re-used that file.
+const METHOD_BADGE_CLASSES = {
+  GET: "bg-emerald-500/20 text-emerald-400",
+  POST: "bg-sky-500/20 text-sky-400",
+  PUT: "bg-amber-500/20 text-amber-400",
+  PATCH: "bg-orange-500/20 text-orange-400",
+  DELETE: "bg-rose-500/20 text-rose-400",
+};
+
+const AUTH_LABELS = { none: "None", bearer: "Bearer Token", apikey: "API Key", basic: "Basic" };
 
 function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
   const { toggleBookmark } = useBookmarks();
@@ -91,22 +106,31 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
           </div>
         );
       case 'API Endpoint':
-      case 'apis':
+      case 'apis': {
+        const method = (card.metadata?.httpMethod || card.content?.method || 'GET').toUpperCase();
+        const auth = Array.isArray(card.metadata?.auth)
+          ? card.metadata.auth
+          : (Array.isArray(card.content?.auth) ? card.content.auth : []);
+        const authLabel = (auth.length === 0 || (auth.length === 1 && auth[0] === 'none'))
+          ? "No auth"
+          : auth.filter((a) => a !== 'none').map((a) => AUTH_LABELS[a] || a).join(' + ');
         return (
           <div className="space-y-1.5 min-w-0">
             <div className="flex items-center gap-2 font-mono text-[11px] w-full">
-              <span className={`px-2 py-0.5 rounded font-extrabold text-[10px] flex-shrink-0 ${
-                card.metadata?.httpMethod === 'POST' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'
-              }`}>
-                {card.metadata?.httpMethod || 'GET'}
+              <span className={`px-2 py-0.5 rounded font-extrabold text-[10px] flex-shrink-0 ${METHOD_BADGE_CLASSES[method] || METHOD_BADGE_CLASSES.GET}`}>
+                {method}
               </span>
               <span className="text-[#F5F6FA] truncate block flex-1 break-all">
                 {card.metadata?.url || card.content?.url}
               </span>
             </div>
+            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-white/[0.04] text-[#9CA3B5] border border-white/[0.06]">
+              {authLabel}
+            </span>
             {descText && <p className="text-[11px] text-[#9CA3B5] line-clamp-2 break-words">{descText}</p>}
           </div>
         );
+      }
       default:
         return descText ? <p className="text-[#9CA3B5] text-xs line-clamp-2 break-words">{descText}</p> : null;
     }
