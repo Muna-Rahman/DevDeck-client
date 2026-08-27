@@ -46,6 +46,30 @@ const MONACO_VALIDATED_LANGUAGES = ["javascript", "typescript", "json"];
 // Minimum character length required before enabling AI prompts
 const MIN_AI_INPUT_LENGTH = 10;
 
+// Pulled out so both the initial useState call and the post-close reset
+// use the exact same blank shape — keeps them from drifting apart if a
+// field is ever added/renamed.
+const INITIAL_FORM_DATA = {
+  url: "",
+  title: "",
+  notes: "",
+  tags: [],
+  repoUrl: "",
+  customLabel: "",
+  language: "javascript",
+  code: "",
+  purpose: "",
+  noteTitle: "",
+  markdownContent: "",
+  apiMethod: "GET",
+  apiUrl: "",
+  apiAuth: [],
+  ideaTitle: "",
+  ideaStatus: "draft",
+  customCategoryTitle: "",
+  customCategoryContent: ""
+};
+
 export default function CreateCardModal({ isOpen, onClose, onSave }) {
   const [activeTab, setActiveTab] = useState("links");
 
@@ -61,6 +85,12 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
   // Unique session token to prevent duplicate saves on double-clicks
   const [clientRequestId, setClientRequestId] = useState(null);
 
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [errors, setErrors] = useState({});
+
+  // Capture Monaco editor diagnostics
+  const [codeSyntaxErrors, setCodeSyntaxErrors] = useState([]);
+
   useEffect(() => {
     if (!isOpen) {
       setSelectedCategory(null);
@@ -69,6 +99,15 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       setCategorySaveError("");
       setIsSubmitting(false);
       setCodeSyntaxErrors([]);
+      // The modal stays mounted between opens (it just renders null while
+      // closed), so without this the title/code/notes/etc. from the last
+      // saved card were still sitting in formData the next time it opened —
+      // forcing you to manually clear every field before saving another
+      // card of the same type. Reset the whole form (and any leftover
+      // validation errors) back to blank on every close.
+      setFormData(INITIAL_FORM_DATA);
+      setErrors({});
+      setActiveTab("links");
       return;
     }
 
@@ -149,31 +188,6 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
     }
   };
 
-  const [formData, setFormData] = useState({
-    url: "",
-    title: "",
-    notes: "",
-    tags: [],
-    repoUrl: "",
-    customLabel: "",
-    language: "javascript",
-    code: "",
-    purpose: "",
-    noteTitle: "",
-    markdownContent: "",
-    apiMethod: "GET",
-    apiUrl: "",
-    apiAuth: [],
-    ideaTitle: "",
-    ideaStatus: "draft",
-    customCategoryTitle: "",
-    customCategoryContent: ""
-  });
-
-  const [errors, setErrors] = useState({});
-
-  // Capture Monaco editor diagnostics
-  const [codeSyntaxErrors, setCodeSyntaxErrors] = useState([]);
   const handleCodeValidate = (markers) => {
     setCodeSyntaxErrors(markers.filter((m) => m.severity === 8)); // 8 is Monaco's MarkerSeverity.Error
   };
