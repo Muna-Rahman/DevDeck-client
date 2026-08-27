@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, ArrowRight } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import Footer from "@/components/landing/Footer";
@@ -62,56 +62,33 @@ export default function LandingPage() {
       {/* MAIN LAYOUT CANVAS FLOW */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-12 relative z-10 flex flex-col justify-start space-y-20">
         
-        {/* ROW 1: HERO VIEW */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch w-full">
-          {/* Left Hero Content */}
-          <div className="lg:col-span-7 rounded-3xl border border-black/5 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-2xl p-8 md:p-12 flex flex-col justify-center shadow-xl dark:shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-[#E94FD1] to-[#8B5CF6]" />
-            <div className="space-y-6 max-w-xl">
+        {/* ROW 1: HERO VIEW (modernized, centered, single-column) */}
+        <section className="w-full">
+          <div className="relative rounded-3xl border border-black/5 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-2xl px-6 py-16 md:px-16 md:py-24 flex flex-col items-center text-center shadow-xl dark:shadow-2xl overflow-hidden">
+            {/* ambient accents */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#E94FD1] via-[#8B5CF6] to-[#3FE0C5]" />
+            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#E94FD1]/10 blur-[100px] pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#3FE0C5]/10 blur-[100px] pointer-events-none" />
+
+            <div className="relative space-y-6 max-w-2xl">
               <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-[#E94FD1] bg-[#E94FD1]/10 px-3 py-1 rounded-full">
-                ✦ Built for modern developers
+                ✦ Made for developers who hate tab overload
               </span>
-              <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight leading-none text-[#1A1D29] dark:text-white">
-                Your workspace.<br/>
-                Perfected.<br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E94FD1] via-[#B55FE6] to-[#3FE0C5]">Streamlined.</span>
+              <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight leading-none text-[#1A1D29] dark:text-white">
+                One workspace.<br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E94FD1] via-[#B55FE6] to-[#3FE0C5]">Zero clutter.</span>
               </h1>
-              <p className="text-sm font-medium text-[#5B5F72] dark:text-[#9CA3B5] leading-relaxed">
-                Stop bouncing between tabs to manage your code. DevDeck brings your GitHub repositories, snippets, project links, and daily notes together into one beautiful, unified workspace.
+              <p className="text-sm md:text-base font-medium text-[#5B5F72] dark:text-[#9CA3B5] leading-relaxed max-w-xl mx-auto">
+                Tired of hopping between a dozen tabs just to find the right repo or snippet? DevDeck brings your GitHub projects, code snippets, links, and notes together in one clean, unified home — so you can get back to actually building.
               </p>
-              <div className="flex items-center gap-4 pt-2">
-                <Link href="/register" className="h-11 px-8 rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white text-xs font-bold uppercase tracking-widest shadow-xl hover:opacity-95 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center">
-                  Get Started Free →
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+                <Link href="/register" className="h-11 px-8 rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white text-xs font-bold uppercase tracking-widest shadow-xl hover:opacity-95 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                  Get Started Free <ArrowRight size={14} strokeWidth={3} />
                 </Link>
+                <a href="#features" className="h-11 px-8 rounded-xl border border-black/10 dark:border-white/15 text-[#1A1D29] dark:text-white text-xs font-bold uppercase tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-all flex items-center justify-center">
+                  See What It Does
+                </a>
               </div>
-            </div>
-          </div>
-
-          {/* Right Interactive Mockup */}
-          <div className="lg:col-span-5 rounded-3xl border border-black/5 dark:border-white/10 bg-white/85 dark:bg-black/60 backdrop-blur-2xl p-8 flex flex-col justify-between shadow-xl dark:shadow-2xl relative overflow-hidden min-h-[350px]">
-            <div className="absolute -inset-px bg-gradient-to-br from-[#E94FD1]/10 via-transparent to-[#3FE0C5]/10 pointer-events-none" />
-            
-            <div className="flex justify-between items-start">
-              <div className="p-2 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10">
-                <div className="w-2 h-2 rounded-full bg-[#0FB8A6] dark:bg-[#3FE0C5] animate-pulse" />
-              </div>
-              <span className="text-[10px] font-mono text-[#5B5F72] dark:text-white/40 tracking-widest uppercase">Platform Status</span>
-            </div>
-
-            <div className="flex-1 flex items-center justify-center my-4">
-              <div className="relative w-40 h-40 rounded-full border border-dashed border-[#E94FD1]/30 flex items-center justify-center animate-spin [animation-duration:25s]">
-                <div className="w-32 h-32 rounded-full border border-double border-[#3FE0C5]/20 flex items-center justify-center" />
-                <div className="absolute top-0 left-1/2 -ml-1 w-2 h-2 rounded-full bg-[#E94FD1] shadow-[0_0_8px_#E94FD1]" />
-                <div className="absolute bottom-4 left-4 w-1.5 h-1.5 rounded-full bg-[#3FE0C5] shadow-[0_0_8px_#3FE0C5]" />
-              </div>
-              <div className="absolute text-center">
-                <span className="text-sm font-bold font-mono tracking-wider text-[#1A1D29] dark:text-white/80">READY</span>
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-[11px] font-mono text-[#5B5F72] dark:text-white/50">
-              <span>WORKFLOW SYNC</span>
-              <span className="text-[#0FB8A6] dark:text-[#3FE0C5] font-bold">100% ONLINE</span>
             </div>
           </div>
         </section>
@@ -120,13 +97,13 @@ export default function LandingPage() {
         <section id="features" className="space-y-6 scroll-mt-24">
           <div className="flex flex-col space-y-1">
             <span className="text-[10px] font-bold tracking-widest text-[#E94FD1] uppercase">Capabilities</span>
-            <h2 className="text-2xl font-black uppercase text-[#1A1D29] dark:text-white">Built for the way you work</h2>
+            <h2 className="text-2xl font-black uppercase text-[#1A1D29] dark:text-white">Built for the way you actually work</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { title: "Secure Accounts", desc: "Keep your workspace private with premium, cookie-based authentication built directly into safe network layers.", color: "from-[#3FE0C5]" },
-              { title: "Developer Dashboard", desc: "Keep track of active staging links, project credentials, configurations, and quick resources in one clean panel.", color: "from-[#2FD1FF]" },
-              { title: "Code Snippet Manager", desc: "Save your most used code structures, boilerplate layouts, and handy utilities inside a responsive, beautiful board.", color: "from-[#E94FD1]" }
+              { title: "Secure Accounts", desc: "Your workspace stays yours. Sign in safely with cookie-based authentication built right into the platform, no clunky third-party logins required.", color: "from-[#3FE0C5]" },
+              { title: "Developer Dashboard", desc: "See what matters at a glance: staging links, project credentials, configs, and quick resources, all living in one clean, uncluttered panel.", color: "from-[#2FD1FF]" },
+              { title: "Code Snippet Manager", desc: "Stop rewriting the same boilerplate every time. Save the code you reach for most in a board that's genuinely nice to browse.", color: "from-[#E94FD1]" }
             ].map((feat, i) => (
               <div key={i} className="rounded-2xl border border-black/5 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-xl p-6 shadow-lg dark:shadow-xl relative group transition-all duration-300 hover:-translate-y-1 hover:border-black/10 dark:hover:border-white/20">
                 <div className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${feat.color} to-transparent rounded-t-2xl`} />
@@ -146,9 +123,9 @@ export default function LandingPage() {
           <div className="rounded-2xl border border-black/5 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-xl p-8 shadow-lg dark:shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#3FE0C5]/10 to-transparent pointer-events-none" />
             <div className="max-w-3xl space-y-4">
-              <h3 className="text-base font-bold text-[#1A1D29] dark:text-white uppercase tracking-wide">A tailor-made dashboard for your ideas</h3>
+              <h3 className="text-base font-bold text-[#1A1D29] dark:text-white uppercase tracking-wide">A workspace that actually fits how you think</h3>
               <p className="text-xs text-[#5B5F72] dark:text-[#9CA3B5] leading-relaxed">
-                DevDeck was created to eliminate tabs clutter and mental overhead. Instead of leaving important repos, API keys, snippet ideas, and design links scattered across browser bookmarks or random text files, DevDeck aggregates everything into a premium, interactive glass command board. It's your entire coding setup, elegantly organized.
+                We built DevDeck because juggling browser bookmarks, sticky notes, and random text files gets old fast. Instead of your repos, API keys, snippet ideas, and design links scattered everywhere, DevDeck brings it all into one calm, well-organized command board. It's your whole coding setup, finally in one place.
               </p>
             </div>
           </div>
@@ -164,7 +141,7 @@ export default function LandingPage() {
             <div className="rounded-2xl border border-black/5 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-xl p-6 shadow-lg dark:shadow-xl space-y-4">
               <h3 className="text-sm font-bold uppercase tracking-wide text-[#1A1D29] dark:text-white">Markdown Notes & Dynamic Pins</h3>
               <p className="text-xs text-[#5B5F72] dark:text-[#9CA3B5] leading-relaxed">
-                Write complete project wikis, deployment logs, or system rules directly in crisp markdown syntax. Pin important links and reference modules alongside your codebase tabs for rapid workflow context switches.
+                Jot down project wikis, deployment notes, or team rules in clean, familiar markdown. Pin the links you keep coming back to right alongside your codebase, so switching context never means losing your place.
               </p>
             </div>
             <div className="rounded-2xl border border-black/5 dark:border-white/10 bg-white/85 dark:bg-black/40 backdrop-blur-xl p-6 shadow-lg dark:shadow-xl space-y-3">
@@ -184,9 +161,9 @@ export default function LandingPage() {
         <section className="w-full max-w-4xl mx-auto pt-4">
           <div className="rounded-3xl border border-black/5 dark:border-white/10 bg-gradient-to-br from-white/95 to-white/85 dark:from-black/80 dark:to-[#11141D]/90 backdrop-blur-3xl p-8 md:p-12 text-center shadow-xl dark:shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#E94FD1] via-[#3FE0C5] to-[#8B5CF6]" />
-            <h2 className="text-2xl font-black uppercase tracking-wider text-[#1A1D29] dark:text-white">Ready to organize your workflow?</h2>
+            <h2 className="text-2xl font-black uppercase tracking-wider text-[#1A1D29] dark:text-white">Ready to get organized?</h2>
             <p className="text-xs text-[#5B5F72] dark:text-[#9CA3B5] mt-2 max-w-md mx-auto leading-relaxed">
-              Join developers who are tracking their projects, snippets, and repositories all in one place.
+              Join the developers who've traded tab chaos for one clean workspace, and start keeping your projects, snippets, and repos together in a single place.
             </p>
             <div className="mt-6 flex justify-center">
               <Link href="/register" className="h-11 px-8 rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white text-xs font-bold uppercase tracking-widest shadow-xl hover:opacity-95 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center">
