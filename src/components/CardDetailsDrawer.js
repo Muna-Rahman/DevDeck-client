@@ -5,6 +5,7 @@ import { Bookmark, BookmarkFill, Xmark, ArrowUpRight, Copy, ArrowLeft, Check, Tr
 export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onDelete, onUpdate }) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Editable Form State
   const [titleText, setTitleText] = useState('');
@@ -12,13 +13,25 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
   const [codeText, setCodeText] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
 
+  // Whether this card actually HAS a code field at all. Computed once from
+  // the card as it arrived (not from live `codeText`, and not from
+  // `metadata.code !== undefined` — the backend always includes
+  // `metadata.code` as "" for every card type, so that check was true for
+  // every single card and forced a "Code snippet can't be empty" error on
+  // cards that never had code in the first place, e.g. Notes/Ideas/Links).
+  const [hasCodeField, setHasCodeField] = useState(false);
+
   // Sync state with passed card prop
   useEffect(() => {
     if (card) {
+      const initialCode = card.content?.code || card.content?.snippet || card.metadata?.code || card.code || '';
       setTitleText(card.title || card.content?.title || card.metadata?.title || card.content?.repoUrl || card.content?.url || "Untitled Asset");
       setDescText(card.content?.notes || card.content?.description || card.metadata?.description || card.content?.body || card.description || '');
-      setCodeText(card.content?.code || card.content?.snippet || card.metadata?.code || card.code || '');
+      setCodeText(initialCode);
       setRepoUrl(card.content?.repoUrl || card.content?.url || card.metadata?.url || card.url || '');
+      setHasCodeField(Boolean(initialCode) || card.type === 'Snippet' || card.type === 'snippets');
+      setIsEditing(false);
+      setIsSaving(false);
     }
   }, [card]);
 
@@ -46,7 +59,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
     }
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!titleText.trim()) {
       alert("Title can't be empty.");
       return;
@@ -59,11 +72,13 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
       alert("That doesn't look like a valid URL.");
       return;
     }
-    if (card.content?.code !== undefined || card.metadata?.code !== undefined) {
-      if (!codeText.trim()) {
-        alert("Code snippet can't be empty.");
-        return;
-      }
+    // Use `hasCodeField` (computed once, from the card as loaded) instead of
+    // checking `metadata.code !== undefined` — the backend always stores
+    // `metadata.code` as "" for every card type, so that old check fired for
+    // every non-snippet card even though the code field wasn't shown at all.
+    if (hasCodeField && !codeText.trim()) {
+      alert("Code snippet can't be empty.");
+      return;
     }
 
     const updatedCard = {
@@ -74,20 +89,41 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
         title: titleText,
         notes: descText,
         description: descText,
-        code: codeText,
+        ...(hasCodeField ? { code: codeText } : {}),
         repoUrl: repoUrl,
         url: repoUrl,
       },
-    
+
       metadata: {
         ...card.metadata,
         description: descText,
-        code: codeText,
+        ...(hasCodeField ? { code: codeText } : {}),
         url: repoUrl,
       },
     };
-    if (onUpdate) onUpdate(updatedCard);
-    setIsEditing(false);
+
+    if (!onUpdate) {
+      setIsEditing(false);
+      return;
+    }
+
+    // Wait for the actual save to succeed before leaving edit mode. Before,
+    // this called onUpdate() without awaiting it and closed the edit form
+    // immediately — so on any save failure (network error, validation
+    // error, etc.) the drawer would still flip back to "view" mode showing
+    // the locally-edited (unsaved) text, making it look like the save had
+    // gone through when the server never actually persisted it.
+    setIsSaving(true);
+    try {
+      const result = await onUpdate(updatedCard);
+      // Treat only an explicit `false` as failure so this stays compatible
+      // with callers that don't return anything yet.
+      if (result !== false) {
+        setIsEditing(false);
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
 
@@ -111,8 +147,9 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
             <div className="flex items-center gap-2 flex-wrap">
               {/* EDIT BUTTON */}
               <button
-                onClick={() => setIsEditing(!isEditing)}
-                className={`p-2 rounded-lg border transition-all cursor-pointer ${
+                onClick={() => !isSaving && setIsEditing(!isEditing)}
+                disabled={isSaving}
+                className={`p-2 rounded-lg border transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
                   isEditing
                     ? 'bg-amber-500/20 border-amber-500 text-amber-500 dark:text-amber-400'
                     : 'bg-black/[0.02] dark:bg-white/[0.02] border-black/[0.06] dark:border-white/[0.06] text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white'
@@ -180,7 +217,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
                 </div>
               )}
 
-              {codeText && (
+              {hasCodeField && (
                 <div>
                   <label className="text-xs font-mono text-[#5B5F72] dark:text-[#9CA3B5] block mb-1">Code Snippet</label>
                   <textarea
@@ -205,15 +242,17 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 text-xs rounded-xl border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                  disabled={isSaving}
+                  className="px-4 py-2 text-xs rounded-xl border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#0FB8A6] dark:bg-[#3FE0C5] text-white dark:text-[#12141C] hover:opacity-90 transition-opacity cursor-pointer"
+                  disabled={isSaving}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#0FB8A6] dark:bg-[#3FE0C5] text-white dark:text-[#12141C] hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Changes
+                  {isSaving ? "Saving…" : "Save Changes"}
                 </button>
               </div>
             </div>

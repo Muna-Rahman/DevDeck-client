@@ -65,12 +65,17 @@ export default function BookmarksPage() {
         const savedCard = await res.json();
         setSelectedCard(savedCard);
         refreshBookmarks();
+        return true;
       } else {
-        const errText = await res.text().catch(() => "");
-        console.error(`Failed to update card (Status ${res.status}):`, errText);
+        const errorBody = await res.json().catch(() => ({}));
+        console.error(`Failed to update card (Status ${res.status}):`, errorBody);
+        alert(errorBody.error || "Failed to update card.");
+        return false;
       }
     } catch (err) {
       console.error("Error updating card:", err);
+      alert("Failed to update card.");
+      return false;
     }
   };
 

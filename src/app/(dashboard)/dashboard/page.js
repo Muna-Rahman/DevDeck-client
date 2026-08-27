@@ -308,14 +308,17 @@ export default function DashboardPage() {
       if (res.ok) {
         const savedCard = await res.json();
         handleCardStateShift(savedCard);
+        return true;
       } else {
         const errorBody = await res.json().catch(() => ({}));
         console.error(`Failed to update card (Status ${res.status}):`, errorBody);
         alert(errorBody.error || "Failed to update card.");
+        return false;
       }
     } catch (err) {
       console.error("Error updating card:", err);
       alert("Failed to update card.");
+      return false;
     }
   };
 

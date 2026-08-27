@@ -207,15 +207,33 @@ export default function SnippetsPage() {
 
   // 4. Delete Snippet
   const handleDelete = async (id) => {
+    if (!id) return;
+    if (!confirm("Are you sure you want to delete this snippet?")) return;
+
+    // Keep a copy so we can roll back if the delete doesn't actually
+    // succeed server-side. Before, the item was removed from local state
+    // unconditionally and the fetch response was never checked, so a failed
+    // delete (404/500/network error) still looked like it worked in the UI
+    // even though the snippet was still sitting in the database.
+    const previousSnippets = snippets;
     setSnippets((prev) => prev.filter((item) => (item.id || item._id) !== id));
 
     try {
-      await fetch(`${API_URL}/api/snippets/${id}`, {
+      const res = await fetch(`${API_URL}/api/snippets/${id}`, {
         method: "DELETE",
         credentials: "include",
       });
+
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}));
+        console.error(`Failed to delete snippet (Status ${res.status}):`, errorBody);
+        alert(errorBody.error || "Failed to delete snippet.");
+        setSnippets(previousSnippets);
+      }
     } catch (err) {
       console.error("Failed to delete snippet from database:", err);
+      alert("Failed to delete snippet.");
+      setSnippets(previousSnippets);
     }
   };
 

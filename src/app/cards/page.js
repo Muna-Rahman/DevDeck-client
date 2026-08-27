@@ -213,13 +213,16 @@ export default function CardsPage() {
           prev.map((c) => ((c.id || c._id) === cardId ? savedCard : c))
         );
         setSelectedCard(savedCard);
+        return true;
       } else {
         const errorBody = await response.json().catch(() => ({}));
         alert(errorBody.error || "Failed to update card.");
+        return false;
       }
     } catch (err) {
       console.error("Error updating card:", err);
       alert("Failed to update card.");
+      return false;
     }
   };
 
