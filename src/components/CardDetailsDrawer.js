@@ -289,7 +289,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
 
           {/* EDIT FORM OR VIEW MODE */}
           {isEditing ? (
-            <div className="space-y-4 mb-4">
+            <div className="space-y-4 mb-4 overflow-y-auto pr-2 min-h-0 scrollbar-none max-h-[65vh]">
               <div>
                 <label className="text-xs font-mono text-[#5B5F72] dark:text-[#9CA3B5] block mb-1">Title</label>
                 <input
@@ -357,7 +357,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
                   </div>
                   <div className="border rounded-xl overflow-hidden shadow-inner bg-[#0B0E14] border-black/10 dark:border-white/10">
                     <Editor
-                      height="220px"
+                      height="180px"
                       language={languageText || 'javascript'}
                       theme="devdeck-theme"
                       beforeMount={handleEditorWillMount}
