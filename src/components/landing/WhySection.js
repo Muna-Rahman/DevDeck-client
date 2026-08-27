@@ -1,49 +1,63 @@
-// src/components/landing/WhySection.js
-import React from "react";
-import { Check } from "@gravity-ui/icons";
+'use client';
 
-const coreValues = [
-  "Personalized workspace mapping layouts",
-  "Powerful multi-parameter search querying indexing",
-  "Immersive futuristic aesthetic with responsive depth",
-  "Theme customization engines supporting structural shifts",
-  "Quick resource management shortcuts",
-  "Modern productivity workflow tools mapping environment metrics"
-];
+import Link from 'next/link';
 
 export default function WhySection() {
-  return (
-    <section id="why" className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-      {/* Decorative Mock Environment Grid Pane */}
-      <div className="lg:col-span-6 order-2 lg:order-1 relative p-1 rounded-2xl border border-white/08 bg-[#1A1D29]/40 backdrop-blur-[20px] overflow-hidden">
-        <div className="grid grid-cols-3 gap-2 p-3 opacity-80 font-mono text-[10px] sm:text-xs">
-          <div className="p-4 rounded-xl border border-[#3FE0C5]/20 bg-[#3FE0C5]/05 text-[#3FE0C5] text-center">REPOS</div>
-          <div className="p-4 rounded-xl border border-[#E94FD1]/20 bg-[#E94FD1]/05 text-[#E94FD1] text-center">ENDPOINTS</div>
-          <div className="p-4 rounded-xl border border-[#8B5CF6]/20 bg-[#8B5CF6]/05 text-[#8B5CF6] text-center">NOTES</div>
-          <div className="col-span-3 p-4 rounded-xl border border-white/06 bg-white/05 text-[#9CA3B5] text-center tracking-wider">
-            GRID_ENGINE_STABLE
-          </div>
-        </div>
-      </div>
+  const points = [
+    {
+      title: 'Context switching is the real productivity killer',
+      body: 'Opening 15 browser tabs just to find that one regex or Bash boilerplate disrupts your flow state. DevDeck puts your most-used assets one keystroke away.',
+      icon: '🧠',
+    },
+    {
+      title: 'Clean, structured, and developer-first',
+      body: 'No bloated enterprise overhead or noisy dashboards. DevDeck gives you lightweight cards, syntax-aware snippets, and neat bookmark collections.',
+      icon: '⚡',
+    },
+    {
+      title: 'Works smoothly alongside your coding setup',
+      body: 'Whether you want a dark mode terminal feel or a high-contrast theme, DevDeck adapts seamlessly to your favorite workspace aesthetic.',
+      icon: '🎨',
+    },
+  ];
 
-      {/* Copy Block */}
-      <div className="lg:col-span-6 order-1 lg:order-2 space-y-6">
-        <h2 className="text-3xl sm:text-4xl font-medium tracking-tight text-[#F5F6FA]">
-          Why Developers Love DevDeck
-        </h2>
-        <p className="text-base text-[#9CA3B5] leading-relaxed">
-          Engineers waste valuable time sorting through disparate historical contexts to fetch environment details. DevDeck simplifies context switching so your focus remains strictly on execution optimization[cite: 1].
-        </p>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm sm:text-base font-normal text-[#9CA3B5]">
-          {coreValues.map((val, idx) => (
-            <li key={idx} className="flex items-start gap-2.5">
-              <span className="mt-1 flex items-center justify-center w-4 h-4 rounded-full bg-[#3FE0C5]/10 border border-[#3FE0C5]/30 text-[#3FE0C5]">
-                <Check className="w-3 h-3" />
-              </span>
-              <span>{val}</span>
-            </li>
+  return (
+    <section className="py-20 border-t border-base-content/5 bg-base-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto text-center mb-16">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-primary mb-2">Why DevDeck</h2>
+          <p className="text-3xl sm:text-4xl font-extrabold text-base-content tracking-tight">
+            Designed for developers who value clarity
+          </p>
+          <p className="mt-4 text-base-content/70">
+            A faster, cleaner way to store and retrieve your technical know-how without the noise.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {points.map((pt, i) => (
+            <div
+              key={i}
+              className="p-8 rounded-2xl bg-base-200/40 border border-base-content/5 flex flex-col justify-between hover:border-primary/20 transition-all"
+            >
+              <div>
+                <div className="text-3xl mb-4">{pt.icon}</div>
+                <h3 className="text-xl font-bold text-base-content mb-3 leading-snug">
+                  {pt.title}
+                </h3>
+                <p className="text-sm text-base-content/70 leading-relaxed">
+                  {pt.body}
+                </p>
+              </div>
+            </div>
           ))}
-        </ul>
+        </div>
+
+        <div className="mt-14 text-center">
+          <Link href="/snippets" className="btn btn-outline btn-sm normal-case font-medium">
+            Browse snippet collection →
+          </Link>
+        </div>
       </div>
     </section>
   );
