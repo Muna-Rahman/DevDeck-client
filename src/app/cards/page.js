@@ -23,9 +23,7 @@ export default function CardsPage() {
   const onOpen = () => setIsOpen(true);
   const onClose = () => setIsOpen(false);
 
-  // Auto-open the create card modal when navigated here via the navbar's
-  // global "Add Card" button (/cards?openModal=true), and honor the sidebar's
-  // "Categories" / "Tags" filter links (/cards?category=... / /cards?tag=...).
+  // Handle URL query parameters to auto-open the create modal or apply initial filters
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -73,7 +71,7 @@ export default function CardsPage() {
     fetchDatabaseCards();
   }, [backendUrl]);
 
-  // Map internal types to backend string enums
+  // Convert tab keys to corresponding backend type strings
   const mapTypeToBackend = (typeKey) => {
     switch (typeKey) {
       case "links": return "Resource Link";
@@ -82,15 +80,13 @@ export default function CardsPage() {
       case "notes": return "Markdown Note";
       case "apis": return "API Endpoint";
       case "ideas": return "Project Idea";
-      // Custom-category entries don't have their own backend type — they
-      // carry a freeform title/content, so store them as a Markdown Note
-      // under the hood. The real grouping happens via `category` below.
+      // Custom categories default to Markdown Note structure
       case "custom": return "Markdown Note";
       default: return typeKey;
     }
   };
 
-  // CREATE CARD
+  // Create card handler
   const handleSaveCard = async (payload) => {
     const { type, data } = payload;
     const content = extractCardData(type, data);
@@ -131,12 +127,7 @@ export default function CardsPage() {
       const savedCardFromDb = await response.json();
       const savedId = (savedCardFromDb._id || savedCardFromDb.id)?.toString();
 
-      // The server dedupes by content hash: saving the exact same content
-      // again (same URL, same repo, same code, same endpoint) responds 200
-      // with the EXISTING document instead of creating a new one. That
-      // existing card is already in local state, so blindly prepending it
-      // again would render the same card twice under the same id/key —
-      // exactly the duplicate-key bug already fixed on the Snippets page.
+      // Avoid adding duplicate cards if the backend returned an existing record
       const alreadyInState = workspaceCards.some((item) => (item._id || item.id)?.toString() === savedId);
       const isDuplicate = response.status === 200 || alreadyInState;
 
@@ -152,15 +143,13 @@ export default function CardsPage() {
       onClose();
     } catch (error) {
       console.error("Error creating card:", error);
-      // Rejected content (bad link, empty code, etc.) never gets added to
-      // state, and the modal stays open so the person can fix it instead of
-      // it silently vanishing.
+      // Keep modal open so entered data is not lost on failure
       alert(error.message || "Failed to save card.");
       throw error;
     }
   };
 
-  // DELETE CARD
+  // Delete card handler
   const handleDeleteCard = async (card, e) => {
     if (e) e.stopPropagation();
 
@@ -196,7 +185,7 @@ export default function CardsPage() {
     }
   };
 
-  // EDIT CARD
+  // Update card handler
   const handleEditCard = async (updatedCard) => {
     const cardId = updatedCard.id || updatedCard._id;
     try {
@@ -226,7 +215,7 @@ export default function CardsPage() {
     }
   };
 
-  // TOGGLE BOOKMARK
+  // Bookmark toggle handler
   const handleToggleBookmark = async (cardId, cardType) => {
     if (!cardId) return;
     const targetType =
@@ -283,7 +272,7 @@ export default function CardsPage() {
 
   return (
     <div className="min-h-screen p-8 flex flex-col gap-8 transition-colors duration-300">
-      {/* Header Bar */}
+      {/* Top navigation header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-black/10 dark:border-white/6 pb-6 w-full">
         <button
           onClick={() => router.push("/dashboard")}
@@ -293,7 +282,7 @@ export default function CardsPage() {
           <span>Back to Dashboard</span>
         </button>
 
-        {/* 3D Glass Pill Button matching DevDeck's theme */}
+        {/* Create card trigger button */}
         <button
           onClick={onOpen}
           className="relative inline-flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-full font-semibold text-xs tracking-wider uppercase text-white transition-all duration-300 transform active:scale-95 hover:scale-[1.03] cursor-pointer
@@ -304,7 +293,7 @@ export default function CardsPage() {
             hover:shadow-[inset_0_2px_6px_rgba(255,255,255,0.8),_inset_0_-2px_6px_rgba(0,0,0,0.4),_0_12px_30px_rgba(233,79,209,0.6)]
             overflow-hidden group"
         >
-          {/* Top Edge Reflection / Inner Highlight */}
+          {/* Subtle light reflection overlay */}
           <span className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-80" />
           
           <Plus className="w-4 h-4 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] transition-transform group-hover:rotate-90 duration-300" />
@@ -312,12 +301,12 @@ export default function CardsPage() {
             Create Card
           </span>
           
-          {/* Bottom Sheen / Light Flare */}
+          {/* Corner glow accent */}
           <span className="absolute -bottom-2 -right-4 w-12 h-12 bg-white/20 blur-md rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-500" />
         </button>
       </div>
 
-      {/* Active Filter Indicator */}
+      {/* Filter status tags */}
       {(activeCategory || activeTag) && (
         <div className="flex items-center gap-3 -mt-4 flex-wrap">
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -342,7 +331,7 @@ export default function CardsPage() {
         </div>
       )}
 
-      {/* Cards Grid */}
+      {/* Main card grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 items-start">
         {visibleCards.length === 0 ? (
           <div className="col-span-full h-64 border border-dashed border-black/10 dark:border-white/10 rounded-2xl flex flex-col items-center justify-center gap-4 bg-white/40 dark:bg-white/[0.02] backdrop-blur-sm p-6 text-center shadow-md">
@@ -385,7 +374,7 @@ export default function CardsPage() {
                       {card.type}
                     </span>
 
-                    {/* Card Actions: Bookmark, Edit & Delete */}
+                    {/* Bookmark and delete actions */}
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => {
@@ -425,7 +414,7 @@ export default function CardsPage() {
         )}
       </div>
 
-      {/* Modals & Drawers */}
+      {/* Modal and drawer components */}
       <CreateCardModal isOpen={isOpen} onClose={onClose} onSave={handleSaveCard} />
 
       {selectedCard && (

@@ -16,9 +16,7 @@ import {
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
-// Real URL validation instead of a loose regex — catches things like
-// "https://" with nothing after it, stray whitespace, or non-http(s)
-// schemes such as "javascript:...".
+// Ensure URL uses standard http or https protocols
 function isValidHttpUrl(candidate) {
   if (!candidate) return false;
   try {
@@ -29,9 +27,7 @@ function isValidHttpUrl(candidate) {
   }
 }
 
-// A GitHub repo URL must resolve to the github.com host itself (not just
-// contain the substring "github.com" anywhere in the string) and point at
-// an owner/repo path.
+// Check that the URL points to a github.com repo with owner/repo path
 function isValidGithubRepoUrl(candidate) {
   if (!isValidHttpUrl(candidate)) return false;
   try {
@@ -44,22 +40,16 @@ function isValidGithubRepoUrl(candidate) {
   }
 }
 
-// Monaco only ships a real parser/checker for these — every other language
-// in LANGUAGE_OPTIONS below only gets syntax *highlighting*, so onValidate's
-// markers stay empty no matter how broken the code is.
+// Languages that Monaco natively parses and reports syntax errors for
 const MONACO_VALIDATED_LANGUAGES = ["javascript", "typescript", "json"];
 
-// Keep this in sync with the server's MIN_AI_INPUT_LENGTH in /api/ai/generate —
-// both directions (code→description and description→code) need the same
-// minimum amount of real content before the button is even enabled.
+// Minimum character length required before enabling AI prompts
 const MIN_AI_INPUT_LENGTH = 10;
 
 export default function CreateCardModal({ isOpen, onClose, onSave }) {
   const [activeTab, setActiveTab] = useState("links");
 
-  // Categories you've created (via "Create Category") — pulled in
-  // automatically and rendered as extra chips right in the same tab bar as
-  // Link/Repo/Snippet/Note/API/Idea, not as a separate control.
+  // User-created categories displayed as tabs
   const [customCategories, setCustomCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -67,10 +57,8 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
   const [categorySaveError, setCategorySaveError] = useState("");
   const [savingCategory, setSavingCategory] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // One id per "compose session" (each time the modal opens). Sent with the
-  // save request and re-sent unchanged if the same click/submit somehow
-  // fires more than once, so the server's unique index can recognize it as
-  // the same attempt instead of a new card.
+
+  // Unique session token to prevent duplicate saves on double-clicks
   const [clientRequestId, setClientRequestId] = useState(null);
 
   useEffect(() => {
@@ -83,12 +71,14 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       setCodeSyntaxErrors([]);
       return;
     }
-    // Fresh id for this compose session every time the modal opens.
+
+    // Reset session ID whenever modal opens
     setClientRequestId(
       typeof crypto !== "undefined" && crypto.randomUUID
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`
     );
+
     let isMounted = true;
     const fetchCategories = async () => {
       try {
@@ -105,13 +95,12 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
         console.error("CreateCardModal: failed to load categories.", err);
       }
     };
+
     fetchCategories();
     return () => { isMounted = false; };
   }, [isOpen]);
 
-  // Persists a brand-new category (same endpoint the sidebar's "Create
-  // Category" uses), adds it to the chip list, and immediately tags this
-  // card with it — so saving a new category and using it are one step.
+  // Create a new category and select it immediately
   const handleSaveNewCategory = async () => {
     const trimmed = newCategoryName.trim();
     if (!trimmed) {
@@ -140,7 +129,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
         savedName = data.name;
         setCustomCategories((prev) => [data, ...prev]);
       } else if (response.status === 409) {
-        // Category already exists — just use the existing one.
+        // Use existing category if name already exists
         savedName = data.category?.name || trimmed;
       } else {
         setCategorySaveError(data?.error || "Failed to save category.");
@@ -182,15 +171,14 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
   });
 
   const [errors, setErrors] = useState({});
-  // The snippet tab's Monaco editor never had an onValidate handler, so
-  // syntax errors were tracked nowhere and code with real syntax errors
-  // could be saved. Mirror the same pattern the Snippets page uses.
+
+  // Capture Monaco editor diagnostics
   const [codeSyntaxErrors, setCodeSyntaxErrors] = useState([]);
   const handleCodeValidate = (markers) => {
-    setCodeSyntaxErrors(markers.filter((m) => m.severity === 8)); // 8 = MarkerSeverity.Error
+    setCodeSyntaxErrors(markers.filter((m) => m.severity === 8)); // 8 is Monaco's MarkerSeverity.Error
   };
 
-  // Expanded Language List
+  // Supported languages list
   const LANGUAGE_OPTIONS = [
     { value: "javascript", label: "JavaScript" },
     { value: "typescript", label: "TypeScript" },
@@ -212,7 +200,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
     { value: "shell", label: "Shell / Bash" },
   ];
 
-  // Define custom Monaco theme matching DevDeck palette
+  // Custom editor theme
   const handleEditorWillMount = (monaco) => {
     monaco.editor.defineTheme("devdeck-theme", {
       base: "vs-dark",
@@ -277,11 +265,6 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       if (!formData.apiUrl) {
         currentErrors.apiUrl = "Where are we targeting? An endpoint URL route is mandatory.";
       } else if (!isValidHttpUrl(formData.apiUrl)) {
-        // Reuse the same real URL check as the Link/Repo tabs (instead of a
-        // loose "/^https?:\/\/\S+/" regex that only checked the start of
-        // the string) so malformed input is caught here with a clear
-        // inline error instead of slipping through to the server's
-        // stricter check and surfacing as a generic alert().
         currentErrors.apiUrl = "That doesn't look like a valid endpoint URL. It must start with http:// or https://.";
       }
     }
@@ -301,7 +284,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field] : null }));
+      setErrors((prev) => ({ ...prev, [field]: null }));
     }
   };
 
@@ -320,9 +303,6 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
     setIsSubmitting(true);
     try {
-      // Wait for the save to actually finish before closing — this also
-      // guarantees a second click (or Enter key repeat) can't fire a second
-      // POST while the first one is still in flight.
       await onSave({
         type: activeTab,
         data: { ...formData, category: selectedCategory || undefined, clientRequestId }
@@ -330,9 +310,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       setSelectedCategory(null);
       onClose();
     } catch {
-      // onSave already alerted with the specific reason (bad link, empty
-      // code, etc.) — keep the modal open so the person can fix it instead
-      // of losing what they typed.
+      // Keep modal open so entered data is not lost on network/server errors
     } finally {
       setIsSubmitting(false);
     }
@@ -368,13 +346,13 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-      {/* Frosted Background Mask Layer */}
+      {/* Backdrop overlay */}
       <div 
         className="fixed inset-0 bg-[#0B0E14]/70 backdrop-blur-md transition-opacity duration-300"
         onClick={onClose}
       />
 
-      {/* Futuristic Glass HUD Container Frame */}
+      {/* Main modal container */}
       <div className={`bg-[#12141C]/90 backdrop-filter backdrop-blur-xl border border-white/8 rounded-2xl ${getGlowColorClass()} transition-shadow duration-500 max-h-[90vh] overflow-y-auto p-6 text-[#F5F6FA] relative w-full max-w-2xl z-10 flex flex-col gap-6`}>
         
         {/* Close Button */}
@@ -396,7 +374,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
         {/* Modal Body */}
         <div className="flex flex-col gap-6">
 
-          {/* Navigation Tabs — card type, plus your categories inline right after them */}
+          {/* Type selector and category chips */}
           <div className="bg-white/5 backdrop-blur-sm p-1.5 border border-white/6 rounded-2xl w-full flex flex-wrap items-center gap-1.5">
             {navTabs.map((tab) => {
               const isSelected = activeTab === tab.id;
@@ -469,9 +447,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
             )}
           </div>
 
-          {/* Inline "save a new category" form — appears right under the tab
-              bar when "+ New" is clicked, so creating one is a single step
-              instead of a separate flow elsewhere in the app. */}
+          {/* New category input */}
           {isAddingCategory && (
             <div className="flex gap-2 -mt-2">
               <input
@@ -630,7 +606,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   />
                 </div>
                 
-                {/* MONACO EDITOR WITH AUTO-CLOSING TAGS & BRACKETS */}
+                {/* Code editor container */}
                 <div className={`border rounded-xl overflow-hidden shadow-inner bg-[#0B0E14] ${errors.code ? "border-rose-500/60" : "border-white/10"}`}>
                   <Editor
                     height="240px"
@@ -648,10 +624,10 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                       tabSize: 2,
                       lineNumbers: "on",
                       folding: true,
-                      autoClosingTags: true,       // Automatically closes HTML/XML tags
-                      autoClosingBrackets: "always", // Automatically closes ({[]})
-                      autoClosingQuotes: "always",   // Automatically closes quotes '' "" ``
-                      formatOnPaste: true,           // Formats pasted code blocks
+                      autoClosingTags: true,
+                      autoClosingBrackets: "always",
+                      autoClosingQuotes: "always",
+                      formatOnPaste: true,
                       padding: { top: 12, bottom: 12 },
                     }}
                   />

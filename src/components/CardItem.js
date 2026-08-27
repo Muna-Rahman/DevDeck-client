@@ -3,10 +3,7 @@ import React from 'react';
 import { useBookmarks } from '../context/BookmarkContext';
 import { Bookmark, BookmarkFill, Star, ArrowUpRight, Copy } from '@gravity-ui/icons';
 
-// Same method -> color mapping as CreateCardModal's method <select> and
-// CardDetailsDrawer's request badge. Previously this only special-cased
-// POST (amber) vs everything else (green), so PUT/PATCH/DELETE all
-// rendered identically to GET.
+// Map HTTP methods to badge styles (keeps color consistency across modal and drawer views)
 const METHOD_BADGE_CLASSES = {
   GET: "bg-emerald-500/20 text-emerald-400",
   POST: "bg-sky-500/20 text-sky-400",
@@ -22,14 +19,14 @@ export default function CardItem({ card, onCardUpdate, onSelectCard }) {
 
   const handleBookmarkClick = async (e) => {
     e.preventDefault();
-    e.stopPropagation(); // CRITICAL: Stops the detail drawer from sliding open when just toggling bookmark status
+    e.stopPropagation(); // Avoid triggering the card selection/drawer
     const activeTargetId = card._id || card.id;
     const updated = await toggleBookmark(activeTargetId, card.type);
     if (onCardUpdate && updated) onCardUpdate(updated);
   };
 
   const handleCardClick = (e) => {
-    // If the user clicked the direct launch link or the copy button, don't trigger the layout drawer selection
+    // Ignore card click if clicking a direct link or copy button
     if (e.target.closest('a') || e.target.closest('.copy-btn-action')) return;
     if (onSelectCard) onSelectCard(card);
   };
@@ -63,7 +60,7 @@ export default function CardItem({ card, onCardUpdate, onSelectCard }) {
               <span className="text-xs text-[#3FE0C5] uppercase tracking-wider font-semibold">{card.metadata?.language || "Code"}</span>
               <button 
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent modal popup on copy utility engagement
+                  e.stopPropagation(); // Don't trigger the card drawer when copying
                   navigator.clipboard.writeText(card.metadata?.code || descText);
                 }}
                 className="copy-btn-action text-[#9CA3B5] hover:text-[#3FE0C5] transition-colors"
@@ -79,9 +76,7 @@ export default function CardItem({ card, onCardUpdate, onSelectCard }) {
       case 'API Endpoint':
       case 'apis': {
         const method = (card.metadata?.httpMethod || card.content?.method || 'GET').toUpperCase();
-        // Auth requirements previously never surfaced anywhere after
-        // creation — mirror them here from metadata.auth (with a fallback
-        // to content.auth for cards saved before that field was tracked).
+        // Support auth arrays from metadata or legacy content objects
         const auth = Array.isArray(card.metadata?.auth)
           ? card.metadata.auth
           : (Array.isArray(card.content?.auth) ? card.content.auth : []);

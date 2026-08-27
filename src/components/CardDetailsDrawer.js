@@ -2,16 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { Bookmark, BookmarkFill, Xmark, ArrowUpRight, Copy, ArrowLeft, Check, TrashBin, Pencil } from '@gravity-ui/icons';
 
-// Same auth option set + labels as the create modal (CreateCardModal.js),
-// kept in sync so a card's auth requirements read the same wherever they
-// appear.
+// Auth options and display labels matching CreateCardModal
 const AUTH_OPTIONS = ["none", "bearer", "apikey", "basic"];
 const AUTH_LABELS = { none: "None", bearer: "Bearer Token", apikey: "API Key", basic: "Basic" };
 
-// Same method -> color mapping as the create modal's <select>, so a method
-// badge looks the same whether you're creating, browsing, or viewing an API
-// card. Previously CardItem only special-cased POST (amber) vs everything
-// else (green), which made PUT/PATCH/DELETE render identically to GET.
+// Color mapping for HTTP method badges
 const METHOD_BADGE_CLASSES = {
   GET: "bg-emerald-500/20 text-emerald-400",
   POST: "bg-sky-500/20 text-sky-400",
@@ -30,22 +25,15 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
   const [descText, setDescText] = useState('');
   const [codeText, setCodeText] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
-  // API Endpoint-only fields. Previously the drawer never read or showed
-  // these at all — the HTTP method and auth requirements picked in
-  // CreateCardModal were saved but became invisible the moment you opened
-  // the card again.
+  
+  // API endpoint configuration state
   const [apiMethod, setApiMethod] = useState('GET');
   const [apiAuth, setApiAuth] = useState([]);
 
-  // Whether this card actually HAS a code field at all. Computed once from
-  // the card as it arrived (not from live `codeText`, and not from
-  // `metadata.code !== undefined` — the backend always includes
-  // `metadata.code` as "" for every card type, so that check was true for
-  // every single card and forced a "Code snippet can't be empty" error on
-  // cards that never had code in the first place, e.g. Notes/Ideas/Links).
+  // Check if the card includes code content (prevents false validation errors on notes/ideas)
   const [hasCodeField, setHasCodeField] = useState(false);
 
-  // Sync state with passed card prop
+  // Sync state with incoming card prop
   useEffect(() => {
     if (card) {
       const initialCode = card.content?.code || card.content?.snippet || card.metadata?.code || card.code || '';
@@ -95,18 +83,14 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
       alert("Title can't be empty.");
       return;
     }
-    // Only enforce these when the field is actually part of this card (the
-    // drawer only shows the URL/code inputs when the card already has that
-    // content), so a plain note or idea card isn't held to a URL/code rule
-    // that never applied to it.
+    
+    // Only validate URL if the card actually has one
     if (repoUrl && !isValidHttpUrl(repoUrl.startsWith("http") ? repoUrl : `https://${repoUrl}`)) {
       alert("That doesn't look like a valid URL.");
       return;
     }
-    // Use `hasCodeField` (computed once, from the card as loaded) instead of
-    // checking `metadata.code !== undefined` — the backend always stores
-    // `metadata.code` as "" for every card type, so that old check fired for
-    // every non-snippet card even though the code field wasn't shown at all.
+    
+    // Validate code only if this card type uses code snippets
     if (hasCodeField && !codeText.trim()) {
       alert("Code snippet can't be empty.");
       return;
@@ -123,10 +107,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
         ...(hasCodeField ? { code: codeText } : {}),
         repoUrl: repoUrl,
         url: repoUrl,
-        // Method/auth were previously write-once at creation — an edit
-        // never resent them, but since ...card.content already spreads
-        // the originals first this was harmless. Sending them explicitly
-        // here means the drawer's new method/auth controls actually save.
+        // Persist updated API method and auth settings
         ...(isApiCard ? { method: apiMethod, auth: apiAuth } : {}),
       },
 
@@ -144,17 +125,11 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
       return;
     }
 
-    // Wait for the actual save to succeed before leaving edit mode. Before,
-    // this called onUpdate() without awaiting it and closed the edit form
-    // immediately — so on any save failure (network error, validation
-    // error, etc.) the drawer would still flip back to "view" mode showing
-    // the locally-edited (unsaved) text, making it look like the save had
-    // gone through when the server never actually persisted it.
+    // Await update resolution before closing edit view to avoid desync on failure
     setIsSaving(true);
     try {
       const result = await onUpdate(updatedCard);
-      // Treat only an explicit `false` as failure so this stays compatible
-      // with callers that don't return anything yet.
+      // Treat only an explicit false as failure for backwards compatibility
       if (result !== false) {
         setIsEditing(false);
       }
@@ -171,11 +146,11 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
 
       <div className="absolute inset-0" onClick={onClose} />
 
-    
+      {/* Main drawer card container */}
       <div className="relative w-full max-w-2xl lg:max-w-3xl border rounded-2xl p-5 sm:p-6 md:p-8 flex flex-col justify-between max-h-[90vh] z-10 transition-all duration-300 bg-white/90 dark:bg-[#1A1D29]/85 border-black/[0.08] dark:border-white/[0.08] backdrop-blur-[40px] shadow-[0_20px_50px_rgba(20,20,40,0.12)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] text-[#1A1D29] dark:text-[#F5F6FA]">
 
         <div className="flex flex-col min-h-0">
-          {/* Header Action Row — wraps instead of overflowing on narrow screens */}
+          {/* Header Action Row */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-black/[0.06] dark:border-white/[0.06]">
             <span className="px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-widest border rounded bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/10 text-[#0FB8A6] dark:text-[#3FE0C5]">
               {displayType}
@@ -335,9 +310,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
                 {titleText}
               </h2>
 
-              {/* Inner Content Matrix — this whole area scrolls, so any
-                  combination of long title/URL/code/notes stays contained
-                  inside the modal instead of pushing it off-screen. */}
+              {/* Scrollable details container */}
               <div className="space-y-6 overflow-y-auto pr-2 min-h-0 scrollbar-none">
 
                 {isApiCard && (
@@ -393,9 +366,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
                         {copied ? <Check className="w-3 h-3 text-emerald-500 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />} Copy Source
                       </button>
                     </div>
-                    {/* max-h + overflow-y-auto (not just overflow-x-auto) so
-                        large files scroll inside their own box instead of
-                        spilling past it and breaking the modal's layout. */}
+                    {/* Auto-scroll container for long snippets */}
                     <pre className="p-4 rounded-xl text-xs font-mono border max-h-56 sm:max-h-72 md:max-h-96 shadow-inner overflow-auto bg-[#EBEDF5]/90 dark:bg-[#0B0E14]/90 border-black/5 dark:border-white/5 text-[#0FB8A6] dark:text-[#3FE0C5]">
                       <code>{codeText}</code>
                     </pre>
@@ -418,7 +389,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
           )}
         </div>
 
-        {/* Footer — stacks on small screens instead of squeezing side by side */}
+        {/* Footer actions */}
         <div className="pt-5 mt-6 border-t flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs font-mono border-black/[0.06] dark:border-white/[0.06] text-zinc-400 dark:text-zinc-600">
           <button
             onClick={onClose}

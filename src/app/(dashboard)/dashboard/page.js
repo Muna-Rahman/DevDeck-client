@@ -31,7 +31,7 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
     e.stopPropagation();
     
     const activeTargetId = card._id || card.id;
-        const updated = await toggleBookmark(activeTargetId, card.type);
+    const updated = await toggleBookmark(activeTargetId, card.type);
     if (onCardUpdate && updated) onCardUpdate(updated);
   };
 
@@ -160,10 +160,9 @@ export default function DashboardPage() {
   const [dbCards, setDbCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
   
-  // HUD Runtime Monitoring States
+  // Track workspace session status and active time
   const [isSystemActive, setIsSystemActive] = useState(true);
   const [uptimeDisplay, setUptimeDisplay] = useState("0m 0s");
-
 
   const [customCategories, setCustomCategories] = useState([]);
   
@@ -202,7 +201,7 @@ export default function DashboardPage() {
         }));
       }
 
-      // Deduplicate cards and snippets by unique ID using a Map
+      // Merge cards and snippets into one list, removing duplicate IDs
       const unifiedMap = new Map();
 
       cardsData.forEach((item) => {
@@ -257,8 +256,7 @@ export default function DashboardPage() {
     refreshBookmarks();
   };
 
-  // DELETE CARD (works for both cards and snippets, mirroring the
-  // bookmark-toggle endpoint-selection logic above)
+  // Delete card or snippet using its respective API route
   const handleDeleteCard = async (cardId) => {
     if (!cardId) return;
     if (!confirm("Are you sure you want to delete this card?")) return;
@@ -288,8 +286,7 @@ export default function DashboardPage() {
     }
   };
 
-  // UPDATE CARD (PUT for cards, PATCH for snippets — same endpoint split
-  // used for bookmarking and deleting)
+  // Save edits: PUT for standard cards, PATCH for code snippets
   const handleUpdateCard = async (updatedCard) => {
     const cardId = updatedCard._id || updatedCard.id;
     try {
@@ -345,7 +342,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Precision interval calculator tracking dynamic strings matching 'Xh Ym Zs' or 'Ym Zs'
+  // Track session uptime and flag as idle after 2 minutes without user interaction
   useEffect(() => {
     const runtimeInterval = setInterval(() => {
       if (isSystemActive) {
@@ -401,7 +398,6 @@ export default function DashboardPage() {
     baseCategories.flatMap((c) => c.ids.map((id) => id.toLowerCase()))
   );
 
- 
   const customCategoryEntries = customCategories
     .filter((cat) => cat?.name && !baseCategoryNames.has(cat.name.toLowerCase()))
     .map((cat) => ({ id: cat.name, ids: [cat.name], title: cat.name }));
@@ -436,7 +432,7 @@ export default function DashboardPage() {
   return (
     <div className="w-full flex flex-col justify-start relative z-10 space-y-6 min-w-0">
       
-      {/* HERO HEADER */}
+      {/* Header section */}
       <div className="flex flex-col gap-4 w-full">
         <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center w-full">
           <div className="rounded-2xl p-6 bg-white/85 dark:bg-black/60 backdrop-blur-2xl border border-white/40 dark:border-white/10 max-w-xl shadow-2xl flex-1 w-full transition-all duration-300 hover:border-white/60 dark:hover:border-white/20">
@@ -449,7 +445,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* HUD MONITOR */}
+          {/* Activity and uptime monitor */}
           <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/85 dark:bg-black/60 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-2xl w-full sm:w-auto min-w-[240px] justify-center sm:justify-start transition-all duration-500">
             <div className="relative h-16 w-16 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
@@ -487,7 +483,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* STAT MODULE CARDS */}
+      {/* Summary stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total Assets", value: dbCards.length.toString(), icon: Layers, color: "text-[#7C3AED] dark:text-[#8B5CF6]" },
@@ -507,7 +503,7 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* CHIPS FILTER SLOTS */}
+      {/* Category filter tabs */}
       <div className="w-full bg-white/5 dark:bg-black/20 backdrop-blur-2xl p-2 border border-white/40 dark:border-white/5 rounded-2xl shadow-xl select-none">
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-7 gap-2 w-full">
           {filters.map((filter) => {
@@ -529,7 +525,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* STACKED FULL-WIDTH SERIAL CATEGORY PANELS */}
+      {/* Category sections and cards list */}
       {visibleCategories.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 backdrop-blur-2xl p-12 text-center max-w-xl mx-auto w-full shadow-2xl">
           <div className="h-2 w-2 bg-[#3FE0C5] rounded-full animate-ping mx-auto mb-4" />
@@ -548,14 +544,14 @@ export default function DashboardPage() {
                 key={col.id} 
                 className="rounded-2xl bg-black/40 backdrop-blur-2xl border border-white/10 p-6 flex flex-col gap-4 shadow-2xl w-full"
               >
-                {/* Category Header */}
+                {/* Section header */}
                 <div className="flex items-center justify-between pb-3 border-b border-white/10">
                   <h3 className="text-xs font-black uppercase tracking-widest text-white/90 font-mono">
                     {col.title.toUpperCase()} ({columnCards.length})
                   </h3>
                 </div>
 
-                {/* Vertical Stack of Full-Width Cards */}
+                {/* Cards stack */}
                 <div className="flex flex-col gap-4 w-full">
                   {columnCards.map((card, idx) => {
                     const uniqueKey = `${card.type || 'card'}-${card._id || card.id}-${idx}`;
@@ -575,7 +571,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Floating Insight Panel Details Overlay */}
+      {/* Card details drawer */}
       <CardDetailsDrawer 
         card={selectedCard}
         onClose={() => setSelectedCard(null)}
