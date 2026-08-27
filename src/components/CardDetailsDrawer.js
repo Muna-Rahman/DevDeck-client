@@ -36,7 +36,36 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const isValidHttpUrl = (candidate) => {
+    if (!candidate) return false;
+    try {
+      const parsed = new URL(candidate.trim());
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
   const handleSaveEdit = () => {
+    if (!titleText.trim()) {
+      alert("Title can't be empty.");
+      return;
+    }
+    // Only enforce these when the field is actually part of this card (the
+    // drawer only shows the URL/code inputs when the card already has that
+    // content), so a plain note or idea card isn't held to a URL/code rule
+    // that never applied to it.
+    if (repoUrl && !isValidHttpUrl(repoUrl.startsWith("http") ? repoUrl : `https://${repoUrl}`)) {
+      alert("That doesn't look like a valid URL.");
+      return;
+    }
+    if (card.content?.code !== undefined || card.metadata?.code !== undefined) {
+      if (!codeText.trim()) {
+        alert("Code snippet can't be empty.");
+        return;
+      }
+    }
+
     const updatedCard = {
       ...card,
       title: titleText,

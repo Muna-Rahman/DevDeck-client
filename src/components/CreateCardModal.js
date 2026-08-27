@@ -16,6 +16,39 @@ import {
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+// Real URL validation instead of a loose regex — catches things like
+// "https://" with nothing after it, stray whitespace, or non-http(s)
+// schemes such as "javascript:...".
+function isValidHttpUrl(candidate) {
+  if (!candidate) return false;
+  try {
+    const parsed = new URL(candidate.trim());
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+// A GitHub repo URL must resolve to the github.com host itself (not just
+// contain the substring "github.com" anywhere in the string) and point at
+// an owner/repo path.
+function isValidGithubRepoUrl(candidate) {
+  if (!isValidHttpUrl(candidate)) return false;
+  try {
+    const { hostname, pathname } = new URL(candidate.trim());
+    const host = hostname.toLowerCase();
+    if (host !== "github.com" && host !== "www.github.com") return false;
+    return pathname.split("/").filter(Boolean).length >= 2;
+  } catch {
+    return false;
+  }
+}
+
+// Monaco only ships a real parser/checker for these — every other language
+// in LANGUAGE_OPTIONS below only gets syntax *highlighting*, so onValidate's
+// markers stay empty no matter how broken the code is.
+const MONACO_VALIDATED_LANGUAGES = ["javascript", "typescript", "json"];
+
 // Keep this in sync with the server's MIN_AI_INPUT_LENGTH in /api/ai/generate —
 // both directions (code→description and description→code) need the same
 // minimum amount of real content before the button is even enabled.
@@ -47,6 +80,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       setNewCategoryName("");
       setCategorySaveError("");
       setIsSubmitting(false);
+      setCodeSyntaxErrors([]);
       return;
     }
     // Fresh id for this compose session every time the modal opens.
@@ -148,6 +182,13 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
   });
 
   const [errors, setErrors] = useState({});
+  // The snippet tab's Monaco editor never had an onValidate handler, so
+  // syntax errors were tracked nowhere and code with real syntax errors
+  // could be saved. Mirror the same pattern the Snippets page uses.
+  const [codeSyntaxErrors, setCodeSyntaxErrors] = useState([]);
+  const handleCodeValidate = (markers) => {
+    setCodeSyntaxErrors(markers.filter((m) => m.severity === 8)); // 8 = MarkerSeverity.Error
+  };
 
   // Expanded Language List
   const LANGUAGE_OPTIONS = [
@@ -204,7 +245,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
     if (activeTab === "links") {
       if (!formData.url) {
         currentErrors.url = "We need a valid link to point your card to.";
-      } else if (!/^https?:\/\/\S+/.test(formData.url)) {
+      } else if (!isValidHttpUrl(formData.url)) {
         currentErrors.url = "That layout doesn't look like a real URL setup.";
       }
       if (!formData.title) currentErrors.title = "Give it a short, descriptive name so it's easy to spot.";
@@ -213,14 +254,18 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
     if (activeTab === "repos") {
       if (!formData.repoUrl) {
         currentErrors.repoUrl = "We need a repository link to capture this.";
-      } else if (!formData.repoUrl.includes("github.com")) {
-        currentErrors.repoUrl = "That doesn't look like a valid GitHub repository URL.";
+      } else if (!isValidGithubRepoUrl(formData.repoUrl)) {
+        currentErrors.repoUrl = "That doesn't look like a valid GitHub repository URL (expected https://github.com/owner/repo).";
       }
     }
 
     if (activeTab === "snippets") {
       if (!formData.language) currentErrors.language = "Pick a language framework so syntax engines can shine.";
-      if (!formData.code || !formData.code.trim()) currentErrors.code = "A snippet card needs some code to hold onto!";
+      if (!formData.code || !formData.code.trim()) {
+        currentErrors.code = "A snippet card needs some code to hold onto!";
+      } else if (MONACO_VALIDATED_LANGUAGES.includes(formData.language) && codeSyntaxErrors.length > 0) {
+        currentErrors.code = `Fix ${codeSyntaxErrors.length} syntax error(s) in the code before saving.`;
+      }
     }
 
     if (activeTab === "notes") {
@@ -279,6 +324,10 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       });
       setSelectedCategory(null);
       onClose();
+    } catch {
+      // onSave already alerted with the specific reason (bad link, empty
+      // code, etc.) — keep the modal open so the person can fix it instead
+      // of losing what they typed.
     } finally {
       setIsSubmitting(false);
     }
@@ -558,7 +607,9 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                 <div className="flex flex-wrap justify-between items-center gap-2 mb-1.5">
                   <div className="flex items-center gap-2">
                     <label className={labelClass}>The Code</label>
-                    <span className="text-[10px] font-mono text-[#3FE0C5]">VS Code Intellisense Engine</span>
+                    <span className="text-[10px] font-mono text-[#3FE0C5]">
+                      {MONACO_VALIDATED_LANGUAGES.includes(formData.language) ? "VS Code Intellisense Engine" : "Syntax highlighting only — not linted"}
+                    </span>
                   </div>
                   <AiAssistButton
                     mode="code"
@@ -583,6 +634,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                     beforeMount={handleEditorWillMount}
                     value={formData.code}
                     onChange={(value) => handleInputChange("code", value || "")}
+                    onValidate={handleCodeValidate}
                     options={{
                       fontSize: 13,
                       minimap: { enabled: false },
@@ -599,6 +651,11 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                     }}
                   />
                 </div>
+                {MONACO_VALIDATED_LANGUAGES.includes(formData.language) && codeSyntaxErrors.length > 0 && !errors.code && (
+                  <p className={errorClass}>
+                    {codeSyntaxErrors.length} syntax error(s) — fix these before saving.
+                  </p>
+                )}
                 {errors.code && <p className={errorClass}>{errors.code}</p>}
               </div>
 

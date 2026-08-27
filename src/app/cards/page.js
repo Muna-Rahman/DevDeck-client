@@ -123,9 +123,9 @@ export default function CardsPage() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text().catch(() => "{}");
-        console.error("Server Error Payload:", errorText);
-        throw new Error("Failed to save card.");
+        const errorBody = await response.json().catch(() => ({}));
+        console.error("Server Error Payload:", errorBody);
+        throw new Error(errorBody.error || "Failed to save card.");
       }
 
       const savedCardFromDb = await response.json();
@@ -133,6 +133,11 @@ export default function CardsPage() {
       onClose();
     } catch (error) {
       console.error("Error creating card:", error);
+      // Rejected content (bad link, empty code, etc.) never gets added to
+      // state, and the modal stays open so the person can fix it instead of
+      // it silently vanishing.
+      alert(error.message || "Failed to save card.");
+      throw error;
     }
   };
 
@@ -189,9 +194,13 @@ export default function CardsPage() {
           prev.map((c) => ((c.id || c._id) === cardId ? savedCard : c))
         );
         setSelectedCard(savedCard);
+      } else {
+        const errorBody = await response.json().catch(() => ({}));
+        alert(errorBody.error || "Failed to update card.");
       }
     } catch (err) {
       console.error("Error updating card:", err);
+      alert("Failed to update card.");
     }
   };
 

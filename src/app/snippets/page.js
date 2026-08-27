@@ -38,6 +38,12 @@ const LANGUAGES = [
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+// Monaco only ships a real parser/checker for these — everything else in
+// LANGUAGES above only gets syntax *highlighting*, so onValidate's markers
+// stay empty no matter how broken the code is. Don't claim to catch errors
+// we can't actually catch.
+const MONACO_VALIDATED_LANGUAGES = ["javascript", "typescript", "json"];
+
 // Keep this in sync with the server's MIN_AI_INPUT_LENGTH in /api/ai/generate —
 // both directions (code→description and description→code) need the same
 // minimum amount of real content before the button is even enabled.
@@ -101,7 +107,15 @@ export default function SnippetsPage() {
   // 2. Save Snippet
   const handleCreateSnippet = async (e) => {
     e.preventDefault();
-    if (!newTitle || !newCode || isSubmitting) return;
+    if (!newTitle.trim() || !newCode.trim() || isSubmitting) return;
+
+    // Monaco's onValidate only does real syntax checking for JS/TS/JSON —
+    // for every other language it's markers array is always empty, so only
+    // enforce this where the check is actually meaningful.
+    if (MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0) {
+      alert(`This snippet has ${editorErrors.length} syntax error(s). Fix them before saving.`);
+      return;
+    }
 
     const newSnippetData = {
       title: newTitle,
@@ -122,12 +136,31 @@ export default function SnippetsPage() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to save snippet");
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || "Failed to save snippet");
       }
 
       const savedSnippet = await res.json();
+      const savedId = savedSnippet.id || savedSnippet._id;
 
-      setSnippets((prev) => [savedSnippet, ...prev]);
+      // The server dedupes by content hash: if this exact code (+ language)
+      // was already saved, it responds 200 with the EXISTING document
+      // instead of creating a new one. That existing snippet is likely
+      // already sitting in local state, so blindly prepending it again
+      // would add a second array entry with the same id/key — which is
+      // exactly what caused the duplicate-key React warning. Guard against
+      // that instead of just letting it render twice.
+      const isDuplicate = res.status === 200 || snippets.some((item) => (item.id || item._id) === savedId);
+
+      if (isDuplicate) {
+        setSnippets((prev) =>
+          prev.some((item) => (item.id || item._id) === savedId) ? prev : [savedSnippet, ...prev]
+        );
+        alert("A snippet with this exact code already exists — it wasn't saved again.");
+      } else {
+        setSnippets((prev) => [savedSnippet, ...prev]);
+      }
+
       setIsModalOpen(false);
 
       // Reset Form
@@ -139,7 +172,9 @@ export default function SnippetsPage() {
       setEditorErrors([]);
     } catch (err) {
       console.error("Error persisting snippet to database:", err);
-      alert("Failed to save snippet to the database. Make sure Express server is running on http://localhost:3001");
+      alert(err.message === "Failed to save snippet"
+        ? "Failed to save snippet to the database. Make sure Express server is running on http://localhost:3001"
+        : err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -522,9 +557,11 @@ export default function SnippetsPage() {
               {/* Real-time Monaco Code Editor */}
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                  <label className="text-xs font-medium text-[#9CA3B5]">Code Editor (IntelliSense &amp; Syntax Linting Enabled)</label>
+                  <label className="text-xs font-medium text-[#9CA3B5]">
+                    Code Editor {MONACO_VALIDATED_LANGUAGES.includes(newLang) ? "(IntelliSense & Syntax Linting Enabled)" : "(Syntax Highlighting Only)"}
+                  </label>
                   <div className="flex items-center gap-2">
-                    {editorErrors.length > 0 && (
+                    {MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0 && (
                       <span className="flex items-center gap-1 text-[11px] text-amber-400 font-medium">
                         <AlertTriangle size={12} />
                         {editorErrors.length} Syntax Error(s)
@@ -567,6 +604,11 @@ export default function SnippetsPage() {
                     }}
                   />
                 </div>
+                {!MONACO_VALIDATED_LANGUAGES.includes(newLang) && (
+                  <p className="text-[10px] text-[#5B5F72] dark:text-[#9CA3B5] mt-1">
+                    Live syntax checking is only available for JavaScript, TypeScript, and JSON — {newLang} code won&apos;t be checked before saving.
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -580,10 +622,11 @@ export default function SnippetsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || (MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0) || !newTitle.trim() || !newCode.trim()}
+                  title={MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0 ? "Fix the syntax errors in the editor first" : undefined}
                   className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] hover:opacity-95 cursor-pointer shadow-[0_0_15px_rgba(233,79,209,0.25)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? "Saving…" : "Save Snippet"}
+                  {isSubmitting ? "Saving…" : editorErrors.length > 0 ? "Fix Errors to Save" : "Save Snippet"}
                 </button>
               </div>
             </form>
