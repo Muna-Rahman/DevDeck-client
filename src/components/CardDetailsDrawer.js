@@ -2,6 +2,24 @@
 import React, { useEffect, useState } from 'react';
 import { Bookmark, BookmarkFill, Xmark, ArrowUpRight, Copy, ArrowLeft, Check, TrashBin, Pencil } from '@gravity-ui/icons';
 
+// Same auth option set + labels as the create modal (CreateCardModal.js),
+// kept in sync so a card's auth requirements read the same wherever they
+// appear.
+const AUTH_OPTIONS = ["none", "bearer", "apikey", "basic"];
+const AUTH_LABELS = { none: "None", bearer: "Bearer Token", apikey: "API Key", basic: "Basic" };
+
+// Same method -> color mapping as the create modal's <select>, so a method
+// badge looks the same whether you're creating, browsing, or viewing an API
+// card. Previously CardItem only special-cased POST (amber) vs everything
+// else (green), which made PUT/PATCH/DELETE render identically to GET.
+const METHOD_BADGE_CLASSES = {
+  GET: "bg-emerald-500/20 text-emerald-400",
+  POST: "bg-sky-500/20 text-sky-400",
+  PUT: "bg-amber-500/20 text-amber-400",
+  PATCH: "bg-orange-500/20 text-orange-400",
+  DELETE: "bg-rose-500/20 text-rose-400",
+};
+
 export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onDelete, onUpdate }) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -12,6 +30,12 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
   const [descText, setDescText] = useState('');
   const [codeText, setCodeText] = useState('');
   const [repoUrl, setRepoUrl] = useState('');
+  // API Endpoint-only fields. Previously the drawer never read or showed
+  // these at all — the HTTP method and auth requirements picked in
+  // CreateCardModal were saved but became invisible the moment you opened
+  // the card again.
+  const [apiMethod, setApiMethod] = useState('GET');
+  const [apiAuth, setApiAuth] = useState([]);
 
   // Whether this card actually HAS a code field at all. Computed once from
   // the card as it arrived (not from live `codeText`, and not from
@@ -30,6 +54,8 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
       setCodeText(initialCode);
       setRepoUrl(card.content?.repoUrl || card.content?.url || card.metadata?.url || card.url || '');
       setHasCodeField(Boolean(initialCode) || card.type === 'Snippet' || card.type === 'snippets');
+      setApiMethod((card.metadata?.httpMethod || card.content?.method || 'GET').toUpperCase());
+      setApiAuth(Array.isArray(card.metadata?.auth) ? card.metadata.auth : (Array.isArray(card.content?.auth) ? card.content.auth : []));
       setIsEditing(false);
       setIsSaving(false);
     }
@@ -41,6 +67,11 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
   const isBookmarkedState = card.isBookmarked || false;
   const languageText = card.content?.language || card.metadata?.language || card.language;
   const displayType = card.type || (repoUrl ? "GitHub Repository" : codeText ? "Snippet" : "Card");
+  const isApiCard = card.type === 'API Endpoint' || card.type === 'apis';
+
+  const toggleApiAuth = (value) => {
+    setApiAuth((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
+  };
 
   const copyToClipboard = (text) => {
     if (!text) return;
@@ -92,6 +123,11 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
         ...(hasCodeField ? { code: codeText } : {}),
         repoUrl: repoUrl,
         url: repoUrl,
+        // Method/auth were previously write-once at creation — an edit
+        // never resent them, but since ...card.content already spreads
+        // the originals first this was harmless. Sending them explicitly
+        // here means the drawer's new method/auth controls actually save.
+        ...(isApiCard ? { method: apiMethod, auth: apiAuth } : {}),
       },
 
       metadata: {
@@ -99,6 +135,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
         description: descText,
         ...(hasCodeField ? { code: codeText } : {}),
         url: repoUrl,
+        ...(isApiCard ? { httpMethod: apiMethod, auth: apiAuth } : {}),
       },
     };
 
@@ -207,13 +244,48 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
 
               {repoUrl && (
                 <div>
-                  <label className="text-xs font-mono text-[#5B5F72] dark:text-[#9CA3B5] block mb-1">Resource URL</label>
+                  <label className="text-xs font-mono text-[#5B5F72] dark:text-[#9CA3B5] block mb-1">
+                    {isApiCard ? "Endpoint URL" : "Resource URL"}
+                  </label>
                   <input
                     type="text"
                     value={repoUrl}
                     onChange={(e) => setRepoUrl(e.target.value)}
                     className={`${inputBaseClass} font-mono`}
                   />
+                </div>
+              )}
+
+              {isApiCard && (
+                <div className="flex flex-col gap-3">
+                  <div className="w-40">
+                    <label className="text-xs font-mono text-[#5B5F72] dark:text-[#9CA3B5] block mb-1">Method</label>
+                    <select
+                      value={apiMethod}
+                      onChange={(e) => setApiMethod(e.target.value)}
+                      className={`${inputBaseClass} font-mono font-bold`}
+                    >
+                      {Object.keys(METHOD_BADGE_CLASSES).map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-mono text-[#5B5F72] dark:text-[#9CA3B5] block mb-2">Authentication Requirements</label>
+                    <div className="flex flex-wrap gap-4">
+                      {AUTH_OPTIONS.map((authType) => (
+                        <label key={authType} className="flex items-center gap-2 cursor-pointer select-none text-sm font-normal text-[#1A1D29] dark:text-[#F5F6FA]">
+                          <input
+                            type="checkbox"
+                            checked={apiAuth.includes(authType)}
+                            onChange={() => toggleApiAuth(authType)}
+                            className="rounded border-black/10 dark:border-white/10 bg-black/[0.02] dark:bg-white/5 text-[#0FB8A6] dark:text-[#3FE0C5] focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                          />
+                          <span>{AUTH_LABELS[authType]}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -268,10 +340,28 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
                   inside the modal instead of pushing it off-screen. */}
               <div className="space-y-6 overflow-y-auto pr-2 min-h-0 scrollbar-none">
 
+                {isApiCard && (
+                  <div className="space-y-2">
+                    <span className="text-xs uppercase font-mono font-bold text-zinc-500 tracking-wider block">
+                      Request
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`px-2.5 py-1 rounded font-mono text-xs font-bold ${METHOD_BADGE_CLASSES[apiMethod] || METHOD_BADGE_CLASSES.GET}`}>
+                        {apiMethod}
+                      </span>
+                      <span className="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                        {(apiAuth.length === 0 || (apiAuth.length === 1 && apiAuth[0] === 'none'))
+                          ? "No authentication required"
+                          : apiAuth.filter((a) => a !== 'none').map((a) => AUTH_LABELS[a] || a).join(' + ')}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {repoUrl && (
                   <div className="space-y-2">
                     <span className="text-xs uppercase font-mono font-bold text-zinc-500 tracking-wider block">
-                      Resource URL
+                      {isApiCard ? "Endpoint URL" : "Resource URL"}
                     </span>
                     <div className="p-3.5 rounded-xl border font-mono text-xs flex flex-wrap items-center justify-between gap-3 bg-[#EBEDF5]/90 dark:bg-[#0B0E14]/90 border-black/5 dark:border-white/5">
                       <a

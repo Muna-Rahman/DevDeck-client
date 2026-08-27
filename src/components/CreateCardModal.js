@@ -276,8 +276,13 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
     if (activeTab === "apis") {
       if (!formData.apiUrl) {
         currentErrors.apiUrl = "Where are we targeting? An endpoint URL route is mandatory.";
-      } else if (!/^https?:\/\/\S+/.test(formData.apiUrl)) {
-        currentErrors.apiUrl = "Ensure your API endpoint starts with http:// or https://";
+      } else if (!isValidHttpUrl(formData.apiUrl)) {
+        // Reuse the same real URL check as the Link/Repo tabs (instead of a
+        // loose "/^https?:\/\/\S+/" regex that only checked the start of
+        // the string) so malformed input is caught here with a clear
+        // inline error instead of slipping through to the server's
+        // stricter check and surfacing as a generic alert().
+        currentErrors.apiUrl = "That doesn't look like a valid endpoint URL. It must start with http:// or https://.";
       }
     }
 

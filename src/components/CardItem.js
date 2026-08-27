@@ -3,6 +3,20 @@ import React from 'react';
 import { useBookmarks } from '../context/BookmarkContext';
 import { Bookmark, BookmarkFill, Star, ArrowUpRight, Copy } from '@gravity-ui/icons';
 
+// Same method -> color mapping as CreateCardModal's method <select> and
+// CardDetailsDrawer's request badge. Previously this only special-cased
+// POST (amber) vs everything else (green), so PUT/PATCH/DELETE all
+// rendered identically to GET.
+const METHOD_BADGE_CLASSES = {
+  GET: "bg-emerald-500/20 text-emerald-400",
+  POST: "bg-sky-500/20 text-sky-400",
+  PUT: "bg-amber-500/20 text-amber-400",
+  PATCH: "bg-orange-500/20 text-orange-400",
+  DELETE: "bg-rose-500/20 text-rose-400",
+};
+
+const AUTH_LABELS = { none: "None", bearer: "Bearer Token", apikey: "API Key", basic: "Basic" };
+
 export default function CardItem({ card, onCardUpdate, onSelectCard }) {
   const { toggleBookmark } = useBookmarks();
 
@@ -63,20 +77,32 @@ export default function CardItem({ card, onCardUpdate, onSelectCard }) {
           </div>
         );
       case 'API Endpoint':
-      case 'apis':
+      case 'apis': {
+        const method = (card.metadata?.httpMethod || card.content?.method || 'GET').toUpperCase();
+        // Auth requirements previously never surfaced anywhere after
+        // creation — mirror them here from metadata.auth (with a fallback
+        // to content.auth for cards saved before that field was tracked).
+        const auth = Array.isArray(card.metadata?.auth)
+          ? card.metadata.auth
+          : (Array.isArray(card.content?.auth) ? card.content.auth : []);
+        const authLabel = (auth.length === 0 || (auth.length === 1 && auth[0] === 'none'))
+          ? "No auth"
+          : auth.filter((a) => a !== 'none').map((a) => AUTH_LABELS[a] || a).join(' + ');
         return (
           <div className="space-y-2">
             <div className="flex items-center gap-2 font-mono text-xs">
-              <span className={`px-2 py-0.5 rounded font-bold ${
-                card.metadata?.httpMethod === 'POST' ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'
-              }`}>
-                {card.metadata?.httpMethod || 'GET'}
+              <span className={`px-2 py-0.5 rounded font-bold ${METHOD_BADGE_CLASSES[method] || METHOD_BADGE_CLASSES.GET}`}>
+                {method}
               </span>
               <span className="text-[#F5F6FA] dark:text-[#F5F6FA] light:text-[#1A1D29] truncate break-all">{card.metadata?.url || card.content?.url}</span>
             </div>
+            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-white/[0.04] text-[#9CA3B5] border border-white/[0.06]">
+              {authLabel}
+            </span>
             {descText && <p className="text-xs text-[#9CA3B5] light:text-[#5B5F72] line-clamp-2">{descText}</p>}
           </div>
         );
+      }
       default:
         return <p className="text-[#9CA3B5] dark:text-[#9CA3B5] light:text-[#5B5F72] text-sm line-clamp-3">{descText}</p>;
     }
