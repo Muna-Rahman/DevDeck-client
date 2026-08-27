@@ -38,6 +38,11 @@ const LANGUAGES = [
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+// Keep this in sync with the server's MIN_AI_INPUT_LENGTH in /api/ai/generate —
+// both directions (code→description and description→code) need the same
+// minimum amount of real content before the button is even enabled.
+const MIN_AI_INPUT_LENGTH = 10;
+
 export default function SnippetsPage() {
   const router = useRouter();
   const [snippets, setSnippets] = useState([]);
@@ -54,6 +59,7 @@ export default function SnippetsPage() {
   const [newCode, setNewCode] = useState("");
   const [newTags, setNewTags] = useState("");
   const [editorErrors, setEditorErrors] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch snippets from database on component mount
   useEffect(() => {
@@ -81,7 +87,7 @@ export default function SnippetsPage() {
   // 2. Save Snippet
   const handleCreateSnippet = async (e) => {
     e.preventDefault();
-    if (!newTitle || !newCode) return;
+    if (!newTitle || !newCode || isSubmitting) return;
 
     const newSnippetData = {
       title: newTitle,
@@ -91,6 +97,7 @@ export default function SnippetsPage() {
       code: newCode,
     };
 
+    setIsSubmitting(true);
     try {
       const res = await fetch(`${API_URL}/api/snippets`, {
         method: "POST",
@@ -118,6 +125,8 @@ export default function SnippetsPage() {
     } catch (err) {
       console.error("Error persisting snippet to database:", err);
       alert("Failed to save snippet to the database. Make sure Express server is running on http://localhost:3001");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -476,7 +485,7 @@ export default function SnippetsPage() {
                   <AiAssistButton
                     mode="description"
                     label="Generate Description"
-                    disabled={!newCode.trim()}
+                    disabled={newCode.trim().length < MIN_AI_INPUT_LENGTH}
                     buildPayload={() => ({ code: newCode, language: newLang })}
                     onResult={(generated) => {
                       if (newDesc.trim().length > 3 && !window.confirm("This will replace your current description. Continue?")) {
@@ -509,7 +518,7 @@ export default function SnippetsPage() {
                     <AiAssistButton
                       mode="code"
                       label="Generate Code"
-                      disabled={!newDesc.trim()}
+                      disabled={newDesc.trim().length < MIN_AI_INPUT_LENGTH}
                       buildPayload={() => ({ description: newDesc, language: newLang })}
                       onResult={(generated) => {
                         if (newCode.trim().length > 3 && !window.confirm("This will replace your current code. Continue?")) {
@@ -556,9 +565,10 @@ export default function SnippetsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] hover:opacity-95 cursor-pointer shadow-[0_0_15px_rgba(233,79,209,0.25)]"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] hover:opacity-95 cursor-pointer shadow-[0_0_15px_rgba(233,79,209,0.25)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Snippet
+                  {isSubmitting ? "Saving…" : "Save Snippet"}
                 </button>
               </div>
             </form>

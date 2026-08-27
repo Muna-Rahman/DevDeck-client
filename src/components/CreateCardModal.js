@@ -16,6 +16,11 @@ import {
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+// Keep this in sync with the server's MIN_AI_INPUT_LENGTH in /api/ai/generate —
+// both directions (code→description and description→code) need the same
+// minimum amount of real content before the button is even enabled.
+const MIN_AI_INPUT_LENGTH = 10;
+
 export default function CreateCardModal({ isOpen, onClose, onSave }) {
   const [activeTab, setActiveTab] = useState("links");
 
@@ -28,6 +33,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categorySaveError, setCategorySaveError] = useState("");
   const [savingCategory, setSavingCategory] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -35,6 +41,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       setIsAddingCategory(false);
       setNewCategoryName("");
       setCategorySaveError("");
+      setIsSubmitting(false);
       return;
     }
     let isMounted = true;
@@ -248,11 +255,19 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || isSubmitting) return;
 
-    onSave({ type: activeTab, data: { ...formData, category: selectedCategory || undefined } });
-    setSelectedCategory(null);
-    onClose();
+    setIsSubmitting(true);
+    try {
+      // Wait for the save to actually finish before closing — this also
+      // guarantees a second click (or Enter key repeat) can't fire a second
+      // POST while the first one is still in flight.
+      await onSave({ type: activeTab, data: { ...formData, category: selectedCategory || undefined } });
+      setSelectedCategory(null);
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getGlowColorClass = () => {
@@ -534,7 +549,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   <AiAssistButton
                     mode="code"
                     label="Generate Code"
-                    disabled={!formData.purpose.trim()}
+                    disabled={formData.purpose.trim().length < MIN_AI_INPUT_LENGTH}
                     buildPayload={() => ({ description: formData.purpose, language: formData.language })}
                     onResult={(generated) => {
                       if (formData.code.trim().length > 3 && !window.confirm("This will replace your current code. Continue?")) {
@@ -579,7 +594,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   <AiAssistButton
                     mode="description"
                     label="Generate Description"
-                    disabled={!formData.code.trim()}
+                    disabled={formData.code.trim().length < MIN_AI_INPUT_LENGTH}
                     buildPayload={() => ({ code: formData.code, language: formData.language })}
                     onResult={(generated) => {
                       if (formData.purpose.trim().length > 3 && !window.confirm("This will replace your current purpose text. Continue?")) {
@@ -765,9 +780,10 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
           <button 
             type="button"
             onClick={handleSubmit}
-            className="bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white font-medium shadow-[0_4px_20px_rgba(233,79,209,0.4)] hover:shadow-[0_4px_25px_rgba(233,79,209,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 rounded-full px-6 py-2 text-sm border-0 outline-none cursor-pointer"
+            disabled={isSubmitting}
+            className="bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white font-medium shadow-[0_4px_20px_rgba(233,79,209,0.4)] hover:shadow-[0_4px_25px_rgba(233,79,209,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 rounded-full px-6 py-2 text-sm border-0 outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            Add to Deck
+            {isSubmitting ? "Adding…" : "Add to Deck"}
           </button>
         </div>
 
