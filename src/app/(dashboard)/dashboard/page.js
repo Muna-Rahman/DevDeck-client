@@ -309,11 +309,13 @@ export default function DashboardPage() {
         const savedCard = await res.json();
         handleCardStateShift(savedCard);
       } else {
-        const errText = await res.text().catch(() => "");
-        console.error(`Failed to update card (Status ${res.status}):`, errText);
+        const errorBody = await res.json().catch(() => ({}));
+        console.error(`Failed to update card (Status ${res.status}):`, errorBody);
+        alert(errorBody.error || "Failed to update card.");
       }
     } catch (err) {
       console.error("Error updating card:", err);
+      alert("Failed to update card.");
     }
   };
 

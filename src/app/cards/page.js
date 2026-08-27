@@ -129,7 +129,26 @@ export default function CardsPage() {
       }
 
       const savedCardFromDb = await response.json();
-      setWorkspaceCards((prev) => [savedCardFromDb, ...prev]);
+      const savedId = (savedCardFromDb._id || savedCardFromDb.id)?.toString();
+
+      // The server dedupes by content hash: saving the exact same content
+      // again (same URL, same repo, same code, same endpoint) responds 200
+      // with the EXISTING document instead of creating a new one. That
+      // existing card is already in local state, so blindly prepending it
+      // again would render the same card twice under the same id/key —
+      // exactly the duplicate-key bug already fixed on the Snippets page.
+      const alreadyInState = workspaceCards.some((item) => (item._id || item.id)?.toString() === savedId);
+      const isDuplicate = response.status === 200 || alreadyInState;
+
+      if (isDuplicate) {
+        setWorkspaceCards((prev) =>
+          prev.some((item) => (item._id || item.id)?.toString() === savedId) ? prev : [savedCardFromDb, ...prev]
+        );
+        alert("A card with this exact content already exists — it wasn't saved again.");
+      } else {
+        setWorkspaceCards((prev) => [savedCardFromDb, ...prev]);
+      }
+
       onClose();
     } catch (error) {
       console.error("Error creating card:", error);
