@@ -34,6 +34,11 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
   const [categorySaveError, setCategorySaveError] = useState("");
   const [savingCategory, setSavingCategory] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // One id per "compose session" (each time the modal opens). Sent with the
+  // save request and re-sent unchanged if the same click/submit somehow
+  // fires more than once, so the server's unique index can recognize it as
+  // the same attempt instead of a new card.
+  const [clientRequestId, setClientRequestId] = useState(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -44,6 +49,12 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       setIsSubmitting(false);
       return;
     }
+    // Fresh id for this compose session every time the modal opens.
+    setClientRequestId(
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    );
     let isMounted = true;
     const fetchCategories = async () => {
       try {
@@ -262,7 +273,10 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
       // Wait for the save to actually finish before closing — this also
       // guarantees a second click (or Enter key repeat) can't fire a second
       // POST while the first one is still in flight.
-      await onSave({ type: activeTab, data: { ...formData, category: selectedCategory || undefined } });
+      await onSave({
+        type: activeTab,
+        data: { ...formData, category: selectedCategory || undefined, clientRequestId }
+      });
       setSelectedCategory(null);
       onClose();
     } finally {

@@ -60,6 +60,20 @@ export default function SnippetsPage() {
   const [newTags, setNewTags] = useState("");
   const [editorErrors, setEditorErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // One id per "compose session" (each time the modal opens). Sent with the
+  // save request and re-sent unchanged if the same click/submit somehow
+  // fires more than once, so the server's unique index can recognize it as
+  // the same attempt instead of a new snippet.
+  const [clientRequestId, setClientRequestId] = useState(null);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    setClientRequestId(
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    );
+  }, [isModalOpen]);
 
   // Fetch snippets from database on component mount
   useEffect(() => {
@@ -95,6 +109,7 @@ export default function SnippetsPage() {
       language: newLang,
       tags: newTags ? newTags.split(",").map((t) => t.trim()) : ["Code"],
       code: newCode,
+      clientRequestId,
     };
 
     setIsSubmitting(true);

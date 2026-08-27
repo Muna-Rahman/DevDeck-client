@@ -118,6 +118,7 @@ export default function CardsPage() {
           content,
           tags: data.tags || [],
           metadata: data.metadata || {},
+          clientRequestId: data.clientRequestId,
         }),
       });
 
