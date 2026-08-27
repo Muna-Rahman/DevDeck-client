@@ -10,10 +10,68 @@ export default function BookmarksPage() {
   const { bookmarkedCards, loading, refreshBookmarks, toggleBookmark } = useBookmarks();
   const [selectedCard, setSelectedCard] = useState(null);
 
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
   const handleBookmarkToggleFromDrawer = async (cardId) => {
     await toggleBookmark(cardId);
     setSelectedCard(null); // Instantly closes details overlay context upon vault clearing shifts
     refreshBookmarks();
+  };
+
+  // DELETE CARD — same card-vs-snippet endpoint split used for bookmarking
+  const handleDeleteFromDrawer = async (cardId) => {
+    if (!cardId) return;
+    if (!confirm("Are you sure you want to delete this card?")) return;
+
+    try {
+      const targetItem = bookmarkedCards.find(c => (c._id || c.id) === cardId);
+      const isSnippet = targetItem?.type === 'Snippet' || targetItem?.type === 'snippets';
+      const endpoint = isSnippet ? `${backendUrl}/api/snippets/${cardId}` : `${backendUrl}/api/cards/${cardId}`;
+
+      const res = await fetch(endpoint, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        setSelectedCard(null);
+        refreshBookmarks();
+      } else {
+        const errText = await res.text().catch(() => "");
+        console.error(`Failed to delete card (Status ${res.status}):`, errText);
+      }
+    } catch (err) {
+      console.error("Error deleting card:", err);
+    }
+  };
+
+  // UPDATE CARD — PUT for cards, PATCH for snippets
+  const handleUpdateFromDrawer = async (updatedCard) => {
+    const cardId = updatedCard._id || updatedCard.id;
+    try {
+      const targetItem = bookmarkedCards.find(c => (c._id || c.id) === cardId);
+      const isSnippet = targetItem?.type === 'Snippet' || targetItem?.type === 'snippets';
+      const endpoint = isSnippet ? `${backendUrl}/api/snippets/${cardId}` : `${backendUrl}/api/cards/${cardId}`;
+      const method = isSnippet ? 'PATCH' : 'PUT';
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(updatedCard),
+      });
+
+      if (res.ok) {
+        const savedCard = await res.json();
+        setSelectedCard(savedCard);
+        refreshBookmarks();
+      } else {
+        const errText = await res.text().catch(() => "");
+        console.error(`Failed to update card (Status ${res.status}):`, errText);
+      }
+    } catch (err) {
+      console.error("Error updating card:", err);
+    }
   };
 
   return (
@@ -93,6 +151,8 @@ export default function BookmarksPage() {
         card={selectedCard}
         onClose={() => setSelectedCard(null)}
         onToggleBookmark={handleBookmarkToggleFromDrawer}
+        onDelete={handleDeleteFromDrawer}
+        onUpdate={handleUpdateFromDrawer}
       />
     </div>
   );

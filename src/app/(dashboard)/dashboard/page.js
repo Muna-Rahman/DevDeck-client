@@ -257,6 +257,66 @@ export default function DashboardPage() {
     refreshBookmarks();
   };
 
+  // DELETE CARD (works for both cards and snippets, mirroring the
+  // bookmark-toggle endpoint-selection logic above)
+  const handleDeleteCard = async (cardId) => {
+    if (!cardId) return;
+    if (!confirm("Are you sure you want to delete this card?")) return;
+
+    try {
+      const targetItem = dbCards.find(c => (c._id || c.id) === cardId);
+      const isSnippet = targetItem?.type === 'Snippet' || targetItem?.type === 'snippets';
+      const endpoint = isSnippet ? `${backendUrl}/api/snippets/${cardId}` : `${backendUrl}/api/cards/${cardId}`;
+
+      const res = await fetch(endpoint, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        setDbCards(prev => prev.filter(c => (c._id || c.id) !== cardId));
+        if (selectedCard && (selectedCard._id || selectedCard.id) === cardId) {
+          setSelectedCard(null);
+        }
+        refreshBookmarks();
+      } else {
+        const errText = await res.text().catch(() => "");
+        console.error(`Failed to delete card (Status ${res.status}):`, errText);
+      }
+    } catch (err) {
+      console.error("Error deleting card:", err);
+    }
+  };
+
+  // UPDATE CARD (PUT for cards, PATCH for snippets — same endpoint split
+  // used for bookmarking and deleting)
+  const handleUpdateCard = async (updatedCard) => {
+    const cardId = updatedCard._id || updatedCard.id;
+    try {
+      const targetItem = dbCards.find(c => (c._id || c.id) === cardId);
+      const isSnippet = targetItem?.type === 'Snippet' || targetItem?.type === 'snippets';
+      const endpoint = isSnippet ? `${backendUrl}/api/snippets/${cardId}` : `${backendUrl}/api/cards/${cardId}`;
+      const method = isSnippet ? 'PATCH' : 'PUT';
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(updatedCard),
+      });
+
+      if (res.ok) {
+        const savedCard = await res.json();
+        handleCardStateShift(savedCard);
+      } else {
+        const errText = await res.text().catch(() => "");
+        console.error(`Failed to update card (Status ${res.status}):`, errText);
+      }
+    } catch (err) {
+      console.error("Error updating card:", err);
+    }
+  };
+
   const handleDrawerBookmarkToggle = async (cardId) => {
     try {
       const targetItem = dbCards.find(c => (c._id || c.id) === cardId);
@@ -515,6 +575,8 @@ export default function DashboardPage() {
         card={selectedCard}
         onClose={() => setSelectedCard(null)}
         onToggleBookmark={handleDrawerBookmarkToggle}
+        onDelete={handleDeleteCard}
+        onUpdate={handleUpdateCard}
       />
 
     </div>

@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, TrashBin } from "@gravity-ui/icons";
+import { Plus, TrashBin, Bookmark, BookmarkFill } from "@gravity-ui/icons";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import CreateCardModal from "@/components/CreateCardModal";
 import CardDetailsDrawer from "@/components/CardDetailsDrawer";
+import { useBookmarks } from "@/context/BookmarkContext";
 
 export default function CardsPage() {
   const router = useRouter();
@@ -14,6 +15,8 @@ export default function CardsPage() {
   const [selectedCard, setSelectedCard] = useState(null);
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeTag, setActiveTag] = useState(null);
+
+  const { toggleBookmark } = useBookmarks();
 
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
@@ -191,6 +194,24 @@ export default function CardsPage() {
     }
   };
 
+  // TOGGLE BOOKMARK
+  const handleToggleBookmark = async (cardId, cardType) => {
+    if (!cardId) return;
+    const targetType =
+      cardType || workspaceCards.find((c) => (c._id || c.id) === cardId)?.type;
+
+    const updated = await toggleBookmark(cardId, targetType);
+    if (!updated) return;
+
+    const updatedId = updated._id || updated.id;
+    setWorkspaceCards((prev) =>
+      prev.map((c) => ((c._id || c.id) === updatedId ? updated : c))
+    );
+    if (selectedCard && (selectedCard._id || selectedCard.id) === updatedId) {
+      setSelectedCard(updated);
+    }
+  };
+
   const extractCardData = (type, data) => {
     switch (type) {
       case "links":
@@ -317,6 +338,7 @@ export default function CardsPage() {
         ) : (
           visibleCards.map((card) => {
             const cardId = card.id || card._id;
+            const isBookmarkedState = card.isBookmarked || card.bookmarked || false;
             return (
               <div
                 key={cardId}
@@ -331,8 +353,22 @@ export default function CardsPage() {
                       {card.type}
                     </span>
 
-                    {/* Card Actions: Edit & Delete */}
+                    {/* Card Actions: Bookmark, Edit & Delete */}
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleBookmark(cardId, card.type);
+                        }}
+                        className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-zinc-500 dark:text-[#9CA3B5] hover:text-[#E94FD1] transition-all cursor-pointer"
+                        title="Bookmark Card"
+                      >
+                        {isBookmarkedState ? (
+                          <BookmarkFill className="w-3.5 h-3.5 text-[#E94FD1] drop-shadow-[0_0_6px_#E94FD1]" />
+                        ) : (
+                          <Bookmark className="w-3.5 h-3.5" />
+                        )}
+                      </button>
                       <button
                         onClick={(e) => handleDeleteCard(cardId, e)}
                         className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all cursor-pointer"
@@ -366,6 +402,7 @@ export default function CardsPage() {
           onClose={() => setSelectedCard(null)}
           onDelete={(id) => handleDeleteCard(id)}
           onUpdate={(updatedCard) => handleEditCard(updatedCard)}
+          onToggleBookmark={(id, type) => handleToggleBookmark(id, type)}
         />
       )}
     </div>
