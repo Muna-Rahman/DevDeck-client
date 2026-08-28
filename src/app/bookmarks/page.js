@@ -158,6 +158,7 @@ export default function BookmarksPage() {
         onToggleBookmark={handleBookmarkToggleFromDrawer}
         onDelete={handleDeleteFromDrawer}
         onUpdate={handleUpdateFromDrawer}
+        existingItems={bookmarkedCards}
       />
     </div>
   );
