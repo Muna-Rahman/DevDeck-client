@@ -490,10 +490,14 @@ export default function SnippetsPage() {
 
       {/* Interactive VS Code Editor Modal — kept as a dark IDE-style panel intentionally, consistent with the Monaco editor it hosts */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#1A1D29] p-6 shadow-2xl space-y-4">
-            
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 overflow-y-auto">
+          {/* max-h + flex column so tall content (long forms, small viewports) scrolls
+              inside the panel instead of pushing the header/footer off screen or
+              getting clipped by the fixed overlay — that clipping was hiding the
+              Save button entirely, which is why saving looked broken. */}
+          <div className="my-8 flex w-full max-w-2xl max-h-[90vh] flex-col rounded-2xl border border-white/10 bg-[#1A1D29] shadow-2xl">
+
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 shrink-0">
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                 <Terminal className="text-[#FF6FB5]" size={20} />
                 VS Code Snippet Editor
@@ -506,131 +510,136 @@ export default function SnippetsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateSnippet} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Title</label>
-                <input
-                  type="text"
-                  required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. Next.js Auth Middleware"
-                  className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-white outline-none focus:border-[#FF6FB5]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            <form onSubmit={handleCreateSnippet} className="flex flex-1 min-h-0 flex-col">
+              <div className="flex-1 min-h-0 space-y-4 overflow-y-auto px-6 py-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Language</label>
-                  <select
-                    value={newLang}
-                    onChange={(e) => setNewLang(e.target.value)}
-                    className="w-full h-10 rounded-xl border border-white/10 bg-[#1A1D29] px-3 text-xs text-white uppercase outline-none focus:border-[#FF6FB5]"
-                  >
-                    {LANGUAGES.filter((lang) => lang !== "All").map((lang) => (
-                      <option key={lang} value={lang}>
-                        {lang.toUpperCase()}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Tags (comma separated)</label>
+                  <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Title</label>
                   <input
                     type="text"
-                    value={newTags}
-                    onChange={(e) => setNewTags(e.target.value)}
-                    placeholder="Auth, Next.js, Middleware"
+                    required
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder="e.g. Next.js Auth Middleware"
                     className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-white outline-none focus:border-[#FF6FB5]"
                   />
                 </div>
-              </div>
 
-              <div>
-                <div className="flex flex-wrap justify-between items-center gap-2 mb-1">
-                  <label className="text-xs font-medium text-[#9CA3B5]">Description</label>
-                  <AiAssistButton
-                    mode="description"
-                    label="Generate Description"
-                    disabled={newCode.trim().length < MIN_AI_INPUT_LENGTH}
-                    buildPayload={() => ({ code: newCode, language: newLang })}
-                    onResult={(generated) => {
-                      if (newDesc.trim().length > 3 && !window.confirm("This will replace your current description. Continue?")) {
-                        return;
-                      }
-                      setNewDesc(generated);
-                    }}
-                  />
-                </div>
-                <input
-                  type="text"
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder="Brief explanation of the snippet..."
-                  className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-white outline-none focus:border-[#FF6FB5]"
-                />
-              </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Language</label>
+                    <select
+                      value={newLang}
+                      onChange={(e) => setNewLang(e.target.value)}
+                      className="w-full h-10 rounded-xl border border-white/10 bg-[#1A1D29] px-3 text-xs text-white uppercase outline-none focus:border-[#FF6FB5]"
+                    >
+                      {LANGUAGES.filter((lang) => lang !== "All").map((lang) => (
+                        <option key={lang} value={lang}>
+                          {lang.toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Real-time Monaco Code Editor */}
-              <div>
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                  <label className="text-xs font-medium text-[#9CA3B5]">
-                    Code Editor {MONACO_VALIDATED_LANGUAGES.includes(newLang) ? "(IntelliSense & Syntax Linting Enabled)" : "(Syntax Highlighting Only)"}
-                  </label>
-                  <div className="flex items-center gap-2">
-                    {MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0 && (
-                      <span className="flex items-center gap-1 text-[11px] text-amber-400 font-medium">
-                        <AlertTriangle size={12} />
-                        {editorErrors.length} Syntax Error(s)
-                      </span>
-                    )}
-                    <AiAssistButton
-                      mode="code"
-                      label="Generate Code"
-                      disabled={newDesc.trim().length < MIN_AI_INPUT_LENGTH}
-                      buildPayload={() => ({ description: newDesc, language: newLang })}
-                      onResult={(generated) => {
-                        if (newCode.trim().length > 3 && !window.confirm("This will replace your current code. Continue?")) {
-                          return;
-                        }
-                        setNewCode(generated);
-                      }}
+                  <div>
+                    <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Tags (comma separated)</label>
+                    <input
+                      type="text"
+                      value={newTags}
+                      onChange={(e) => setNewTags(e.target.value)}
+                      placeholder="Auth, Next.js, Middleware"
+                      className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-white outline-none focus:border-[#FF6FB5]"
                     />
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-white/10 overflow-hidden bg-[#1e1e1e]">
-                  <Editor
-                    height="200px"
-                    language={newLang}
-                    value={newCode}
-                    beforeMount={handleEditorWillMount}
-                    onChange={(value) => setNewCode(value || "")}
-                    onValidate={handleValidate}
-                    theme="vs-dark"
-                    options={{
-                      minimap: { enabled: false },
-                      fontSize: 13,
-                      quickSuggestions: true,
-                      suggestOnTriggerCharacters: true,
-                      autoClosingBrackets: "always",
-                      autoClosingQuotes: "always",
-                      formatOnType: true,
-                      tabSize: 2,
-                      scrollBeyondLastLine: false,
-                    }}
+                <div>
+                  <div className="flex flex-wrap justify-between items-center gap-2 mb-1">
+                    <label className="text-xs font-medium text-[#9CA3B5]">Description</label>
+                    <AiAssistButton
+                      mode="description"
+                      label="Generate Description"
+                      disabled={newCode.trim().length < MIN_AI_INPUT_LENGTH}
+                      buildPayload={() => ({ code: newCode, language: newLang })}
+                      onResult={(generated) => {
+                        if (newDesc.trim().length > 3 && !window.confirm("This will replace your current description. Continue?")) {
+                          return;
+                        }
+                        setNewDesc(generated);
+                      }}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={newDesc}
+                    onChange={(e) => setNewDesc(e.target.value)}
+                    placeholder="Brief explanation of the snippet..."
+                    className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-white outline-none focus:border-[#FF6FB5]"
                   />
                 </div>
-                {!MONACO_VALIDATED_LANGUAGES.includes(newLang) && (
-                  <p className="text-[10px] text-[#5B5F72] dark:text-[#9CA3B5] mt-1">
-                    Live syntax checking is only available for JavaScript, TypeScript, and JSON — {newLang} code won&apos;t be checked before saving.
-                  </p>
-                )}
+
+                {/* Real-time Monaco Code Editor */}
+                <div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                    <label className="text-xs font-medium text-[#9CA3B5]">
+                      Code Editor {MONACO_VALIDATED_LANGUAGES.includes(newLang) ? "(IntelliSense & Syntax Linting Enabled)" : "(Syntax Highlighting Only)"}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0 && (
+                        <span className="flex items-center gap-1 text-[11px] text-amber-400 font-medium">
+                          <AlertTriangle size={12} />
+                          {editorErrors.length} Syntax Error(s)
+                        </span>
+                      )}
+                      <AiAssistButton
+                        mode="code"
+                        label="Generate Code"
+                        disabled={newDesc.trim().length < MIN_AI_INPUT_LENGTH}
+                        buildPayload={() => ({ description: newDesc, language: newLang })}
+                        onResult={(generated) => {
+                          if (newCode.trim().length > 3 && !window.confirm("This will replace your current code. Continue?")) {
+                            return;
+                          }
+                          setNewCode(generated);
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 overflow-hidden bg-[#1e1e1e]">
+                    <Editor
+                      height="200px"
+                      language={newLang}
+                      value={newCode}
+                      beforeMount={handleEditorWillMount}
+                      onChange={(value) => setNewCode(value || "")}
+                      onValidate={handleValidate}
+                      theme="vs-dark"
+                      options={{
+                        minimap: { enabled: false },
+                        fontSize: 13,
+                        quickSuggestions: true,
+                        suggestOnTriggerCharacters: true,
+                        autoClosingBrackets: "always",
+                        autoClosingQuotes: "always",
+                        formatOnType: true,
+                        tabSize: 2,
+                        scrollBeyondLastLine: false,
+                      }}
+                    />
+                  </div>
+                  {!MONACO_VALIDATED_LANGUAGES.includes(newLang) && (
+                    <p className="text-[10px] text-[#5B5F72] dark:text-[#9CA3B5] mt-1">
+                      Live syntax checking is only available for JavaScript, TypeScript, and JSON — {newLang} code won&apos;t be checked before saving.
+                    </p>
+                  )}
+                </div>
+
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-2">
+              {/* Action Buttons — outside the scrollable area and inside a shrink-0
+                  footer so Save/Cancel stay visible and reachable no matter how
+                  tall the form content above gets. */}
+              <div className="flex justify-end gap-3 border-t border-white/10 px-6 py-4 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
