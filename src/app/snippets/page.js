@@ -79,6 +79,25 @@ export default function SnippetsPage() {
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`
     );
+
+    // Previously the form fields were only reset after a *successful* save
+    // (see the bottom of handleCreateSnippet). If someone opened the modal,
+    // typed something invalid, then closed it with Cancel/✕ instead of
+    // saving, that leftover state — most importantly editorErrors — stuck
+    // around. Next time they clicked "Create Snippet", the modal reopened
+    // with a stale editorErrors count still > 0, which permanently disabled
+    // the Save button (via MONACO_VALIDATED_LANGUAGES.includes(newLang) &&
+    // editorErrors.length > 0) even though the new code they'd just typed
+    // was perfectly valid — because Monaco only re-validates on further
+    // edits, not just from being remounted. Resetting every field here, on
+    // every modal open, guarantees each compose session starts clean so
+    // this can't happen. Save/duplicate-detection logic itself is untouched.
+    setNewTitle("");
+    setNewDesc("");
+    setNewLang("javascript");
+    setNewCode("");
+    setNewTags("");
+    setEditorErrors([]);
   }, [isModalOpen]);
 
   // Fetch snippets from database on component mount
@@ -639,22 +658,36 @@ export default function SnippetsPage() {
               {/* Action Buttons — outside the scrollable area and inside a shrink-0
                   footer so Save/Cancel stay visible and reachable no matter how
                   tall the form content above gets. */}
-              <div className="flex justify-end gap-3 border-t border-white/10 px-6 py-4 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-[#9CA3B5] hover:bg-white/5 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || (MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0) || !newTitle.trim() || !newCode.trim()}
-                  title={MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0 ? "Fix the syntax errors in the editor first" : undefined}
-                  className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] hover:opacity-95 cursor-pointer shadow-[0_0_15px_rgba(233,79,209,0.25)] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? "Saving…" : editorErrors.length > 0 ? "Fix Errors to Save" : "Save Snippet"}
-                </button>
+              <div className="flex items-center justify-between gap-3 border-t border-white/10 px-6 py-4 shrink-0">
+                {/* Makes it obvious *why* Save is disabled instead of it just
+                    looking broken — the missing-title case in particular is
+                    easy to miss once Title has scrolled out of view. */}
+                <span className="text-[11px] text-[#5B5F72] dark:text-[#9CA3B5]">
+                  {!newTitle.trim()
+                    ? "Enter a title to save"
+                    : !newCode.trim()
+                    ? "Add some code to save"
+                    : MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0
+                    ? `Fix ${editorErrors.length} syntax error(s) to save`
+                    : ""}
+                </span>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-medium text-[#9CA3B5] hover:bg-white/5 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || (MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0) || !newTitle.trim() || !newCode.trim()}
+                    title={MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0 ? "Fix the syntax errors in the editor first" : undefined}
+                    className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] hover:opacity-95 cursor-pointer shadow-[0_0_15px_rgba(233,79,209,0.25)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? "Saving…" : editorErrors.length > 0 ? "Fix Errors to Save" : "Save Snippet"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
