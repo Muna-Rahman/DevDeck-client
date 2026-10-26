@@ -3,7 +3,21 @@ import React, { useEffect, useState, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useBookmarks } from '@/context/BookmarkContext';
-import CardItem from '../../components/CardItem';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  rectSortingStrategy,
+  arrayMove,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import SortableCardItem from '../../components/SortableCardItem';
 import CardDetailsDrawer from '../../components/CardDetailsDrawer';
 import CreateCardModal from '../../components/CreateCardModal';
 import { LayoutCellsLarge, ArrowLeft, Plus } from '@gravity-ui/icons';
@@ -113,6 +127,48 @@ function CardsPageContent() {
     if (tagFilter && !(Array.isArray(card.tags) && card.tags.includes(tagFilter))) return false;
     return true;
   });
+
+  // DRAG & DROP — small distance threshold so a plain click never starts a drag
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = async ({ active, over }) => {
+    if (!over || active.id === over.id) return;
+
+    const getId = (c) => c._id || c.id;
+    const visibleIds = visibleCards.map(getId);
+    const oldIndex = visibleIds.indexOf(active.id);
+    const newIndex = visibleIds.indexOf(over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // The grid may be filtered (category/tag). Reorder the visible subset, then put it
+    // back into the same slots it occupied in the full list so hidden cards don't move.
+    const reorderedVisible = arrayMove(visibleCards, oldIndex, newIndex);
+    let cursor = 0;
+    const visibleSet = new Set(visibleIds);
+    const nextCards = cards.map((c) => (visibleSet.has(getId(c)) ? reorderedVisible[cursor++] : c));
+
+    const previousCards = cards;
+    setCards(nextCards); // optimistic
+
+    try {
+      const res = await fetch(`${backendUrl}/api/resources/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          items: nextCards.map((c, index) => ({ id: getId(c), order: index })),
+        }),
+      });
+      if (!res.ok) throw new Error(`Reorder failed (${res.status})`);
+    } catch (err) {
+      console.error('Failed to save card order:', err);
+      setCards(previousCards); // roll back so the UI matches what's stored
+      alert('Could not save the new order. Please try again.');
+    }
+  };
 
   // CREATE — CreateCardModal calls onSave({ type, data }) on submit
   const handleSaveCard = async ({ type, data }) => {
@@ -277,18 +333,22 @@ function CardsPageContent() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {visibleCards.map((card) => (
-              <CardItem
-                key={card._id || card.id}
-                card={card}
-                onCardUpdate={(updated) =>
-                  setCards((prev) => prev.map((c) => ((c._id || c.id) === (updated._id || updated.id) ? updated : c)))
-                }
-                onSelectCard={(c) => setSelectedCard(c)}
-              />
-            ))}
-          </div>
+          <DndContext id="cards-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={visibleCards.map((c) => c._id || c.id)} strategy={rectSortingStrategy}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {visibleCards.map((card) => (
+                  <SortableCardItem
+                    key={card._id || card.id}
+                    card={card}
+                    onCardUpdate={(updated) =>
+                      setCards((prev) => prev.map((c) => ((c._id || c.id) === (updated._id || updated.id) ? updated : c)))
+                    }
+                    onSelectCard={(c) => setSelectedCard(c)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
