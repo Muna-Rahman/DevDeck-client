@@ -15,11 +15,28 @@ import {
   Copy,
   Terminal,
   Check,
-  Folder
+  Folder,
+  GripVertical
 } from 'lucide-react'; 
 import { authClient } from "@/lib/auth-client";
 import { useBookmarks } from '@/context/BookmarkContext';
 import CardDetailsDrawer from '@/components/CardDetailsDrawer';
+import {
+  DndContext,
+  closestCorners,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Kept in sync with the same maps in CardItem.js — this dashboard grid uses
 // its own local DashboardCardItem instead of importing CardItem, so it
@@ -37,7 +54,7 @@ const METHOD_BADGE_CLASSES = {
 
 const AUTH_LABELS = { none: "None", bearer: "Bearer Token", apikey: "API Key", basic: "Basic" };
 
-function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
+function DashboardCardItem({ card, onCardUpdate, onSelectCard, dragHandleProps }) {
   const { toggleBookmark } = useBookmarks();
   const [copied, setCopied] = useState(false);
 
@@ -142,6 +159,18 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
       className="group relative rounded-xl border border-white/[0.08] bg-[#12141C]/90 hover:bg-[#1A1D29]/90 backdrop-blur-xl p-5 shadow-md transition-all duration-300 hover:border-white/20 cursor-pointer min-w-0 overflow-hidden w-full"
     >
       <div className="flex justify-between items-start gap-4 mb-3 w-full">
+        {dragHandleProps && (
+          <button
+            type="button"
+            aria-label="Drag to reorder"
+            title="Drag to reorder"
+            {...dragHandleProps}
+            onClick={(e) => e.stopPropagation()}
+            className="p-1.5 -ml-1.5 rounded-lg text-[#9CA3B5] hover:text-[#3FE0C5] hover:bg-white/[0.06] cursor-grab active:cursor-grabbing touch-none flex-shrink-0 transition-colors"
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+        )}
         <div className="min-w-0 flex-1">
           <span className="text-[10px] uppercase font-bold tracking-widest text-[#9CA3B5]/60 block mb-1 font-mono truncate">{card.type}</span>
           <h4 className="text-base font-semibold text-white tracking-tight truncate w-full">{titleText}</h4>
@@ -178,6 +207,49 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard }) {
   );
 }
 
+
+// Standalone snippets live in their own collection/endpoint, so they stay fixed in place.
+const isDraggableCard = (card) => !card.isStandaloneSnippet;
+
+function SortableDashboardCard({ card, ...cardProps }) {
+  const id = card._id || card.id;
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled: !isDraggableCard(card),
+  });
+
+  if (!isDraggableCard(card)) return <DashboardCardItem card={card} {...cardProps} />;
+
+  return (
+    <div
+      ref={setNodeRef}
+      onPointerDown={listeners?.onPointerDown}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : undefined,
+        opacity: isDragging ? 0.6 : 1,
+        touchAction: 'manipulation',
+      }}
+      className="w-full min-w-0 cursor-grab active:cursor-grabbing"
+    >
+      <DashboardCardItem card={card} dragHandleProps={{ ...attributes, ...listeners }} {...cardProps} />
+    </div>
+  );
+}
+
+// Each category section is a drop zone, so cards can be dropped into an empty/other section too
+function DroppableColumn({ id, children }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `column:${id}` });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex flex-col gap-4 w-full rounded-xl transition-colors ${isOver ? 'bg-[#3FE0C5]/5 ring-1 ring-[#3FE0C5]/30' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState('All');
@@ -221,7 +293,8 @@ export default function DashboardPage() {
         snippetsData = rawSnippets.map((s) => ({
           ...s,
           type: s.type || "Snippet",
-          category: "snippets"
+          category: "snippets",
+          isStandaloneSnippet: true
         }));
       }
 
@@ -409,6 +482,42 @@ export default function DashboardPage() {
     };
   }, [isSystemActive]);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const getCardId = (c) => c._id || c.id;
+
+  // Saves the full card order (and the category of a moved card) and rolls back on failure
+  const persistOrder = async (nextCards, move) => {
+    const previousCards = dbCards;
+    setDbCards(nextCards);
+
+    try {
+      const res = await fetch(`${backendUrl}/api/resources/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          items: nextCards.filter(isDraggableCard).map((c, index) => ({
+            id: getCardId(c),
+            order: index,
+            ...(move && move.id === getCardId(c) ? { category: move.category } : {}),
+          })),
+        }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Reorder failed (${res.status})`);
+      }
+    } catch (err) {
+      console.error('Failed to save card order:', err);
+      setDbCards(previousCards);
+      alert(err.message || 'Could not save the new order. Please try again.');
+    }
+  };
+
   const baseCategories = [
     { id: 'links', ids: ['links', 'Resource Link'], title: 'Links / Docs' },
     { id: 'repos', ids: ['repos', 'GitHub Repository'], title: 'Repositories' },
@@ -452,6 +561,51 @@ export default function DashboardPage() {
     }
     return belongsToActiveFilter;
   });
+
+  const handleDragEnd = ({ active, over }) => {
+    if (!over || active.id === over.id) return;
+
+    const dragged = dbCards.find((c) => getCardId(c) === active.id);
+    if (!dragged) return;
+
+    const columnOf = (card) =>
+      allCategories.find((col) => col.ids.map((id) => id.toLowerCase()).includes(getCardGroupKey(card).toLowerCase()));
+
+    // Work out which section the card was dropped in and where
+    let targetCol;
+    let overCard = null;
+    if (String(over.id).startsWith('column:')) {
+      targetCol = allCategories.find((col) => `column:${col.id}` === over.id);
+    } else {
+      overCard = dbCards.find((c) => getCardId(c) === over.id);
+      targetCol = overCard && columnOf(overCard);
+    }
+    if (!targetCol) return;
+
+    const sourceCol = columnOf(dragged);
+    const isMove = !sourceCol || sourceCol.id !== targetCol.id;
+    const withoutDragged = dbCards.filter((c) => getCardId(c) !== active.id);
+    const movedCard = isMove ? { ...dragged, category: targetCol.id } : dragged;
+
+    // Insert before the card it was dropped on, or after the last card of an empty/other section
+    let insertAt;
+    if (overCard) {
+      const overIndex = withoutDragged.findIndex((c) => getCardId(c) === over.id);
+      const oldIndex = dbCards.findIndex((c) => getCardId(c) === active.id);
+      const overOriginal = dbCards.findIndex((c) => getCardId(c) === over.id);
+      // Same section + dragging downward lands after the target, like the sortable preview shows
+      insertAt = !isMove && oldIndex < overOriginal ? overIndex + 1 : overIndex;
+    } else {
+      let last = -1;
+      withoutDragged.forEach((c, i) => {
+        if (columnOf(c)?.id === targetCol.id) last = i;
+      });
+      insertAt = last === -1 ? withoutDragged.length : last + 1;
+    }
+
+    const nextCards = [...withoutDragged.slice(0, insertAt), movedCard, ...withoutDragged.slice(insertAt)];
+    persistOrder(nextCards, isMove ? { id: active.id, category: targetCol.id } : undefined);
+  };
 
   return (
     <div className="w-full flex flex-col justify-start relative z-10 space-y-6 min-w-0">
@@ -559,6 +713,7 @@ export default function DashboardPage() {
           </p>
         </div>
       ) : (
+        <DndContext id="dashboard-dnd" sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
         <div className="flex flex-col gap-6 w-full">
           {visibleCategories.map((col) => {
             const columnCards = dbCards.filter(card => col.ids.map(id => id.toLowerCase()).includes(getCardGroupKey(card).toLowerCase()));
@@ -576,23 +731,26 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Cards stack */}
-                <div className="flex flex-col gap-4 w-full">
-                  {columnCards.map((card, idx) => {
-                    const uniqueKey = `${card.type || 'card'}-${card._id || card.id}-${idx}`;
-                    return (
-                      <DashboardCardItem 
-                        key={uniqueKey}
-                        card={card}
-                        onCardUpdate={handleCardStateShift}
-                        onSelectCard={(c) => setSelectedCard(c)}
-                      />
-                    );
-                  })}
-                </div>
+                <SortableContext items={columnCards.filter(isDraggableCard).map(getCardId)} strategy={verticalListSortingStrategy}>
+                  <DroppableColumn id={col.id}>
+                    {columnCards.map((card, idx) => {
+                      const uniqueKey = `${card.type || 'card'}-${card._id || card.id}-${idx}`;
+                      return (
+                        <SortableDashboardCard
+                          key={uniqueKey}
+                          card={card}
+                          onCardUpdate={handleCardStateShift}
+                          onSelectCard={(c) => setSelectedCard(c)}
+                        />
+                      );
+                    })}
+                  </DroppableColumn>
+                </SortableContext>
               </div>
             );
           })}
         </div>
+        </DndContext>
       )}
 
       {/* Card details drawer */}
