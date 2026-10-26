@@ -2,6 +2,7 @@
 import React from 'react';
 import { useBookmarks } from '../context/BookmarkContext';
 import { Bookmark, BookmarkFill, Star, ArrowUpRight, Copy } from '@gravity-ui/icons';
+import { GripVertical } from 'lucide-react';
 
 // Map HTTP methods to badge styles (keeps color consistency across modal and drawer views)
 const METHOD_BADGE_CLASSES = {
@@ -14,7 +15,8 @@ const METHOD_BADGE_CLASSES = {
 
 const AUTH_LABELS = { none: "None", bearer: "Bearer Token", apikey: "API Key", basic: "Basic" };
 
-export default function CardItem({ card, onCardUpdate, onSelectCard }) {
+// dragHandleProps is optional: when provided (by SortableCardItem) a grip handle is shown
+export default function CardItem({ card, onCardUpdate, onSelectCard, dragHandleProps }) {
   const { toggleBookmark } = useBookmarks();
 
   const handleBookmarkClick = async (e) => {
@@ -109,7 +111,19 @@ export default function CardItem({ card, onCardUpdate, onSelectCard }) {
       className="group relative rounded-2xl border border-white/[0.08] bg-[#1A1D29]/60 backdrop-blur-xl p-5 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(233,79,209,0.15)] cursor-pointer select-none"
     >
       <div className="flex justify-between items-start gap-2 mb-3">
-        <div>
+        {dragHandleProps && (
+          <button
+            type="button"
+            aria-label="Drag to reorder"
+            title="Drag to reorder"
+            {...dragHandleProps}
+            onClick={(e) => e.stopPropagation()} // Grabbing the handle shouldn't open the drawer
+            className="p-1.5 -ml-1 rounded-lg text-[#9CA3B5] hover:text-[#3FE0C5] hover:bg-white/[0.06] cursor-grab active:cursor-grabbing touch-none flex-shrink-0 transition-colors"
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+        )}
+        <div className="flex-1 min-w-0">
           <span className="text-[10px] uppercase font-bold tracking-widest text-[#9CA3B5]/60 block mb-1 font-mono">{card.type}</span>
           <h4 className="text-base font-medium text-[#F5F6FA] tracking-tight transition-colors group-hover:text-white">{titleText}</h4>
         </div>
