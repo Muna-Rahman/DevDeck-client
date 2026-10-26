@@ -208,17 +208,11 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard, dragHandleProps }
 }
 
 
-// Standalone snippets live in their own collection/endpoint, so they stay fixed in place.
-const isDraggableCard = (card) => !card.isStandaloneSnippet;
-
 function SortableDashboardCard({ card, ...cardProps }) {
   const id = card._id || card.id;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
-    disabled: !isDraggableCard(card),
   });
-
-  if (!isDraggableCard(card)) return <DashboardCardItem card={card} {...cardProps} />;
 
   return (
     <div
@@ -294,7 +288,9 @@ export default function DashboardPage() {
           ...s,
           type: s.type || "Snippet",
           category: "snippets",
-          isStandaloneSnippet: true
+          // Snippet-type cards come back here too (source: "cards_collection"); only real
+          // snippets-collection documents are "standalone" and use the snippets reorder path
+          isStandaloneSnippet: s.source !== "cards_collection"
         }));
       }
 
@@ -308,10 +304,17 @@ export default function DashboardPage() {
 
       snippetsData.forEach((item) => {
         const idKey = (item._id || item.id)?.toString();
-        if (idKey) unifiedMap.set(idKey, item);
+        // Keep the real card when a snippet-type card was returned by both endpoints,
+        // so it keeps its own category and order
+        if (idKey && !unifiedMap.has(idKey)) unifiedMap.set(idKey, item);
       });
 
-      setDbCards(Array.from(unifiedMap.values()));
+      // Cards and snippets share one saved order; unordered (legacy) items go last, newest first
+      const orderOf = (c) => (typeof c.order === "number" ? c.order : Infinity);
+      setDbCards(Array.from(unifiedMap.values()).sort((a, b) => {
+        const ao = orderOf(a), bo = orderOf(b);
+        return ao === bo ? 0 : ao < bo ? -1 : 1;
+      }));
     } catch (err) {
       console.error("Ecosystem stream connection rejected by infrastructure link.", err);
     }
@@ -500,9 +503,10 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          items: nextCards.filter(isDraggableCard).map((c, index) => ({
+          items: nextCards.map((c, index) => ({
             id: getCardId(c),
             order: index,
+            ...(c.isStandaloneSnippet ? { collection: 'snippets' } : {}),
             ...(move && move.id === getCardId(c) ? { category: move.category } : {}),
           })),
         }),
@@ -584,6 +588,8 @@ export default function DashboardPage() {
 
     const sourceCol = columnOf(dragged);
     const isMove = !sourceCol || sourceCol.id !== targetCol.id;
+    // Standalone snippets can be reordered but not re-categorised
+    if (isMove && dragged.isStandaloneSnippet) return;
     const withoutDragged = dbCards.filter((c) => getCardId(c) !== active.id);
     const movedCard = isMove ? { ...dragged, category: targetCol.id } : dragged;
 
@@ -731,7 +737,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Cards stack */}
-                <SortableContext items={columnCards.filter(isDraggableCard).map(getCardId)} strategy={verticalListSortingStrategy}>
+                <SortableContext items={columnCards.map(getCardId)} strategy={verticalListSortingStrategy}>
                   <DroppableColumn id={col.id}>
                     {columnCards.map((card, idx) => {
                       const uniqueKey = `${card.type || 'card'}-${card._id || card.id}-${idx}`;
