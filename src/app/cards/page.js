@@ -6,6 +6,7 @@ import { useBookmarks } from '@/context/BookmarkContext';
 import {
   DndContext,
   closestCenter,
+  pointerWithin,
   PointerSensor,
   KeyboardSensor,
   useSensor,
@@ -18,6 +19,7 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import SortableCardItem from '../../components/SortableCardItem';
+import CollectionDropBar, { COLLECTION_DROP_PREFIX } from '../../components/CollectionDropBar';
 import CardDetailsDrawer from '../../components/CardDetailsDrawer';
 import CreateCardModal from '../../components/CreateCardModal';
 import { LayoutCellsLarge, ArrowLeft, Plus } from '@gravity-ui/icons';
@@ -98,6 +100,8 @@ function CardsPageContent() {
   const [loading, setLoading] = useState(true);
   const [selectedCard, setSelectedCard] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [activeCardId, setActiveCardId] = useState(null);
+  const [savedCategories, setSavedCategories] = useState([]);
 
   const fetchCards = useCallback(async () => {
     try {
@@ -117,6 +121,14 @@ function CardsPageContent() {
     fetchCards();
   }, [fetchCards]);
 
+  // Saved custom categories, so they can be drop targets even when they hold no cards yet
+  useEffect(() => {
+    fetch(`${backendUrl}/api/categories`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setSavedCategories(Array.isArray(data) ? data.map((c) => c?.name).filter(Boolean) : []))
+      .catch(() => {});
+  }, []);
+
   // "+" button in the navbar sends you here with ?openModal=true
   useEffect(() => {
     if (openModalParam === 'true') setIsCreateOpen(true);
@@ -134,10 +146,61 @@ function CardsPageContent() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const handleDragEnd = async ({ active, over }) => {
+  // Chips in the "move to collection" bar win over the sortable cards when the pointer is on them
+  const collisionDetection = (args) => {
+    const chipHits = pointerWithin(args).filter((c) => String(c.id).startsWith(COLLECTION_DROP_PREFIX));
+    return chipHits.length > 0 ? chipHits : closestCenter(args);
+  };
+
+  const getId = (c) => c._id || c.id;
+  const collectionOf = (c) => c.category || c.type || "Uncategorized";
+  const collections = Array.from(new Set([...savedCategories, ...cards.map(collectionOf)]));
+  const activeCard = cards.find((c) => getId(c) === activeCardId);
+
+  // Optimistically applies nextCards, saves it, and rolls back if the server refuses.
+  // `move` ({ id, category }) is sent along when a card was dropped onto another collection.
+  const persistOrder = async (nextCards, move) => {
+    const previousCards = cards;
+    setCards(nextCards);
+
+    try {
+      const res = await fetch(`${backendUrl}/api/resources/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          items: nextCards.map((c, index) => ({
+            id: getId(c),
+            order: index,
+            ...(move && move.id === getId(c) ? { category: move.category } : {}),
+          })),
+        }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || `Reorder failed (${res.status})`);
+      }
+    } catch (err) {
+      console.error('Failed to save card order:', err);
+      setCards(previousCards); // roll back so the UI matches what's stored
+      alert(err.message || 'Could not save the new order. Please try again.');
+    }
+  };
+
+  const handleDragStart = ({ active }) => setActiveCardId(active.id);
+
+  const handleDragEnd = ({ active, over }) => {
+    setActiveCardId(null);
     if (!over || active.id === over.id) return;
 
-    const getId = (c) => c._id || c.id;
+    // Dropped on a collection chip: move the card there
+    if (String(over.id).startsWith(COLLECTION_DROP_PREFIX)) {
+      const category = String(over.id).slice(COLLECTION_DROP_PREFIX.length);
+      const nextCards = cards.map((c) => (getId(c) === active.id ? { ...c, category } : c));
+      persistOrder(nextCards, { id: active.id, category });
+      return;
+    }
+
     const visibleIds = visibleCards.map(getId);
     const oldIndex = visibleIds.indexOf(active.id);
     const newIndex = visibleIds.indexOf(over.id);
@@ -148,26 +211,7 @@ function CardsPageContent() {
     const reorderedVisible = arrayMove(visibleCards, oldIndex, newIndex);
     let cursor = 0;
     const visibleSet = new Set(visibleIds);
-    const nextCards = cards.map((c) => (visibleSet.has(getId(c)) ? reorderedVisible[cursor++] : c));
-
-    const previousCards = cards;
-    setCards(nextCards); // optimistic
-
-    try {
-      const res = await fetch(`${backendUrl}/api/resources/reorder`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          items: nextCards.map((c, index) => ({ id: getId(c), order: index })),
-        }),
-      });
-      if (!res.ok) throw new Error(`Reorder failed (${res.status})`);
-    } catch (err) {
-      console.error('Failed to save card order:', err);
-      setCards(previousCards); // roll back so the UI matches what's stored
-      alert('Could not save the new order. Please try again.');
-    }
+    persistOrder(cards.map((c) => (visibleSet.has(getId(c)) ? reorderedVisible[cursor++] : c)));
   };
 
   // CREATE — CreateCardModal calls onSave({ type, data }) on submit
@@ -333,7 +377,14 @@ function CardsPageContent() {
             </button>
           </div>
         ) : (
-          <DndContext id="cards-dnd" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <DndContext
+            id="cards-dnd"
+            sensors={sensors}
+            collisionDetection={collisionDetection}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={() => setActiveCardId(null)}
+          >
             <SortableContext items={visibleCards.map((c) => c._id || c.id)} strategy={rectSortingStrategy}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {visibleCards.map((card) => (
@@ -348,6 +399,7 @@ function CardsPageContent() {
                 ))}
               </div>
             </SortableContext>
+            {activeCard && <CollectionDropBar collections={collections} currentCollection={collectionOf(activeCard)} />}
           </DndContext>
         )}
       </div>
