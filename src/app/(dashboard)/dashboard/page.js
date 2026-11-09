@@ -90,12 +90,12 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard, dragHandleProps }
       case 'repos':
         return (
           <div className="space-y-3 min-w-0">
-            {descText && <p className="text-[#9CA3B5] text-xs line-clamp-2 break-words">{descText}</p>}
+            {descText && <p className="text-[#5B5F72] dark:text-[#9CA3B5] text-xs line-clamp-2 break-words">{descText}</p>}
             <div className="flex flex-wrap items-center gap-2 text-[11px]">
-              <span className="px-2.5 py-0.5 max-w-[120px] truncate rounded bg-[#8B5CF6]/10 text-[#B084F5] border border-[#8B5CF6]/20 font-mono">
+              <span className="px-2.5 py-0.5 max-w-[120px] truncate rounded bg-[#8B5CF6]/10 text-[#6D3FD6] dark:text-[#B084F5] border border-[#8B5CF6]/25 font-mono">
                 {card.metadata?.language || "JavaScript"}
               </span>
-              <span className="flex items-center gap-1 text-[#FFB84D] font-mono flex-shrink-0">
+              <span className="flex items-center gap-1 text-[#C77A00] dark:text-[#FFB84D] font-mono flex-shrink-0">
                 <Star className="w-3.5 h-3.5 fill-[#FFB84D]" /> {card.metadata?.stars || 0}
               </span>
             </div>
@@ -106,18 +106,18 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard, dragHandleProps }
         return (
           <div className="space-y-2 min-w-0">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-[#3FE0C5] uppercase tracking-wider font-mono font-semibold truncate max-w-[120px]">
+              <span className="text-[10px] text-[#0E9F8A] dark:text-[#3FE0C5] uppercase tracking-wider font-mono font-semibold truncate max-w-[120px]">
                 {card.language || card.metadata?.language || "Code"}
               </span>
               <button 
                 onClick={handleCopyCode}
-                className="copy-action-trigger text-[#9CA3B5] hover:text-[#3FE0C5] transition-colors flex-shrink-0 cursor-pointer"
+                className="copy-action-trigger text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#0E9F8A] dark:hover:text-[#3FE0C5] transition-colors flex-shrink-0 cursor-pointer"
                 title="Copy Code"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
-            <pre className="p-3 bg-[#0B0E14]/80 rounded-lg text-[11px] font-mono text-[#3FE0C5] overflow-x-auto border border-white/5 whitespace-pre-wrap break-all max-h-[120px]">
+            <pre className="p-3 bg-[#EEF0F8] dark:bg-[#0B0E14]/80 rounded-lg text-[11px] font-mono text-[#0E7F6E] dark:text-[#3FE0C5] overflow-x-auto border border-[#1A1D29]/10 dark:border-white/5 whitespace-pre-wrap break-all max-h-[120px]">
               <code className="block">{snippetCode}</code>
             </pre>
           </div>
@@ -137,26 +137,26 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard, dragHandleProps }
               <span className={`px-2 py-0.5 rounded font-extrabold text-[10px] flex-shrink-0 ${METHOD_BADGE_CLASSES[method] || METHOD_BADGE_CLASSES.GET}`}>
                 {method}
               </span>
-              <span className="text-[#F5F6FA] truncate block flex-1 break-all">
+              <span className="text-[#1A1D29] dark:text-[#F5F6FA] truncate block flex-1 break-all">
                 {card.metadata?.url || card.content?.url}
               </span>
             </div>
-            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-white/[0.04] text-[#9CA3B5] border border-white/[0.06]">
+            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-[#1A1D29]/[0.05] dark:bg-white/[0.04] text-[#5B5F72] dark:text-[#9CA3B5] border border-[#1A1D29]/10 dark:border-white/[0.06]">
               {authLabel}
             </span>
-            {descText && <p className="text-[11px] text-[#9CA3B5] line-clamp-2 break-words">{descText}</p>}
+            {descText && <p className="text-[11px] text-[#5B5F72] dark:text-[#9CA3B5] line-clamp-2 break-words">{descText}</p>}
           </div>
         );
       }
       default:
-        return descText ? <p className="text-[#9CA3B5] text-xs line-clamp-2 break-words">{descText}</p> : null;
+        return descText ? <p className="text-[#5B5F72] dark:text-[#9CA3B5] text-xs line-clamp-2 break-words">{descText}</p> : null;
     }
   };
 
   return (
     <div 
       onClick={handleCardClick}
-      className="group relative rounded-xl border border-white/[0.08] bg-[#12141C]/90 hover:bg-[#1A1D29]/90 backdrop-blur-xl p-5 shadow-md transition-all duration-300 hover:border-white/20 cursor-pointer min-w-0 overflow-hidden w-full"
+      className="group relative rounded-xl border border-[#1A1D29]/10 dark:border-white/[0.08] bg-white/80 hover:bg-white dark:bg-[#12141C]/90 dark:hover:bg-[#1A1D29]/90 backdrop-blur-xl p-5 shadow-md shadow-[#7C3AED]/5 dark:shadow-md transition-all duration-300 hover:border-[#D6249F]/40 dark:hover:border-white/20 hover:shadow-lg hover:shadow-[#D6249F]/10 dark:hover:shadow-md cursor-pointer min-w-0 overflow-hidden w-full"
     >
       <div className="flex justify-between items-start gap-4 mb-3 w-full">
         {dragHandleProps && (
@@ -166,19 +166,19 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard, dragHandleProps }
             title="Drag to reorder"
             {...dragHandleProps}
             onClick={(e) => e.stopPropagation()}
-            className="p-1.5 -ml-1.5 rounded-lg text-[#9CA3B5] hover:text-[#3FE0C5] hover:bg-white/[0.06] cursor-grab active:cursor-grabbing touch-none flex-shrink-0 transition-colors"
+            className="p-1.5 -ml-1.5 rounded-lg text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#0E9F8A] dark:hover:text-[#3FE0C5] hover:bg-[#1A1D29]/[0.06] dark:hover:bg-white/[0.06] cursor-grab active:cursor-grabbing touch-none flex-shrink-0 transition-colors"
           >
             <GripVertical className="w-4 h-4" />
           </button>
         )}
         <div className="min-w-0 flex-1">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-[#9CA3B5]/60 block mb-1 font-mono truncate">{card.type}</span>
-          <h4 className="text-base font-semibold text-white tracking-tight truncate w-full">{titleText}</h4>
+          <span className="text-[10px] uppercase font-bold tracking-widest text-[#5B5F72]/70 dark:text-[#9CA3B5]/60 block mb-1 font-mono truncate">{card.type}</span>
+          <h4 className="text-base font-semibold text-[#1A1D29] dark:text-white tracking-tight truncate w-full">{titleText}</h4>
         </div>
         
         <button 
           onClick={handleBookmarkClick}
-          className="p-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-[#9CA3B5] hover:text-[#E94FD1] transition-all flex-shrink-0 cursor-pointer"
+          className="p-2 rounded-lg bg-[#1A1D29]/[0.04] dark:bg-white/[0.04] border border-[#1A1D29]/10 dark:border-white/[0.06] text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#D6249F] dark:hover:text-[#E94FD1] transition-all flex-shrink-0 cursor-pointer"
         >
           {isBookmarkedState ? (
             <Bookmark className="w-4 h-3.5 text-[#E94FD1] drop-shadow-[0_0_6px_#E94FD1] fill-[#E94FD1]" />
@@ -190,14 +190,14 @@ function DashboardCardItem({ card, onCardUpdate, onSelectCard, dragHandleProps }
 
       {renderCardContent()}
 
-      <div className="mt-4 pt-3 border-t border-white/[0.06] flex justify-between items-center text-[11px] text-white/30 font-mono w-full">
+      <div className="mt-4 pt-3 border-t border-[#1A1D29]/10 dark:border-white/[0.06] flex justify-between items-center text-[11px] text-[#5B5F72]/70 dark:text-white/30 font-mono w-full">
         <span className="truncate">ID: {(card._id || card.id || "SYNC").substring(0, 6)}</span>
         {(card.metadata?.url || card.content?.url) && (
           <a 
             href={card.metadata?.url || card.content?.url} 
             target="_blank" 
             rel="noreferrer" 
-            className="text-[#3FE0C5] hover:underline flex items-center gap-1 font-sans flex-shrink-0 ml-1"
+            className="text-[#0E9F8A] dark:text-[#3FE0C5] hover:underline flex items-center gap-1 font-sans flex-shrink-0 ml-1"
           >
             Launch <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
