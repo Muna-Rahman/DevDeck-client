@@ -106,8 +106,8 @@
 .lamp-on .lamp-line { fill: #5b5f72; }
 .lamp-shade { fill: #4a4578; transition: fill 0.5s ease; }
 .lamp-rim { fill: #3a3563; transition: fill 0.5s ease; }
-.lamp-on .lamp-shade { fill: #2f3a78; }
-.lamp-on .lamp-rim { fill: #232c5e; }
+.lamp-on .lamp-shade { fill: url(#lampShadeOn); }
+.lamp-on .lamp-rim { fill: #8f2a8f; }
 .lamp-bulb { fill: #3b3763; transition: fill 0.4s ease; }
 .lamp-on .lamp-bulb { fill: url(#lampBulb); }
 .lamp-bulb-glow { opacity: 0; filter: blur(7px); transition: opacity 0.4s ease; pointer-events: none; }
@@ -131,7 +131,7 @@
 .lamp-flicker .lamp-cone { animation: lamp-flicker 0.9s linear 0.15s both; }
 
 @keyframes lamp-cord-pull { 0% { transform: scaleY(1); } 25% { transform: scaleY(1.5); } 100% { transform: scaleY(1); } }
-@keyframes lamp-bead-pull { 0% { transform: translateY(0); } 25% { transform: translateY(11px); } 100% { transform: translateY(0); } }
+@keyframes lamp-bead-pull { 0% { transform: translateY(0); } 25% { transform: translateY(7px); } 100% { transform: translateY(0); } }
 @keyframes lamp-sway {
   0% { transform: rotate(0deg); }
   15% { transform: rotate(9deg); }

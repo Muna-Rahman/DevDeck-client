@@ -33,7 +33,7 @@ export default function LampToggle({ ceiling = 10, className = "" }) {
     toggleTheme();
   };
 
-  const H = ceiling + 70;
+  const H = ceiling + 56;
 
   return (
     <div className={`lamp-wrap ${className}`} style={{ width: 56, height: H }}>
@@ -51,6 +51,10 @@ export default function LampToggle({ ceiling = 10, className = "" }) {
               <stop offset="0" stopColor="#FFD76A" stopOpacity="0.55" />
               <stop offset="1" stopColor="#FFD76A" stopOpacity="0" />
             </linearGradient>
+            <linearGradient id="lampShadeOn" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#7C3AED" />
+              <stop offset="1" stopColor="#D6249F" />
+            </linearGradient>
             <radialGradient id="lampBulb" cx="50%" cy="40%" r="60%">
               <stop offset="0" stopColor="#FFFBE6" />
               <stop offset="1" stopColor="#FFC93C" />
@@ -63,7 +67,7 @@ export default function LampToggle({ ceiling = 10, className = "" }) {
 
             <g transform={`translate(0 ${ceiling})`}>
               {/* light cone */}
-              <polygon className="lamp-cone" points="12,26 44,26 66,92 -10,92" fill="url(#lampCone)" />
+              <polygon className="lamp-cone" points="12,26 44,26 58,52 -2,52" fill="url(#lampCone)" />
 
               {/* bulb */}
               <circle className="lamp-bulb-glow" cx="28" cy="27" r="11" fill="#FFD76A" />
@@ -74,9 +78,9 @@ export default function LampToggle({ ceiling = 10, className = "" }) {
               <rect className="lamp-rim" x="4" y="21" width="48" height="3.5" rx="1.75" />
 
               {/* pull cord + bead */}
-              <rect className="lamp-cord" x="39.4" y="24" width="1.2" height="22" rx="0.6" />
+              <rect className="lamp-cord" x="39.4" y="24" width="1.2" height="14" rx="0.6" />
               <g className="lamp-bead">
-                <ellipse cx="40" cy="50" rx="4" ry="5" className="lamp-bead-shape" />
+                <ellipse cx="40" cy="42" rx="3.5" ry="4.5" className="lamp-bead-shape" />
               </g>
             </g>
           </g>

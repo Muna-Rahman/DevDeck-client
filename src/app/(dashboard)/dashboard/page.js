@@ -262,6 +262,10 @@ export default function DashboardPage() {
   const lastActivityTime = useRef(Date.now());
 
   const { data: session } = authClient.useSession();
+  // The session may already be cached on the client while the server HTML
+  // was rendered without it, so only show the real name after mount.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const { refreshBookmarks } = useBookmarks();
 
   const streamWorkspaceAssets = async () => {
@@ -552,7 +556,7 @@ export default function DashboardPage() {
     ...customCategoryEntries.map((cat) => ({ id: cat.id, label: cat.title, icon: Folder })),
   ];
 
-  const username = session?.user?.name || session?.user?.email || "User";
+  const username = (mounted && (session?.user?.name || session?.user?.email)) || "User";
 
   const getCardGroupKey = (card) => (card.category && card.category.trim()) || card.type || "";
 

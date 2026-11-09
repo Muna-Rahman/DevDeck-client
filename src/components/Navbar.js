@@ -293,7 +293,7 @@ export default function Navbar() {
           {/* Pull-cord lamp theme switch: hangs from the top edge of the header */}
           <div className="relative h-9 w-14 flex-shrink-0">
             <div className="absolute left-0 -top-[14px]">
-              <LampToggle ceiling={14} />
+              <LampToggle ceiling={8} />
             </div>
           </div>
 
