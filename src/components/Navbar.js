@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useTheme } from "@/context/ThemeContext";
+import LampToggle from "@/components/LampToggle";
 import { Sun, Moon, Search, Plus, Code2, FileText, Link2, Cpu, Lightbulb, Loader2 } from "lucide-react";
 import { LogoGithub } from "@gravity-ui/icons";
 
@@ -289,13 +290,12 @@ export default function Navbar() {
             <span>Add Card</span>
           </button>
 
-          <button 
-            onClick={toggleTheme}
-            aria-label="Toggle visual theme mode"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(20,20,40,0.08)] bg-white/60 dark:border-white/10 dark:bg-[#1A1D29]/60 hover:bg-white dark:hover:bg-[#1A1D29] transition-all duration-200 active:scale-90 text-[#5B5F72] dark:text-[#9CA3B5] cursor-pointer"
-          >
-            {darkMode ? <Sun size={18} strokeWidth={2.5} /> : <Moon size={18} strokeWidth={2.5} />}
-          </button>
+          {/* Pull-cord lamp theme switch: hangs from the top edge of the header */}
+          <div className="relative h-9 w-14 flex-shrink-0">
+            <div className="absolute left-0 -top-[14px]">
+              <LampToggle ceiling={14} />
+            </div>
+          </div>
 
           {/* User Profile / Auth State */}
           {mounted && !isPending && session?.user ? (

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Sun, Moon, ArrowRight } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import LampToggle from "@/components/LampToggle";
 import LandingNavbar from "@/components/landing/LandingNavbar";
 import Footer from "@/components/landing/Footer";
 
@@ -43,16 +44,10 @@ export default function LandingPage() {
         )}
       </div>
 
-      {/* Floating Theme Switcher Option */}
+      {/* Pull-cord lamp theme switch: hangs from behind the top navbar */}
       {mounted && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <button
-            onClick={toggleTheme}
-            aria-label="Toggle layout theme look"
-            className="flex h-12 w-12 items-center justify-center rounded-2xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#12141C]/85 backdrop-blur-xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white cursor-pointer"
-          >
-            {darkMode ? <Sun size={20} strokeWidth={2.5} /> : <Moon size={20} strokeWidth={2.5} />}
-          </button>
+        <div className="fixed top-0 right-4 sm:right-8 z-40">
+          <LampToggle ceiling={100} />
         </div>
       )}
 

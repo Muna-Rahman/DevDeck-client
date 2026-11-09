@@ -90,3 +90,63 @@
   .flip-tab-inner { transition: none; }
   .flip-tab.is-active .flip-tab-back { animation: none; }
 }
+
+/* ---------- Pull-cord lamp theme toggle ---------- */
+.lamp-wrap { position: relative; flex-shrink: 0; }
+.lamp-toggle {
+  position: absolute; inset: 0; padding: 0; border: 0; background: none;
+  cursor: pointer; -webkit-tap-highlight-color: transparent; outline: none;
+}
+.lamp-toggle:focus-visible { outline: 2px solid #e94fd1; outline-offset: 2px; border-radius: 12px; }
+.lamp-toggle svg { pointer-events: none; display: block; }
+.lamp-body { transform-box: view-box; transform-origin: 28px 0; }
+.lamp-toggle:hover .lamp-body { animation: lamp-nudge 0.5s ease-out; }
+
+.lamp-line { fill: #8a86b3; }
+.lamp-on .lamp-line { fill: #5b5f72; }
+.lamp-shade { fill: #4a4578; transition: fill 0.5s ease; }
+.lamp-rim { fill: #3a3563; transition: fill 0.5s ease; }
+.lamp-on .lamp-shade { fill: #2f3a78; }
+.lamp-on .lamp-rim { fill: #232c5e; }
+.lamp-bulb { fill: #3b3763; transition: fill 0.4s ease; }
+.lamp-on .lamp-bulb { fill: url(#lampBulb); }
+.lamp-bulb-glow { opacity: 0; filter: blur(7px); transition: opacity 0.4s ease; pointer-events: none; }
+.lamp-on .lamp-bulb-glow { opacity: 0.9; }
+.lamp-cone { opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
+.lamp-on .lamp-cone { opacity: 1; }
+.dark .lamp-on .lamp-cone { opacity: 0.8; }
+
+.lamp-cord { fill: #a7a3d1; transform-box: fill-box; transform-origin: top; }
+.lamp-on .lamp-cord { fill: #8a8fb0; }
+.lamp-bead-shape { fill: #a7a3d1; stroke: rgba(255,255,255,0.55); stroke-width: 1; transition: fill 0.4s ease; }
+.lamp-on .lamp-bead-shape { fill: #FFD76A; stroke: #fff3c4; filter: drop-shadow(0 0 4px rgba(255, 201, 60, 0.9)); }
+.lamp-bead { transition: transform 0.2s ease; }
+.lamp-toggle:hover .lamp-bead { transform: translateY(2px); }
+
+.lamp-pulling .lamp-cord { animation: lamp-cord-pull 0.7s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.lamp-pulling .lamp-bead { animation: lamp-bead-pull 0.7s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.lamp-pulling .lamp-body { animation: lamp-sway 1.7s ease-out; }
+.lamp-flicker .lamp-bulb,
+.lamp-flicker .lamp-bulb-glow,
+.lamp-flicker .lamp-cone { animation: lamp-flicker 0.9s linear 0.15s both; }
+
+@keyframes lamp-cord-pull { 0% { transform: scaleY(1); } 25% { transform: scaleY(1.5); } 100% { transform: scaleY(1); } }
+@keyframes lamp-bead-pull { 0% { transform: translateY(0); } 25% { transform: translateY(11px); } 100% { transform: translateY(0); } }
+@keyframes lamp-sway {
+  0% { transform: rotate(0deg); }
+  15% { transform: rotate(9deg); }
+  35% { transform: rotate(-7deg); }
+  55% { transform: rotate(4deg); }
+  75% { transform: rotate(-2deg); }
+  100% { transform: rotate(0deg); }
+}
+@keyframes lamp-nudge { 0%, 100% { transform: rotate(0deg); } 40% { transform: rotate(2.5deg); } 70% { transform: rotate(-1.5deg); } }
+@keyframes lamp-flicker {
+  0% { opacity: 0; } 10% { opacity: 1; } 20% { opacity: 0.15; } 30% { opacity: 1; }
+  45% { opacity: 0.3; } 60% { opacity: 1; } 70% { opacity: 0.6; } 100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lamp-pulling .lamp-body, .lamp-pulling .lamp-cord, .lamp-pulling .lamp-bead,
+  .lamp-flicker .lamp-bulb, .lamp-flicker .lamp-bulb-glow, .lamp-flicker .lamp-cone,
+  .lamp-toggle:hover .lamp-body { animation: none; }
+}
