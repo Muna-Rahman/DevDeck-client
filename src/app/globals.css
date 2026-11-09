@@ -24,3 +24,66 @@
     -webkit-text-fill-color: transparent;
   }
 }
+/* ---------- 3D flip filter tabs ---------- */
+.flip-tab {
+  position: relative;
+  width: 100%;
+  height: 46px;
+  perspective: 700px;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  transition: transform 0.3s ease;
+}
+.flip-tab:hover { transform: translateY(-2px); }
+.flip-tab:active { transform: translateY(0) scale(0.97); }
+.flip-tab-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+.flip-tab.is-active .flip-tab-inner { transform: rotateY(180deg); }
+.flip-tab-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.flip-tab-front {
+  background: rgba(255, 255, 255, 0.4);
+  color: #5b5f72;
+  transition: background 0.3s, color 0.3s;
+}
+.flip-tab:hover .flip-tab-front { background: rgba(255, 255, 255, 0.8); color: #1a1d29; }
+.flip-tab-back {
+  transform: rotateY(180deg);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, #d6249f, #7c3aed 55%, #2fd1ff);
+  background-size: 200% 200%;
+  box-shadow: 0 0 18px rgba(233, 79, 209, 0.65), 0 0 40px rgba(47, 209, 255, 0.3),
+    inset 0 0 12px rgba(255, 255, 255, 0.25);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+.flip-tab.is-active .flip-tab-back { animation: flip-glow 2.4s ease-in-out infinite; }
+@keyframes flip-glow {
+  0%, 100% { background-position: 0% 50%; box-shadow: 0 0 14px rgba(233,79,209,.55), 0 0 30px rgba(47,209,255,.25), inset 0 0 10px rgba(255,255,255,.2); }
+  50% { background-position: 100% 50%; box-shadow: 0 0 24px rgba(233,79,209,.9), 0 0 50px rgba(47,209,255,.5), inset 0 0 14px rgba(255,255,255,.35); }
+}
+.dark .flip-tab-front { background: rgba(0, 0, 0, 0.4); color: rgba(255, 255, 255, 0.6); }
+.dark .flip-tab:hover .flip-tab-front { background: rgba(0, 0, 0, 0.6); color: #fff; }
+@media (prefers-reduced-motion: reduce) {
+  .flip-tab-inner { transition: none; }
+  .flip-tab.is-active .flip-tab-back { animation: none; }
+}

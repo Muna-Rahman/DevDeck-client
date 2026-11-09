@@ -695,14 +695,15 @@ export default function DashboardPage() {
             return (
               <button
                 key={filter.id}
+                type="button"
                 onClick={() => setActiveFilter(filter.id)}
-                className={`group flex items-center justify-center gap-2.5 px-4 py-3 text-xs font-bold uppercase tracking-widest rounded-xl border transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 w-full cursor-pointer
-                  ${isSelected 
-                    ? `bg-white dark:bg-white/25 shadow-xl border-white/80 dark:border-white/30 text-[#D6249F] dark:text-white scale-[1.02] drop-shadow-[0_0_12px_rgba(233,79,209,0.25)]` 
-                    : 'bg-white/40 dark:bg-black/40 border-white/20 dark:border-white/5 text-[#5B5F72] dark:text-white/60 hover:bg-white/80 dark:hover:bg-black/60 hover:text-[#1A1D29] dark:hover:text-white'
-                  }`}
+                aria-pressed={isSelected}
+                className={`flip-tab ${isSelected ? 'is-active' : ''}`}
               >
-                <span>{filter.label}</span>
+                <span className="flip-tab-inner">
+                  <span className="flip-tab-face flip-tab-front">{filter.label}</span>
+                  <span className="flip-tab-face flip-tab-back">{filter.label}</span>
+                </span>
               </button>
             );
           })}
