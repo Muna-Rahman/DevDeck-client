@@ -58,14 +58,15 @@
   letter-spacing: 0.1em;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(26, 29, 41, 0.12);
 }
 .flip-tab-front {
-  background: rgba(255, 255, 255, 0.4);
-  color: #5b5f72;
+  background: rgba(255, 255, 255, 0.75);
+  color: #4a4e63;
+  box-shadow: 0 2px 8px rgba(26, 29, 41, 0.08);
   transition: background 0.3s, color 0.3s;
 }
-.flip-tab:hover .flip-tab-front { background: rgba(255, 255, 255, 0.8); color: #1a1d29; }
+.flip-tab:hover .flip-tab-front { background: #fff; color: #1a1d29; box-shadow: 0 4px 14px rgba(214, 36, 159, 0.18); }
 .flip-tab-back {
   transform: rotateY(180deg);
   color: #fff;
@@ -74,15 +75,17 @@
   background-size: 200% 200%;
   box-shadow: 0 0 18px rgba(233, 79, 209, 0.65), 0 0 40px rgba(47, 209, 255, 0.3),
     inset 0 0 12px rgba(255, 255, 255, 0.25);
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
 .flip-tab.is-active .flip-tab-back { animation: flip-glow 2.4s ease-in-out infinite; }
 @keyframes flip-glow {
   0%, 100% { background-position: 0% 50%; box-shadow: 0 0 14px rgba(233,79,209,.55), 0 0 30px rgba(47,209,255,.25), inset 0 0 10px rgba(255,255,255,.2); }
   50% { background-position: 100% 50%; box-shadow: 0 0 24px rgba(233,79,209,.9), 0 0 50px rgba(47,209,255,.5), inset 0 0 14px rgba(255,255,255,.35); }
 }
-.dark .flip-tab-front { background: rgba(0, 0, 0, 0.4); color: rgba(255, 255, 255, 0.6); }
-.dark .flip-tab:hover .flip-tab-front { background: rgba(0, 0, 0, 0.6); color: #fff; }
+.dark .flip-tab-face { border-color: rgba(255, 255, 255, 0.08); }
+.dark .flip-tab-front { background: rgba(0, 0, 0, 0.4); color: rgba(255, 255, 255, 0.6); box-shadow: none; }
+.dark .flip-tab-back { border-color: rgba(255, 255, 255, 0.5); text-shadow: 0 0 8px rgba(255, 255, 255, 0.8); }
+.dark .flip-tab:hover .flip-tab-front { background: rgba(0, 0, 0, 0.6); color: #fff; box-shadow: none; }
 @media (prefers-reduced-motion: reduce) {
   .flip-tab-inner { transition: none; }
   .flip-tab.is-active .flip-tab-back { animation: none; }
