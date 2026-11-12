@@ -150,3 +150,32 @@
   .lamp-flicker .lamp-bulb, .lamp-flicker .lamp-bulb-glow, .lamp-flicker .lamp-cone,
   .lamp-toggle:hover .lamp-body { animation: none; }
 }
+/* ---------- Side drawer (sidebar) ---------- */
+.drawer-panel {
+  transform: translateX(-110%);
+  visibility: hidden;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 1, 1), visibility 0s linear 0.35s;
+}
+.drawer-open .drawer-panel {
+  transform: translateX(0);
+  visibility: visible;
+  /* slight overshoot = the "spring" */
+  transition: transform 0.65s cubic-bezier(0.34, 1.25, 0.5, 1), visibility 0s;
+}
+.drawer-row {
+  opacity: 0;
+  transform: translateX(-16px);
+}
+.drawer-open .drawer-row {
+  animation: drawer-row-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms + 160ms);
+}
+@keyframes drawer-row-in {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawer-panel,
+  .drawer-open .drawer-panel { transition: visibility 0s; }
+  .drawer-open .drawer-row { animation: none; opacity: 1; transform: none; }
+}

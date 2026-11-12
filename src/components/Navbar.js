@@ -5,8 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useTheme } from "@/context/ThemeContext";
+import { useSidebar } from "@/context/SidebarContext";
 import LampToggle from "@/components/LampToggle";
-import { Sun, Moon, Search, Plus, Code2, FileText, Link2, Cpu, Lightbulb, Loader2 } from "lucide-react";
+import { Menu, Sun, Moon, Search, Plus, Code2, FileText, Link2, Cpu, Lightbulb, Loader2 } from "lucide-react";
 import { LogoGithub } from "@gravity-ui/icons";
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -41,6 +42,7 @@ export default function Navbar() {
   const currentPath = usePathname();
   const [searchFocused, setSearchFocused] = useState(false);
   const { isDark: darkMode, toggleTheme } = useTheme();
+  const { isSidebarOpen, toggleSidebar } = useSidebar();
   const [mounted, setMounted] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -185,7 +187,17 @@ export default function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         
         {/* Branding & Navigation */}
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4 sm:gap-6">
+          {/* Hamburger: opens the side drawer */}
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label="Open menu"
+            aria-expanded={isSidebarOpen}
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-[#6D4AFF]/15 dark:border-white/10 bg-white/60 dark:bg-white/5 text-[#1E1B3A] dark:text-white shadow-sm hover:bg-[#6D4AFF]/10 dark:hover:bg-white/10 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+          >
+            <Menu size={20} />
+          </button>
           <Link href="/dashboard" className="flex items-center gap-2.5 transition-transform active:scale-95 group">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] text-white shadow-[0_0_15px_rgba(233,79,209,0.35)]">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

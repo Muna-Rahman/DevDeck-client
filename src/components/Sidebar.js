@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useSidebar } from "@/context/SidebarContext";
+import { authClient } from "@/lib/auth-client";
 import CreateCategoryModal from "@/components/CreateCategoryModal";
 import {
   FolderPlus,
@@ -12,7 +13,8 @@ import {
   Clock,
   Tag,
   Settings,
-  Menu,
+  LayoutDashboard,
+  X,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -21,8 +23,20 @@ const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function Sidebar() {
   // Grab state directly from the context provider framework
-  const { isSidebarCollapsed, setIsSidebarCollapsed } = useSidebar();
-  const router = useRouter();
+  const { isSidebarOpen, closeSidebar } = useSidebar();
+  const pathname = usePathname();
+  const { data: session } = authClient.useSession();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  // Close the drawer on navigation and when Escape is pressed.
+  useEffect(() => { closeSidebar(); }, [pathname, closeSidebar]);
+  useEffect(() => {
+    if (!isSidebarOpen) return;
+    const onKey = (e) => { if (e.key === "Escape") closeSidebar(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isSidebarOpen, closeSidebar]);
 
   const [workspaceCards, setWorkspaceCards] = useState([]);
   const [savedCategories, setSavedCategories] = useState([]);
@@ -120,9 +134,7 @@ export default function Sidebar() {
 
   
   const handleCreateCategory = () => {
-    if (isSidebarCollapsed) {
-      setIsSidebarCollapsed(false);
-    }
+    closeSidebar();
     setCategoriesOpen(true);
     setIsCreateCategoryOpen(true);
   };
@@ -150,73 +162,102 @@ export default function Sidebar() {
     }
   };
 
+  const userName = (mounted && session?.user?.name) || "Your workspace";
+  const userEmail = (mounted && session?.user?.email) || "";
+  const userImage = mounted ? session?.user?.image : null;
+  const initial = (userName || "D").trim().charAt(0).toUpperCase();
+
+  // One shared look for every drawer row. `active` gets the gradient pill.
+  const rowClass = (active) =>
+    `drawer-row group w-full flex items-center gap-3 pl-2 pr-3 py-2 rounded-2xl text-sm font-medium transition-all duration-200 cursor-pointer text-left ${
+      active
+        ? "bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#35338F] dark:to-[#5A4BD1] text-white shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
+        : "text-[#3A3656] dark:text-[#C9C6E0] hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.06]"
+    }`;
+  const chipClass = (active) =>
+    `flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl transition-colors duration-200 ${
+      active
+        ? "bg-[#2FA8FF] text-white"
+        : "bg-[#6D4AFF]/10 text-[#6B6788] dark:bg-white/[0.07] dark:text-[#9A97B5] group-hover:text-[#6D28D9] dark:group-hover:text-white"
+    }`;
+  const countClass = (active) =>
+    `text-[10px] font-mono ${active ? "text-white/80" : "text-[#8A86A6] dark:text-white/40"}`;
+  const subLinkClass =
+    "flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-[#4A4668] dark:text-[#C9C6E0]/80 hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.06] hover:text-[#1E1B3A] dark:hover:text-white transition-all duration-150";
+
+  const isActive = (target) => pathname === target;
+
   return (
     <>
-    <div
-      className={`fixed top-16 left-0 h-[calc(100vh-4rem)] border-r transition-all duration-300 ease-in-out z-40 glass-rail
-        bg-black/10 dark:bg-black/30 backdrop-blur-xl border-white/10 shadow-2xl text-white
-        ${isSidebarCollapsed ? 'w-16' : 'w-64'}`}
-    >
-      <div className="flex flex-col h-full justify-between p-4 overflow-x-hidden select-none overflow-y-auto">
+    <div className={isSidebarOpen ? "drawer-open" : ""}>
+      {/* Dimmed page behind the drawer; tap to close */}
+      <div
+        onClick={closeSidebar}
+        aria-hidden="true"
+        className={`fixed inset-0 z-[55] bg-[#0B0E14]/55 backdrop-blur-[2px] transition-opacity duration-300 ${
+          isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
 
-        <div className="space-y-6">
+      <aside
+        inert={!isSidebarOpen}
+        aria-hidden={!isSidebarOpen}
+        aria-label="Workspace navigation"
+        className="drawer-panel fixed top-0 -left-10 z-[60] h-full w-[22rem] max-w-[calc(85vw+2.5rem)] pl-10 flex flex-col rounded-r-[28px] border-r border-[#6D4AFF]/15 dark:border-white/[0.07] bg-gradient-to-b from-white to-[#F3F0FF] dark:from-[#26233B] dark:to-[#1C1A2D] shadow-[24px_0_60px_-20px_rgba(30,27,58,0.35)] dark:shadow-[24px_0_60px_-20px_rgba(0,0,0,0.8)] select-none"
+      >
+        <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden p-5">
 
-          {/* HEADER ROW: Anchored Hamburger Button Inside the Sidebar */}
-          <div className={`flex items-center w-full transition-all duration-300
-            ${isSidebarCollapsed ? 'justify-center' : 'justify-start pl-1'}`}
-          >
+          {/* Profile header */}
+          <div className="drawer-row flex items-center gap-3 pb-5" style={{ "--i": 0 }}>
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#2FA8FF] to-[#7C5CFF] text-lg font-semibold text-white shadow-[0_8px_20px_-8px_rgba(79,70,229,0.8)]">
+              {userImage ? <img src={userImage} alt="" className="h-full w-full object-cover" /> : initial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-[#1E1B3A] dark:text-white">{userName}</p>
+              {userEmail && <p className="truncate text-[11px] text-[#8A86A6] dark:text-[#9A97B5]">{userEmail}</p>}
+            </div>
             <button
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white transition-all duration-200 shadow-md backdrop-blur-md hover:scale-105 active:scale-95"
+              onClick={closeSidebar}
+              aria-label="Close menu"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-[#6B6788] dark:text-[#9A97B5] hover:bg-[#6D4AFF]/[0.08] dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
             >
-              <Menu size={20} />
+              <X size={16} />
             </button>
           </div>
 
-          {/* Create Category Action Button */}
-          <div className="mt-2">
-            <button
-              onClick={handleCreateCategory}
-              className={`w-full flex items-center justify-center gap-2 font-semibold text-white bg-gradient-to-r from-seagreen/80 via-mauve/80 to-rosepink/80 hover:from-seagreen hover:via-mauve hover:to-rosepink backdrop-blur-md bg-[length:200%_auto] hover:bg-right rounded-xl shadow-md transition-all duration-500 ease-in-out transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer
-                ${isSidebarCollapsed ? 'p-3 rounded-full' : 'px-4 py-3'}`}
-            >
-              <FolderPlus size={20} className="animate-pulse" />
-              {!isSidebarCollapsed && <span className="transition-opacity duration-300 whitespace-nowrap">Create Category</span>}
-            </button>
-          </div>
-
-          {/* Core Navigation Links */}
-          <nav className="space-y-1">
+          <nav className="space-y-1.5">
+            {/* Dashboard */}
+            <Link href="/dashboard" className={rowClass(isActive("/dashboard"))} style={{ "--i": 1 }}>
+              <span className={chipClass(isActive("/dashboard"))}><LayoutDashboard size={16} /></span>
+              <span className="flex-1 whitespace-nowrap">Dashboard</span>
+            </Link>
 
             {/* Categories — expandable list of real, live categories */}
             <div>
               <button
-                onClick={() => (isSidebarCollapsed ? router.push("/cards") : setCategoriesOpen(!categoriesOpen))}
-                className="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl hover:bg-white/10 font-medium transition-all duration-200 group cursor-pointer"
+                onClick={() => setCategoriesOpen(!categoriesOpen)}
+                className={rowClass(false)}
+                style={{ "--i": 2 }}
               >
-                <Folder size={20} className="group-hover:scale-110 transition-transform duration-200 text-seagreen flex-shrink-0" />
-                {!isSidebarCollapsed && (
-                  <>
-                    <span className="whitespace-nowrap text-white/90 flex-1 text-left">Categories</span>
-                    <span className="text-[10px] text-white/50 font-mono">{loading ? "…" : categories.length}</span>
-                    {categoriesOpen ? <ChevronDown size={14} className="text-white/50" /> : <ChevronRight size={14} className="text-white/50" />}
-                  </>
-                )}
+                <span className={chipClass(false)}><Folder size={16} /></span>
+                <span className="flex-1 whitespace-nowrap">Categories</span>
+                <span className={countClass(false)}>{loading ? "…" : categories.length}</span>
+                {categoriesOpen ? <ChevronDown size={14} className="opacity-50" /> : <ChevronRight size={14} className="opacity-50" />}
               </button>
 
-              {!isSidebarCollapsed && categoriesOpen && (
-                <div className="mt-1 ml-8 space-y-0.5 border-l border-white/10 pl-3">
+              {categoriesOpen && (
+                <div className="mt-1 ml-6 space-y-0.5 border-l border-[#6D4AFF]/15 dark:border-white/10 pl-3 animate-fadeIn">
                   {categories.length === 0 ? (
-                    <p className="text-xs text-white/40 py-1.5">No categories yet</p>
+                    <p className="text-xs text-[#8A86A6] dark:text-white/40 py-1.5">No categories yet</p>
                   ) : (
                     categories.map((cat) => (
                       <Link
                         key={cat.name}
                         href={`/cards?category=${encodeURIComponent(cat.name)}`}
-                        className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-white/10 text-xs text-white/80 hover:text-white transition-all duration-150"
+                        className={subLinkClass}
                       >
                         <span className="truncate">{cat.name}</span>
-                        <span className="text-[10px] text-white/40 font-mono ml-2">{cat.count}</span>
+                        <span className="text-[10px] font-mono ml-2 text-[#8A86A6] dark:text-white/40">{cat.count}</span>
                       </Link>
                     ))
                   )}
@@ -225,62 +266,45 @@ export default function Sidebar() {
             </div>
 
             {/* Favorites — links to the real, backend-backed bookmarks page */}
-            <Link
-              href="/bookmarks"
-              className="flex items-center gap-4 px-3 py-2.5 rounded-xl hover:bg-white/10 font-medium transition-all duration-200 group"
-            >
-              <Heart size={20} className="group-hover:scale-110 transition-transform duration-200 text-rosepink flex-shrink-0" />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="whitespace-nowrap text-white/90 flex-1">Favorites</span>
-                  <span className="text-[10px] text-white/50 font-mono">{loading ? "…" : favoritesCount}</span>
-                </>
-              )}
+            <Link href="/bookmarks" className={rowClass(isActive("/bookmarks"))} style={{ "--i": 3 }}>
+              <span className={chipClass(isActive("/bookmarks"))}><Heart size={16} /></span>
+              <span className="flex-1 whitespace-nowrap">Favorites</span>
+              <span className={countClass(isActive("/bookmarks"))}>{loading ? "…" : favoritesCount}</span>
             </Link>
 
-            {/* Recent — links to the cards workspace, already sorted newest-first by the backend */}
-            <Link
-              href="/cards"
-              className="flex items-center gap-4 px-3 py-2.5 rounded-xl hover:bg-white/10 font-medium transition-all duration-200 group"
-            >
-              <Clock size={20} className="group-hover:scale-110 transition-transform duration-200 text-mauve flex-shrink-0" />
-              {!isSidebarCollapsed && (
-                <>
-                  <span className="whitespace-nowrap text-white/90 flex-1">Recent</span>
-                  <span className="text-[10px] text-white/50 font-mono">{loading ? "…" : recentCount}</span>
-                </>
-              )}
+            {/* Recent — the cards workspace, already sorted newest-first by the backend */}
+            <Link href="/cards" className={rowClass(isActive("/cards"))} style={{ "--i": 4 }}>
+              <span className={chipClass(isActive("/cards"))}><Clock size={16} /></span>
+              <span className="flex-1 whitespace-nowrap">Recent</span>
+              <span className={countClass(isActive("/cards"))}>{loading ? "…" : recentCount}</span>
             </Link>
 
             {/* Tags — expandable list of real, live tags */}
             <div>
               <button
-                onClick={() => (isSidebarCollapsed ? router.push("/cards") : setTagsOpen(!tagsOpen))}
-                className="w-full flex items-center gap-4 px-3 py-2.5 rounded-xl hover:bg-white/10 font-medium transition-all duration-200 group cursor-pointer"
+                onClick={() => setTagsOpen(!tagsOpen)}
+                className={rowClass(false)}
+                style={{ "--i": 5 }}
               >
-                <Tag size={20} className="group-hover:scale-110 transition-transform duration-200 text-rosepink/80 flex-shrink-0" />
-                {!isSidebarCollapsed && (
-                  <>
-                    <span className="whitespace-nowrap text-white/90 flex-1 text-left">Tags</span>
-                    <span className="text-[10px] text-white/50 font-mono">{loading ? "…" : tags.length}</span>
-                    {tagsOpen ? <ChevronDown size={14} className="text-white/50" /> : <ChevronRight size={14} className="text-white/50" />}
-                  </>
-                )}
+                <span className={chipClass(false)}><Tag size={16} /></span>
+                <span className="flex-1 whitespace-nowrap">Tags</span>
+                <span className={countClass(false)}>{loading ? "…" : tags.length}</span>
+                {tagsOpen ? <ChevronDown size={14} className="opacity-50" /> : <ChevronRight size={14} className="opacity-50" />}
               </button>
 
-              {!isSidebarCollapsed && tagsOpen && (
-                <div className="mt-1 ml-8 space-y-0.5 border-l border-white/10 pl-3">
+              {tagsOpen && (
+                <div className="mt-1 ml-6 space-y-0.5 border-l border-[#6D4AFF]/15 dark:border-white/10 pl-3 animate-fadeIn">
                   {tags.length === 0 ? (
-                    <p className="text-xs text-white/40 py-1.5">No tags yet</p>
+                    <p className="text-xs text-[#8A86A6] dark:text-white/40 py-1.5">No tags yet</p>
                   ) : (
                     tags.map((tag) => (
                       <Link
                         key={tag.name}
                         href={`/cards?tag=${encodeURIComponent(tag.name)}`}
-                        className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-white/10 text-xs text-white/80 hover:text-white transition-all duration-150"
+                        className={subLinkClass}
                       >
                         <span className="truncate">#{tag.name}</span>
-                        <span className="text-[10px] text-white/40 font-mono ml-2">{tag.count}</span>
+                        <span className="text-[10px] font-mono ml-2 text-[#8A86A6] dark:text-white/40">{tag.count}</span>
                       </Link>
                     ))
                   )}
@@ -288,20 +312,30 @@ export default function Sidebar() {
               )}
             </div>
           </nav>
-        </div>
 
-        {/* Bottom Panel Settings Shortcut (Connected with Next.js Link Engine) */}
-        <div className="border-t border-white/10 pt-4 mb-4">
-          <Link
-            href="/settings"
-            className="flex items-center gap-4 px-3 py-2.5 rounded-xl hover:bg-white/10 font-medium transition-all duration-200 group"
-          >
-            <Settings size={20} className="group-hover:rotate-45 transition-transform duration-300 ease-out text-white/70" />
-            {!isSidebarCollapsed && <span className="whitespace-nowrap text-white/90">Settings</span>}
-          </Link>
-        </div>
+          {/* Footer: create category + settings */}
+          <div className="mt-auto pt-5 space-y-2">
+            <button
+              onClick={handleCreateCategory}
+              className="drawer-row w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#7C3AED] via-[#C026D3] to-[#E94FD1] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_-12px_rgba(192,38,211,0.7)] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 cursor-pointer"
+              style={{ "--i": 6 }}
+            >
+              <FolderPlus size={18} />
+              <span className="whitespace-nowrap">Create Category</span>
+            </button>
 
-      </div>
+            <div className="drawer-row border-t border-[#6D4AFF]/10 dark:border-white/[0.07] pt-2" style={{ "--i": 7 }}>
+              <Link href="/settings" className={rowClass(isActive("/settings")).replace("drawer-row ", "")}>
+                <span className={chipClass(isActive("/settings"))}>
+                  <Settings size={16} className="group-hover:rotate-45 transition-transform duration-300 ease-out" />
+                </span>
+                <span className="flex-1 whitespace-nowrap">Settings</span>
+              </Link>
+            </div>
+          </div>
+
+        </div>
+      </aside>
     </div>
 
     <CreateCategoryModal

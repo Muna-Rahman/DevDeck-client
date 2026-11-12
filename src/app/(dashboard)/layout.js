@@ -3,11 +3,8 @@
 import React from 'react';
 import SidebarContainer from "@/components/SidebarContainer";
 import Navbar from "@/components/Navbar";
-import { useSidebar } from "@/context/SidebarContext";
 
 export default function DashboardLayout({ children }) {
-  const { isSidebarCollapsed } = useSidebar();
-
   return (
     <div className="flex h-screen w-screen overflow-hidden relative font-sans antialiased text-[#1A1D29] dark:text-[#F5F6FA] transition-colors duration-300">
       
@@ -52,8 +49,7 @@ export default function DashboardLayout({ children }) {
         
         {/* Core Layout Workspace Target Area */}
         <main 
-          className={`flex-1 overflow-y-auto px-6 md:px-12 pb-16 pt-28 transition-all duration-300 min-w-0
-            ${isSidebarCollapsed ? 'pl-24' : 'pl-72'}`}
+          className="flex-1 overflow-y-auto px-6 md:px-12 pb-16 pt-28 min-w-0"
         >
           <div className="max-w-[1440px] mx-auto w-full">
             {children}
