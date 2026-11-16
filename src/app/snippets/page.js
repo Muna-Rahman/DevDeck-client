@@ -509,21 +509,21 @@ export default function SnippetsPage() {
 
       {/* Interactive VS Code Editor Modal — kept as a dark IDE-style panel intentionally, consistent with the Monaco editor it hosts */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#EBEDF5]/60 dark:bg-black/70 backdrop-blur-md p-4 overflow-y-auto">
           {/* max-h + flex column so tall content (long forms, small viewports) scrolls
               inside the panel instead of pushing the header/footer off screen or
               getting clipped by the fixed overlay — that clipping was hiding the
               Save button entirely, which is why saving looked broken. */}
-          <div className="my-8 flex w-full max-w-2xl max-h-[90vh] flex-col rounded-2xl border border-white/10 bg-[#1A1D29] shadow-2xl">
+          <div className="my-8 flex w-full max-w-2xl max-h-[90vh] flex-col rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1A1D29] shadow-2xl">
 
-            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 shrink-0">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Terminal className="text-[#FF6FB5]" size={20} />
+            <div className="flex items-center justify-between border-b border-black/10 dark:border-white/10 px-6 py-4 shrink-0">
+              <h2 className="text-lg font-semibold text-[#1A1D29] dark:text-white flex items-center gap-2">
+                <Terminal className="text-[#D6249F] dark:text-[#FF6FB5]" size={20} />
                 VS Code Snippet Editor
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-[#9CA3B5] hover:text-white text-sm cursor-pointer"
+                className="text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white text-sm cursor-pointer"
               >
                 ✕
               </button>
@@ -532,24 +532,24 @@ export default function SnippetsPage() {
             <form onSubmit={handleCreateSnippet} className="flex flex-1 min-h-0 flex-col">
               <div className="flex-1 min-h-0 space-y-4 overflow-y-auto px-6 py-4">
                 <div>
-                  <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Title</label>
+                  <label className="block text-xs font-medium text-[#5B5F72] dark:text-[#9CA3B5] mb-1">Title</label>
                   <input
                     type="text"
                     required
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     placeholder="e.g. Next.js Auth Middleware"
-                    className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-white outline-none focus:border-[#FF6FB5]"
+                    className="w-full h-10 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 px-3 text-xs text-[#1A1D29] dark:text-white outline-none focus:border-[#FF6FB5]"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Language</label>
+                    <label className="block text-xs font-medium text-[#5B5F72] dark:text-[#9CA3B5] mb-1">Language</label>
                     <select
                       value={newLang}
                       onChange={(e) => setNewLang(e.target.value)}
-                      className="w-full h-10 rounded-xl border border-white/10 bg-[#1A1D29] px-3 text-xs text-white uppercase outline-none focus:border-[#FF6FB5]"
+                      className="w-full h-10 rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#1A1D29] px-3 text-xs text-[#1A1D29] dark:text-white uppercase outline-none focus:border-[#FF6FB5]"
                     >
                       {LANGUAGES.filter((lang) => lang !== "All").map((lang) => (
                         <option key={lang} value={lang}>
@@ -560,20 +560,20 @@ export default function SnippetsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-[#9CA3B5] mb-1">Tags (comma separated)</label>
+                    <label className="block text-xs font-medium text-[#5B5F72] dark:text-[#9CA3B5] mb-1">Tags (comma separated)</label>
                     <input
                       type="text"
                       value={newTags}
                       onChange={(e) => setNewTags(e.target.value)}
                       placeholder="Auth, Next.js, Middleware"
-                      className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-white outline-none focus:border-[#FF6FB5]"
+                      className="w-full h-10 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 px-3 text-xs text-[#1A1D29] dark:text-white outline-none focus:border-[#FF6FB5]"
                     />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex flex-wrap justify-between items-center gap-2 mb-1">
-                    <label className="text-xs font-medium text-[#9CA3B5]">Description</label>
+                    <label className="text-xs font-medium text-[#5B5F72] dark:text-[#9CA3B5]">Description</label>
                     <AiAssistButton
                       mode="description"
                       label="Generate Description"
@@ -592,19 +592,19 @@ export default function SnippetsPage() {
                     value={newDesc}
                     onChange={(e) => setNewDesc(e.target.value)}
                     placeholder="Brief explanation of the snippet..."
-                    className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-3 text-xs text-white outline-none focus:border-[#FF6FB5]"
+                    className="w-full h-10 rounded-xl border border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 px-3 text-xs text-[#1A1D29] dark:text-white outline-none focus:border-[#FF6FB5]"
                   />
                 </div>
 
                 {/* Real-time Monaco Code Editor */}
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                    <label className="text-xs font-medium text-[#9CA3B5]">
+                    <label className="text-xs font-medium text-[#5B5F72] dark:text-[#9CA3B5]">
                       Code Editor {MONACO_VALIDATED_LANGUAGES.includes(newLang) ? "(IntelliSense & Syntax Linting Enabled)" : "(Syntax Highlighting Only)"}
                     </label>
                     <div className="flex items-center gap-2">
                       {MONACO_VALIDATED_LANGUAGES.includes(newLang) && editorErrors.length > 0 && (
-                        <span className="flex items-center gap-1 text-[11px] text-amber-400 font-medium">
+                        <span className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
                           <AlertTriangle size={12} />
                           {editorErrors.length} Syntax Error(s)
                         </span>
@@ -624,7 +624,7 @@ export default function SnippetsPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-white/10 overflow-hidden bg-[#1e1e1e]">
+                  <div className="rounded-xl border border-black/10 dark:border-white/10 overflow-hidden bg-[#1e1e1e]">
                     <Editor
                       height="200px"
                       language={newLang}
@@ -658,7 +658,7 @@ export default function SnippetsPage() {
               {/* Action Buttons — outside the scrollable area and inside a shrink-0
                   footer so Save/Cancel stay visible and reachable no matter how
                   tall the form content above gets. */}
-              <div className="flex items-center justify-between gap-3 border-t border-white/10 px-6 py-4 shrink-0">
+              <div className="flex items-center justify-between gap-3 border-t border-black/10 dark:border-white/10 px-6 py-4 shrink-0">
                 {/* Makes it obvious *why* Save is disabled instead of it just
                     looking broken — the missing-title case in particular is
                     easy to miss once Title has scrolled out of view. */}
@@ -675,7 +675,7 @@ export default function SnippetsPage() {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-medium text-[#9CA3B5] hover:bg-white/5 cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-medium text-[#5B5F72] dark:text-[#9CA3B5] hover:bg-black/[0.05] dark:hover:bg-white/5 cursor-pointer"
                   >
                     Cancel
                   </button>

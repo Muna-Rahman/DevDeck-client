@@ -1,15 +1,14 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Editor from '@monaco-editor/react';
+import MarkdownEditor from '@/components/MarkdownEditor';
+import MarkdownPreview from '@/components/MarkdownPreview';
 import { Bookmark, BookmarkFill, Xmark, ArrowUpRight, Copy, ArrowLeft, Check, TrashBin, Pencil } from '@gravity-ui/icons';
 
 // Auth options and display labels matching CreateCardModal
 const AUTH_OPTIONS = ["none", "bearer", "apikey", "basic"];
 const AUTH_LABELS = { none: "None", bearer: "Bearer Token", apikey: "API Key", basic: "Basic" };
 
-// Languages that Monaco natively parses and reports syntax errors for — keep in
-// sync with CreateCardModal so "no linting available" languages behave the same
-// way in both the create and edit paths.
 const MONACO_VALIDATED_LANGUAGES = ["javascript", "typescript", "json"];
 
 // Color mapping for HTTP method badges
@@ -66,6 +65,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
   const languageText = card.content?.language || card.metadata?.language || card.language;
   const displayType = card.type || (repoUrl ? "GitHub Repository" : codeText ? "Snippet" : "Card");
   const isApiCard = card.type === 'API Endpoint' || card.type === 'apis';
+  const isNoteCard = card.type === 'Markdown Note' || card.type === 'notes';
 
   const toggleApiAuth = (value) => {
     setApiAuth((prev) => (prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]));
@@ -88,8 +88,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
     }
   };
 
-  // Custom editor theme — kept identical to CreateCardModal so snippets look
-  // the same whether you're creating or editing one.
+  // Define Monaco editor theme for the code snippet editor, matching the same palette as the snippet editors in CreateCardModal. This function is safe to call repeatedly.
   const handleEditorWillMount = (monaco) => {
     monaco.editor.defineTheme("devdeck-theme", {
       base: "vs-dark",
@@ -121,9 +120,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
     setCodeSyntaxErrors(markers.filter((m) => m.severity === 8)); // 8 is Monaco's MarkerSeverity.Error
   };
 
-  // Look for another already-saved item with the exact same code (and
-  // language, when known) so we can block the save client-side instead of
-  // only finding out after a round trip to the server.
+  // Check for duplicate code snippets in the existingItems array, ignoring the current card itself.
   const findDuplicateSibling = () => {
     if (!hasCodeField || !Array.isArray(existingItems) || existingItems.length === 0) return null;
 
@@ -166,8 +163,7 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
       return;
     }
 
-    // Block saving code that Monaco has flagged as having syntax errors —
-    // same gate CreateCardModal applies when a snippet is first added.
+    // Block saving if the edited code has syntax errors (only for languages Monaco can validate)
     if (hasCodeField && MONACO_VALIDATED_LANGUAGES.includes((languageText || '').toLowerCase()) && codeSyntaxErrors.length > 0) {
       alert(`Fix ${codeSyntaxErrors.length} syntax error(s) in the code before saving.`);
       return;
@@ -390,12 +386,16 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
 
               <div>
                 <label className="text-xs font-mono text-[#5B5F72] dark:text-[#9CA3B5] block mb-1">Notes / Description</label>
-                <textarea
-                  rows={3}
-                  value={descText}
-                  onChange={(e) => setDescText(e.target.value)}
-                  className={`${inputBaseClass} text-xs resize-y max-h-72`}
-                />
+                {isNoteCard ? (
+                  <MarkdownEditor value={descText} onChange={setDescText} height="260px" />
+                ) : (
+                  <textarea
+                    rows={3}
+                    value={descText}
+                    onChange={(e) => setDescText(e.target.value)}
+                    className={`${inputBaseClass} text-xs resize-y max-h-72`}
+                  />
+                )}
               </div>
 
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-2">
@@ -491,8 +491,8 @@ export default function CardDetailsDrawer({ card, onClose, onToggleBookmark, onD
                     <span className="text-xs uppercase font-mono font-bold text-zinc-500 tracking-wider block">
                       Workspace Notes
                     </span>
-                    <div className="p-4 rounded-xl border text-sm leading-relaxed whitespace-pre-wrap max-h-56 overflow-y-auto bg-black/[0.02] dark:bg-black/[0.08] border-black/[0.03] dark:border-white/[0.04] text-[#5B5F72] dark:text-[#9CA3B5]">
-                      {descText}
+                    <div className={`p-4 rounded-xl border text-sm leading-relaxed max-h-56 overflow-y-auto bg-black/[0.02] dark:bg-black/[0.08] border-black/[0.03] dark:border-white/[0.04] text-[#5B5F72] dark:text-[#9CA3B5] ${isNoteCard ? "" : "whitespace-pre-wrap"}`}>
+                      {isNoteCard ? <MarkdownPreview source={descText} /> : descText}
                     </div>
                   </div>
                 )}

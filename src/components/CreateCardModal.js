@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import { X, Folder, Plus } from "lucide-react";
 import AiAssistButton from "@/components/AiAssistButton";
+import MarkdownEditor from "@/components/MarkdownEditor";
 
 import { 
   Link as LinkIcon, 
@@ -353,43 +354,43 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
     { id: "ideas", label: "Idea", icon: <IdeaIcon className="w-[18px] h-[18px]" /> }
   ];
 
-  const inputBaseClass = "w-full bg-[#1A1D29]/60 backdrop-blur-md text-[#F5F6FA] placeholder:#9CA3B5/40 border border-white/8 hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl h-11 px-4 transition-all duration-300";
-  const textareaBaseClass = "w-full bg-[#1A1D29]/60 backdrop-blur-md text-[#F5F6FA] placeholder:#9CA3B5/40 border border-white/8 hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl p-4 transition-all duration-300 min-h-[100px]";
-  const labelClass = "text-[#9CA3B5] font-medium mb-1.5 block text-sm";
+  const inputBaseClass = "w-full bg-black/[0.02] dark:bg-[#1A1D29]/60 backdrop-blur-md text-[#1A1D29] dark:text-[#F5F6FA] placeholder:text-[#5B5F72]/50 dark:placeholder:text-[#9CA3B5]/50 border border-black/10 dark:border-white/8 hover:border-black/25 dark:hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl h-11 px-4 transition-all duration-300";
+  const textareaBaseClass = "w-full bg-black/[0.02] dark:bg-[#1A1D29]/60 backdrop-blur-md text-[#1A1D29] dark:text-[#F5F6FA] placeholder:text-[#5B5F72]/50 dark:placeholder:text-[#9CA3B5]/50 border border-black/10 dark:border-white/8 hover:border-black/25 dark:hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl p-4 transition-all duration-300 min-h-[100px]";
+  const labelClass = "text-[#5B5F72] dark:text-[#9CA3B5] font-medium mb-1.5 block text-sm";
   const errorClass = "text-xs text-rose-500 mt-1.5 font-normal";
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       {/* Backdrop overlay */}
       <div 
-        className="fixed inset-0 bg-[#0B0E14]/70 backdrop-blur-md transition-opacity duration-300"
+        className="fixed inset-0 bg-[#EBEDF5]/60 dark:bg-[#0B0E14]/70 backdrop-blur-md transition-opacity duration-300"
         onClick={onClose}
       />
 
       {/* Main modal container */}
-      <div className={`bg-[#12141C]/90 backdrop-filter backdrop-blur-xl border border-white/8 rounded-2xl ${getGlowColorClass()} transition-shadow duration-500 max-h-[90vh] overflow-y-auto p-6 text-[#F5F6FA] relative w-full max-w-2xl z-10 flex flex-col gap-6`}>
+      <div className={`bg-white/95 dark:bg-[#12141C]/90 backdrop-filter backdrop-blur-xl border border-black/10 dark:border-white/8 rounded-2xl ${getGlowColorClass()} transition-shadow duration-500 max-h-[90vh] overflow-y-auto p-6 text-[#1A1D29] dark:text-[#F5F6FA] relative w-full max-w-2xl z-10 flex flex-col gap-6`}>
         
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 text-[#9CA3B5] hover:text-[#F5F6FA] transition-all duration-300 cursor-pointer"
+          className="absolute top-5 right-5 p-2 rounded-xl border border-black/5 dark:border-white/5 bg-black/[0.03] dark:bg-white/5 hover:bg-black/[0.08] dark:hover:bg-white/10 hover:border-black/25 dark:hover:border-white/20 text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-[#F5F6FA] transition-all duration-300 cursor-pointer"
           aria-label="Close panel"
         >
           <X size={16} />
         </button>
 
         {/* Modal Header */}
-        <div className="border-b border-white/6 pb-4 pr-10">
+        <div className="border-b border-black/[0.06] dark:border-white/6 pb-4 pr-10">
           <h2 className="text-xl font-medium tracking-wide">Add a Card to Workspace</h2>
-          <p className="text-sm text-[#9CA3B5] font-normal">Expand your dashboard ecosystem by storing a new unit.</p>
+          <p className="text-sm text-[#5B5F72] dark:text-[#9CA3B5] font-normal">Expand your dashboard ecosystem by storing a new unit.</p>
         </div>
 
         {/* Modal Body */}
         <div className="flex flex-col gap-6">
 
           {/* Type selector and category chips */}
-          <div className="bg-white/5 backdrop-blur-sm p-1.5 border border-white/6 rounded-2xl w-full flex flex-wrap items-center gap-1.5">
+          <div className="bg-black/[0.03] dark:bg-white/5 backdrop-blur-sm p-1.5 border border-black/[0.06] dark:border-white/6 rounded-2xl w-full flex flex-wrap items-center gap-1.5">
             {navTabs.map((tab) => {
               const isSelected = activeTab === tab.id;
               return (
@@ -403,7 +404,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   className={`flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
                     isSelected 
                       ? "bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] text-white shadow-lg shadow-pink-500/20" 
-                      : "text-[#9CA3B5] hover:text-[#F5F6FA] hover:bg-white/5"
+                      : "text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-[#F5F6FA] hover:bg-black/[0.05] dark:hover:bg-white/5"
                   }`}
                 >
                   {tab.icon}
@@ -413,7 +414,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
             })}
 
             {customCategories.length > 0 && (
-              <div className="w-px self-stretch bg-white/10 mx-0.5" />
+              <div className="w-px self-stretch bg-black/10 dark:bg-white/10 mx-0.5" />
             )}
 
             {customCategories.map((cat) => {
@@ -436,7 +437,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   className={`flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
                     isSelected
                       ? "bg-gradient-to-r from-[#3FE0C5] to-[#2FD1FF] text-[#0B0E14] shadow-lg shadow-cyan-500/20"
-                      : "text-[#9CA3B5] hover:text-[#F5F6FA] hover:bg-white/5"
+                      : "text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-[#F5F6FA] hover:bg-black/[0.05] dark:hover:bg-white/5"
                   }`}
                 >
                   <Folder className="w-[18px] h-[18px]" />
@@ -453,7 +454,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   setCategorySaveError("");
                 }}
                 title="Save a new category"
-                className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-full border border-dashed border-white/15 text-[#9CA3B5] hover:text-[#F5F6FA] hover:border-white/30 hover:bg-white/5 transition-all duration-300"
+                className="flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-full border border-dashed border-black/15 dark:border-white/15 text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-[#F5F6FA] hover:border-black/30 dark:hover:border-white/30 hover:bg-black/[0.05] dark:hover:bg-white/5 transition-all duration-300"
               >
                 <Plus className="w-[18px] h-[18px]" />
                 <span className="hidden sm:inline">New</span>
@@ -498,7 +499,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   setCategorySaveError("");
                 }}
                 disabled={savingCategory}
-                className="shrink-0 px-4 h-10 rounded-xl text-sm font-medium text-[#9CA3B5] hover:text-[#F5F6FA] hover:bg-white/5 border border-white/8 transition-all duration-200 cursor-pointer disabled:opacity-40"
+                className="shrink-0 px-4 h-10 rounded-xl text-sm font-medium text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-[#F5F6FA] hover:bg-black/[0.05] dark:hover:bg-white/5 border border-black/10 dark:border-white/8 transition-all duration-200 cursor-pointer disabled:opacity-40"
               >
                 Cancel
               </button>
@@ -510,7 +511,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
           
           {activeTab === "links" && (
             <div className="flex flex-col gap-4">
-              <p className="text-xs text-[#3FE0C5] bg-[#3FE0C5]/10 px-3 py-1.5 rounded-lg w-fit border border-[#3FE0C5]/20 font-medium">
+              <p className="text-xs text-[#0FB8A6] dark:text-[#3FE0C5] bg-[#3FE0C5]/10 px-3 py-1.5 rounded-lg w-fit border border-[#3FE0C5]/20 font-medium">
                 Quick-save a documentation page, tool, or guide.
               </p>
               <div>
@@ -578,7 +579,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
           {activeTab === "snippets" && (
             <div className="flex flex-col gap-4">
-              <p className="text-xs text-[#E94FD1] bg-[#E94FD1]/10 px-3 py-1.5 rounded-lg w-fit border border-[#E94FD1]/20 font-medium">
+              <p className="text-xs text-[#D6249F] dark:text-[#E94FD1] bg-[#E94FD1]/10 px-3 py-1.5 rounded-lg w-fit border border-[#E94FD1]/20 font-medium">
                 Save a reusable block of magic code.
               </p>
               
@@ -587,7 +588,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                 <select
                   value={formData.language}
                   onChange={(e) => handleInputChange("language", e.target.value)}
-                  className="w-full bg-[#1A1D29]/60 text-[#F5F6FA] border border-white/8 hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl h-11 px-3 backdrop-blur-md transition-all duration-300"
+                  className="w-full bg-black/[0.02] dark:bg-[#1A1D29]/60 text-[#1A1D29] dark:text-[#F5F6FA] border border-black/10 dark:border-white/8 hover:border-black/25 dark:hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl h-11 px-3 backdrop-blur-md transition-all duration-300"
                 >
                   {LANGUAGE_OPTIONS.map((lang) => (
                     <option key={lang.value} value={lang.value}>
@@ -602,7 +603,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                 <div className="flex flex-wrap justify-between items-center gap-2 mb-1.5">
                   <div className="flex items-center gap-2">
                     <label className={labelClass}>The Code</label>
-                    <span className="text-[10px] font-mono text-[#3FE0C5]">
+                    <span className="text-[10px] font-mono text-[#0FB8A6] dark:text-[#3FE0C5]">
                       {MONACO_VALIDATED_LANGUAGES.includes(formData.language) ? "VS Code Intellisense Engine" : "Syntax highlighting only — not linted"}
                     </span>
                   </div>
@@ -621,7 +622,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                 </div>
                 
                 {/* Code editor container */}
-                <div className={`border rounded-xl overflow-hidden shadow-inner bg-[#0B0E14] ${errors.code ? "border-rose-500/60" : "border-white/10"}`}>
+                <div className={`border rounded-xl overflow-hidden shadow-inner bg-[#0B0E14] ${errors.code ? "border-rose-500/60" : "border-black/10 dark:border-white/10"}`}>
                   <Editor
                     height="240px"
                     language={formData.language}
@@ -656,7 +657,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
               <div>
                 <div className="flex flex-wrap justify-between items-center gap-2 mb-1.5">
-                  <label className={`${labelClass} mb-0`}>Purpose</label>
+                  <label className={labelClass}>Purpose</label>
                   <AiAssistButton
                     mode="description"
                     label="Generate Description"
@@ -683,7 +684,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
           {activeTab === "notes" && (
             <div className="flex flex-col gap-4">
-              <p className="text-xs text-[#FFB84D] bg-[#FFB84D]/10 px-3 py-1.5 rounded-lg w-fit border border-[#FFB84D]/20 font-medium">
+              <p className="text-xs text-[#B7791F] dark:text-[#FFB84D] bg-[#FFB84D]/10 px-3 py-1.5 rounded-lg w-fit border border-[#FFB84D]/20 font-medium">
                 Brainstorm, document setups, or write long-form scratchpads.
               </p>
               <div>
@@ -698,12 +699,15 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                 {errors.noteTitle && <p className={errorClass}>{errors.noteTitle}</p>}
               </div>
               <div>
-                <label className={labelClass}>Workspace Editor</label>
-                <textarea
-                  placeholder="# Start writing here... use markdown syntax for headers, lists, and bold text."
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-1">
+                  <label className={labelClass}>Workspace Editor</label>
+                  <span className="text-[10px] font-mono text-[#B7791F] dark:text-[#FFB84D]">Markdown · live preview · tables &amp; code fences</span>
+                </div>
+                <MarkdownEditor
                   value={formData.markdownContent}
-                  onChange={(e) => handleInputChange("markdownContent", e.target.value)}
-                  className={`${textareaBaseClass} min-h-[180px]`}
+                  onChange={(value) => handleInputChange("markdownContent", value)}
+                  hasError={Boolean(errors.markdownContent)}
+                  placeholder="# Start writing here... use markdown syntax for headers, lists, and bold text."
                 />
                 {errors.markdownContent && <p className={errorClass}>{errors.markdownContent}</p>}
               </div>
@@ -712,7 +716,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
           {activeTab === "apis" && (
             <div className="flex flex-col gap-4">
-              <p className="text-xs text-[#3FE0C5] bg-[#3FE0C5]/10 px-3 py-1.5 rounded-lg w-fit border border-[#3FE0C5]/20 font-medium">
+              <p className="text-xs text-[#0FB8A6] dark:text-[#3FE0C5] bg-[#3FE0C5]/10 px-3 py-1.5 rounded-lg w-fit border border-[#3FE0C5]/20 font-medium">
                 Log a critical endpoint configuration for quick testing or reference.
               </p>
               <div className="flex gap-3 items-end">
@@ -721,12 +725,12 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
                   <select
                     value={formData.apiMethod}
                     onChange={(e) => handleInputChange("apiMethod", e.target.value)}
-                    className="w-full bg-[#1A1D29]/60 text-[#F5F6FA] border border-white/8 hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl h-11 px-3 backdrop-blur-md transition-all duration-300 font-bold"
+                    className="w-full bg-black/[0.02] dark:bg-[#1A1D29]/60 text-[#1A1D29] dark:text-[#F5F6FA] border border-black/10 dark:border-white/8 hover:border-black/25 dark:hover:border-white/20 focus:border-[#E94FD1]/80 focus:outline-none rounded-xl h-11 px-3 backdrop-blur-md transition-all duration-300 font-bold"
                   >
-                    <option value="GET" className="text-emerald-400">GET</option>
-                    <option value="POST" className="text-sky-400">POST</option>
-                    <option value="PUT" className="text-amber-400">PUT</option>
-                    <option value="PATCH" className="text-orange-400">PATCH</option>
+                    <option value="GET" className="text-emerald-600 dark:text-emerald-400">GET</option>
+                    <option value="POST" className="text-sky-600 dark:text-sky-400">POST</option>
+                    <option value="PUT" className="text-amber-600 dark:text-amber-400">PUT</option>
+                    <option value="PATCH" className="text-orange-600 dark:text-orange-400">PATCH</option>
                     <option value="DELETE" className="text-rose-500">DELETE</option>
                   </select>
                 </div>
@@ -745,15 +749,15 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
               {errors.apiUrl && <p className={errorClass}>{errors.apiUrl}</p>}
 
               <div className="mt-2">
-                <label className="text-[#9CA3B5] text-sm font-medium mb-3 block">Authentication Requirements</label>
+                <label className="text-[#5B5F72] dark:text-[#9CA3B5] text-sm font-medium mb-3 block">Authentication Requirements</label>
                 <div className="flex flex-wrap gap-4">
                   {["none", "bearer", "apikey", "basic"].map((authType) => (
-                    <label key={authType} className="flex items-center gap-2 cursor-pointer select-none text-sm font-normal text-[#F5F6FA]">
+                    <label key={authType} className="flex items-center gap-2 cursor-pointer select-none text-sm font-normal text-[#1A1D29] dark:text-[#F5F6FA]">
                       <input
                         type="checkbox"
                         checked={formData.apiAuth.includes(authType)}
                         onChange={() => handleCheckboxChange(authType)}
-                        className="rounded border-white/10 bg-white/5 text-[#E94FD1] focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                        className="rounded border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 text-[#D6249F] dark:text-[#E94FD1] focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
                       />
                       <span className="capitalize">{authType === "apikey" ? "API Key" : authType === "bearer" ? "Bearer Token" : authType}</span>
                     </label>
@@ -765,7 +769,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
           {activeTab === "ideas" && (
             <div className="flex flex-col gap-4">
-              <p className="text-xs text-[#E94FD1] bg-[#E94FD1]/10 px-3 py-1.5 rounded-lg w-fit border border-[#E94FD1]/20 font-medium">
+              <p className="text-xs text-[#D6249F] dark:text-[#E94FD1] bg-[#E94FD1]/10 px-3 py-1.5 rounded-lg w-fit border border-[#E94FD1]/20 font-medium">
                 Don't let that late-night spark fade away. Draft it down.
               </p>
               <div>
@@ -781,21 +785,21 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
               </div>
 
               <div className="mt-2">
-                <label className="text-[#9CA3B5] text-sm font-medium mb-3 block">Current Momentum</label>
+                <label className="text-[#5B5F72] dark:text-[#9CA3B5] text-sm font-medium mb-3 block">Current Momentum</label>
                 <div className="flex gap-6">
                   {[
                     { val: "draft", label: "Just a Draft 🧊" },
                     { val: "coding", label: "Actively Coding 🪵" },
                     { val: "shipped", label: "Shipped & Done 🎉" }
                   ].map((statusItem) => (
-                    <label key={statusItem.val} className="flex items-center gap-2 cursor-pointer select-none text-sm font-normal text-[#F5F6FA]">
+                    <label key={statusItem.val} className="flex items-center gap-2 cursor-pointer select-none text-sm font-normal text-[#1A1D29] dark:text-[#F5F6FA]">
                       <input
                         type="radio"
                         name="ideaStatus"
                         value={statusItem.val}
                         checked={formData.ideaStatus === statusItem.val}
                         onChange={() => handleInputChange("ideaStatus", statusItem.val)}
-                        className="border-white/10 bg-white/5 text-[#E94FD1] focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
+                        className="border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/5 text-[#D6249F] dark:text-[#E94FD1] focus:ring-0 focus:ring-offset-0 w-4 h-4 cursor-pointer"
                       />
                       <span>{statusItem.label}</span>
                     </label>
@@ -807,7 +811,7 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
 
           {activeTab === "custom" && (
             <div className="flex flex-col gap-4">
-              <p className="text-xs text-[#3FE0C5] bg-[#3FE0C5]/10 px-3 py-1.5 rounded-lg w-fit border border-[#3FE0C5]/20 font-medium">
+              <p className="text-xs text-[#0FB8A6] dark:text-[#3FE0C5] bg-[#3FE0C5]/10 px-3 py-1.5 rounded-lg w-fit border border-[#3FE0C5]/20 font-medium">
                 Adding data under your "{selectedCategory}" category.
               </p>
               <div>
@@ -835,11 +839,11 @@ export default function CreateCardModal({ isOpen, onClose, onSave }) {
         </div>
 
         {/* Modal Footer */}
-        <div className="border-t border-white/6 pt-4 flex justify-end gap-3">
+        <div className="border-t border-black/[0.06] dark:border-white/6 pt-4 flex justify-end gap-3">
           <button 
             type="button"
             onClick={onClose}
-            className="text-[#9CA3B5] hover:text-[#F5F6FA] hover:bg-white/5 font-medium transition-colors rounded-full px-6 py-2 text-sm bg-transparent border-0 outline-none cursor-pointer"
+            className="text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-[#F5F6FA] hover:bg-black/[0.05] dark:hover:bg-white/5 font-medium transition-colors rounded-full px-6 py-2 text-sm bg-transparent border-0 outline-none cursor-pointer"
           >
             Nevermind
           </button>
