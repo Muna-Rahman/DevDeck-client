@@ -13,14 +13,15 @@ import {
   Star,
   ArrowUpRight,
   Copy,
-  Terminal,
   Check,
   Folder,
   GripVertical
 } from 'lucide-react'; 
-import { authClient } from "@/lib/auth-client";
 import { useBookmarks } from '@/context/BookmarkContext';
 import CardDetailsDrawer from '@/components/CardDetailsDrawer';
+import DeckStack from '@/components/DeckStack';
+import AssetsPulse from '@/components/AssetsPulse';
+import CategoryBreakdown from '@/components/CategoryBreakdown';
 import {
   DndContext,
   closestCorners,
@@ -278,11 +279,6 @@ export default function DashboardPage() {
   const startTimeRef = useRef(Date.now());
   const lastActivityTime = useRef(Date.now());
 
-  const { data: session } = authClient.useSession();
-  // The session may already be cached on the client while the server HTML
-  // was rendered without it, so only show the real name after mount.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
   const { refreshBookmarks } = useBookmarks();
 
   const streamWorkspaceAssets = async () => {
@@ -573,9 +569,21 @@ export default function DashboardPage() {
     ...customCategoryEntries.map((cat) => ({ id: cat.id, label: cat.title, icon: Folder })),
   ];
 
-  const username = (mounted && (session?.user?.name || session?.user?.email)) || "User";
-
   const getCardGroupKey = (card) => (card.category && card.category.trim()) || card.type || "";
+
+  // Deck counts use the same grouping the sections below use, so a card dragged
+  // into another category is counted there and not under its original type
+  const countInCategory = (colId) => {
+    const ids = allCategories.find((c) => c.id === colId).ids.map((id) => id.toLowerCase());
+    return dbCards.filter((card) => ids.includes(getCardGroupKey(card).toLowerCase())).length;
+  };
+
+  const deckItems = filters.slice(1).map((f) => ({
+    id: f.id,
+    title: f.label,
+    count: countInCategory(f.id),
+    icon: f.icon,
+  }));
 
   const visibleCategories = allCategories.filter((col) => {
     const belongsToActiveFilter = activeFilter === 'All' || col.id.toLowerCase() === activeFilter.toLowerCase();
@@ -637,79 +645,32 @@ export default function DashboardPage() {
   return (
     <div className="w-full flex flex-col justify-start relative z-10 space-y-6 min-w-0">
       
-      {/* Header section */}
-      <div className="flex flex-col gap-4 w-full">
-        <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center w-full">
-          <div className="rounded-2xl p-6 bg-white/85 dark:bg-black/60 backdrop-blur-2xl border border-white/40 dark:border-white/10 max-w-xl shadow-2xl flex-1 w-full transition-all duration-300 hover:border-white/60 dark:hover:border-white/20">
-            <h1 className="text-3xl font-extrabold tracking-tight uppercase font-sans text-[#1A1D29] dark:text-white text-left drop-shadow-sm dark:drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
-              Welcome back, {username}.
-            </h1>
-            <p className="text-xs font-semibold tracking-wide text-[#5B5F72] dark:text-white/70 uppercase mt-2 text-justify flex items-start gap-2">
-              <span className={`h-1.5 w-1.5 rounded-full animate-ping mt-1 flex-shrink-0 ${isSystemActive ? "bg-[#0FB8A6] dark:bg-[#3FE0C5]" : "bg-amber-500"}`} />
-              System environment operating stable. Ready for deployment deck workspace layout implementation parameters.
-            </p>
-          </div>
+      {/* Hero: total assets + live status on the left, category deck on the right */}
+      <div
+        style={{ '--i': 0 }}
+        className="dash-rise relative overflow-hidden flex flex-col lg:flex-row lg:items-center gap-6 w-full rounded-2xl p-5 sm:p-6 bg-white/85 dark:bg-black/60 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-xl transition-all duration-300 hover:border-white/60 dark:hover:border-white/20"
+      >
+        {/* Ambient glow behind the content */}
+        <div className="pointer-events-none absolute -left-16 -top-20 -z-10 h-64 w-64 rounded-full bg-[#E94FD1]/20 dark:bg-[#E94FD1]/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 right-1/4 -z-10 h-64 w-64 rounded-full bg-[#3FE0C5]/15 dark:bg-[#3FE0C5]/15 blur-3xl" />
 
-          {/* Activity and uptime monitor */}
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/85 dark:bg-black/60 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-2xl w-full sm:w-auto min-w-[240px] justify-center sm:justify-start transition-all duration-500">
-            <div className="relative h-16 w-16 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                <path className="text-black/5 dark:text-white/10" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                <path 
-                  className={`transition-all duration-1000 ease-in-out ${
-                    isSystemActive 
-                      ? "text-[#0FB8A6] dark:text-[#3FE0C5] drop-shadow-[0_0_8px_rgba(63,224,197,0.5)] [stroke-dasharray:100,_100]" 
-                      : "text-amber-500 dark:text-amber-500/80 [stroke-dasharray:30,_100]"
-                  }`}
-                  strokeWidth="3" 
-                  strokeLinecap="round" 
-                  fill="none" 
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" 
-                />
-              </svg>
-              <span className={`absolute h-2 w-2 rounded-full shadow-md ${
-                isSystemActive ? "bg-[#0FB8A6] dark:bg-[#3FE0C5] animate-ping" : "bg-amber-500 animate-pulse"
-              }`} />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#5B5F72] dark:text-white/50">Workspace Status</p>
-              <div className="flex flex-col mt-0.5">
-                <span className={`text-sm font-black font-mono transition-colors duration-300 ${
-                  isSystemActive ? "text-[#0FB8A6] dark:text-[#3FE0C5]" : "text-amber-500"
-                }`}>
-                  {isSystemActive ? "SYS_ACTIVE" : "SYS_IDLE"}
-                </span>
-                <span className="text-[11px] font-mono text-zinc-500 dark:text-white/40 font-medium">
-                  Uptime: <span className="text-[#E94FD1] font-bold">{uptimeDisplay}</span>
-                </span>
-              </div>
-            </div>
-          </div>
+        <AssetsPulse total={dbCards.length} isActive={isSystemActive} uptime={uptimeDisplay} />
+
+        {/* Fills the middle: how the cards split across categories */}
+        <div className="flex-1 min-w-0 lg:px-6 lg:border-x border-black/10 dark:border-white/10">
+          <CategoryBreakdown items={deckItems} onSelect={setActiveFilter} />
+        </div>
+
+        <div className="self-center lg:self-auto">
+          <DeckStack
+            items={deckItems}
+            onSelect={setActiveFilter}
+          />
         </div>
       </div>
 
-      {/* Summary stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Total Assets", value: dbCards.length.toString(), icon: Layers, color: "text-[#7C3AED] dark:text-[#8B5CF6]" },
-          { label: "Repositories", value: dbCards.filter(c => c.type === 'repos' || c.type === 'GitHub Repository').length.toString(), icon: Code, color: "text-[#159FE0] dark:text-[#2FD1FF]" },
-          { label: "Snippets", value: dbCards.filter(c => c.type === 'snippets' || c.type === 'Snippet').length.toString(), icon: Terminal, color: "text-[#D6249F] dark:text-[#E94FD1]" },
-          { label: "Ideas", value: dbCards.filter(c => c.type === 'ideas' || c.type === 'Project Idea').length.toString(), icon: Lightbulb, color: "text-[#E8940F] dark:text-[#FFB84D]" },
-        ].map((stat, i) => (
-          <div key={i} className="rounded-2xl border border-white/40 dark:border-white/10 bg-white/85 dark:bg-black/60 backdrop-blur-2xl p-5 flex items-center justify-between shadow-2xl transition-all duration-300 hover:border-white/60 dark:hover:border-white/20">
-            <div>
-              <p className="text-[10px] uppercase tracking-widest text-[#5B5F72] dark:text-white/50 font-semibold">{stat.label}</p>
-              <p className="text-xl font-bold text-[#1A1D29] dark:text-white mt-1">{stat.value}</p>
-            </div>
-            <div className={`p-2.5 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 ${stat.color}`}>
-              <stat.icon size={18} />
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Category filter tabs */}
-      <div className="w-full bg-white/5 dark:bg-black/20 backdrop-blur-2xl p-2 border border-white/40 dark:border-white/5 rounded-2xl shadow-xl select-none">
+      <div style={{ '--i': 1 }} className="dash-rise w-full bg-white/5 dark:bg-black/20 backdrop-blur-2xl p-2 border border-white/40 dark:border-white/5 rounded-2xl shadow-xl select-none">
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-7 gap-2 w-full">
           {filters.map((filter) => {
             const isSelected = activeFilter.toLowerCase() === filter.id.toLowerCase();
@@ -743,13 +704,14 @@ export default function DashboardPage() {
       ) : (
         <DndContext id="dashboard-dnd" sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
         <div className="flex flex-col gap-6 w-full">
-          {visibleCategories.map((col) => {
+          {visibleCategories.map((col, colIdx) => {
             const columnCards = dbCards.filter(card => col.ids.map(id => id.toLowerCase()).includes(getCardGroupKey(card).toLowerCase()));
 
             return (
               <div 
-                key={col.id} 
-                className="rounded-2xl bg-black/40 backdrop-blur-2xl border border-white/10 p-6 flex flex-col gap-4 shadow-2xl w-full"
+                key={col.id}
+                style={{ '--i': Math.min(colIdx, 6) + 2 }}
+                className="dash-rise rounded-2xl bg-black/40 backdrop-blur-2xl border border-white/10 p-6 flex flex-col gap-4 shadow-2xl w-full"
               >
                 {/* Section header */}
                 <div className="flex items-center justify-between pb-3 border-b border-white/10">
