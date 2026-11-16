@@ -47,7 +47,7 @@ export default function LandingPage() {
       {/* Pull-cord lamp theme switch: hangs from behind the top navbar */}
       {mounted && (
         <div className="fixed top-0 right-4 sm:right-8 z-40">
-          <LampToggle ceiling={100} />
+          <LampToggle ceiling={78} />
         </div>
       )}
 
