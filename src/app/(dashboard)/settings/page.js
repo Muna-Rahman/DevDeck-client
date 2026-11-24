@@ -21,6 +21,7 @@ import {
   Moon,
   ShieldCheck,
   Palette,
+  Sparkles,
   X,
 } from "lucide-react";
 
@@ -30,8 +31,9 @@ const FONT_SIZES = [
   { id: "large", label: "Large", px: 18 },
 ];
 
+// Frosted glass: light tint, soft blur and a thin bright edge so the wallpaper shows through
 const cardStyle =
-  "relative overflow-hidden rounded-2xl border border-white/40 dark:border-white/10 bg-white/85 dark:bg-black/60 backdrop-blur-2xl shadow-2xl transition-all duration-300 hover:border-white/60 dark:hover:border-white/20";
+  "relative overflow-hidden rounded-2xl border border-white/50 dark:border-white/10 bg-white/45 dark:bg-white/[0.06] backdrop-blur-xl backdrop-saturate-150 shadow-xl shadow-black/5 dark:shadow-black/30 transition-all duration-300 hover:border-white/70 dark:hover:border-white/20";
 
 const inputStyle =
   "w-full h-11 rounded-xl border border-[#6D4AFF]/15 dark:border-white/10 bg-white/70 dark:bg-black/40 pl-10 pr-4 text-sm text-[#1E1B3A] dark:text-[#F5F6FA] outline-none transition-all placeholder:text-[#8A86A6] dark:placeholder:text-white/30 focus:border-[#6D4AFF] dark:focus:border-[#FF6FB5]/60 focus:ring-2 focus:ring-[#6D4AFF]/15 dark:focus:ring-[#FF6FB5]/15 disabled:opacity-60 disabled:cursor-not-allowed";
@@ -39,11 +41,21 @@ const inputStyle =
 const labelStyle =
   "block text-[10px] font-mono font-bold uppercase tracking-widest text-[#6B6788] dark:text-[#9CA3B5] mb-1.5";
 
-function Section({ icon: Icon, tag, title, description, children }) {
+const pillStyle =
+  "inline-flex max-w-full items-center gap-2 rounded-full border border-white/50 dark:border-white/10 bg-white/50 dark:bg-white/[0.08] px-3 py-1.5 text-xs font-mono text-[#4A4660] dark:text-white/80";
+
+// Each section gets its own color so the page feels less samey
+const ACCENTS = {
+  pink: "bg-[#D6249F]/15 text-[#D6249F] dark:bg-[#E94FD1]/15 dark:text-[#E94FD1]",
+  teal: "bg-[#0FB8A6]/15 text-[#0B8F80] dark:bg-[#3FE0C5]/15 dark:text-[#3FE0C5]",
+  violet: "bg-[#6D4AFF]/15 text-[#5B3FE0] dark:bg-[#8B7CFF]/15 dark:text-[#A99CFF]",
+};
+
+function Section({ icon: Icon, tag, title, description, accent = "pink", children }) {
   return (
-    <section className={`${cardStyle} p-6`}>
+    <section className={`${cardStyle} p-6 hover:-translate-y-0.5`}>
       <div className="flex items-start gap-3 mb-6">
-        <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#D6249F]/10 dark:bg-white/[0.07] text-[#D6249F] dark:text-[#E94FD1]">
+        <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${ACCENTS[accent]}`}>
           <Icon size={18} />
         </span>
         <div className="min-w-0">
@@ -238,221 +250,234 @@ export default function SettingsPage() {
   }
 
   const user = session?.user;
-  const avatarUrl =
-    user?.image ||
-    `https://api.dicebear.com/7.x/open-peeps/svg?seed=${encodeURIComponent(user?.name || "default")}`;
-  const previewPx = FONT_SIZES.find((f) => f.id === selectedFontSize)?.px || 16;
+  const firstName = (user?.name || "there").split(" ")[0];
 
   return (
-    <div className="w-full flex flex-col relative z-10 space-y-6 min-w-0 max-w-3xl mx-auto pb-20">
+    <div className="w-full flex flex-col relative z-10 space-y-6 min-w-0 max-w-5xl mx-auto pb-20">
+      {/* Softens the wallpaper on this page only, the other pages keep it sharp */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 -z-10 pointer-events-none backdrop-blur-xl bg-white/25 dark:bg-black/30"
+      />
+
       <button
         type="button"
         onClick={() => router.back()}
-        className="self-start inline-flex items-center gap-2 px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider rounded-xl border border-white/40 dark:border-white/10 bg-white/85 dark:bg-black/60 backdrop-blur-2xl text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white hover:border-white/60 dark:hover:border-white/20 shadow-lg transition-all active:scale-95 cursor-pointer"
+        className="self-start inline-flex items-center gap-2 px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider rounded-xl border border-white/50 dark:border-white/10 bg-white/45 dark:bg-white/[0.06] backdrop-blur-xl text-[#5B5F72] dark:text-[#9CA3B5] hover:text-[#1A1D29] dark:hover:text-white hover:border-white/70 dark:hover:border-white/20 shadow-lg transition-all active:scale-95 cursor-pointer"
       >
         <ArrowLeft size={14} strokeWidth={2.5} />
         Back
       </button>
 
-      <div className={`${cardStyle} p-6 flex items-center gap-5`}>
-        <img
-          src={avatarUrl}
-          alt={user?.name ? `${user.name}'s avatar` : "Your avatar"}
-          className="h-16 w-16 rounded-2xl border-2 border-[#E94FD1] bg-white dark:bg-[#1A1D29] object-cover shadow-[0_0_20px_rgba(233,79,209,0.3)] shrink-0"
+      <div className={`${cardStyle} p-6 sm:p-8`}>
+        {/* A couple of blurry color blobs to give the header some life */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-12 -top-16 h-48 w-48 rounded-full bg-[#E94FD1]/30 blur-3xl"
         />
-        <div className="min-w-0">
-          <h1 className="text-3xl font-extrabold tracking-tight uppercase text-[#1A1D29] dark:text-white dark:drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-20 right-24 h-44 w-44 rounded-full bg-[#3FE0C5]/25 blur-3xl"
+        />
+
+        <div className="relative">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/50 dark:border-white/10 bg-white/50 dark:bg-white/10 px-3 py-1 text-[10px] font-mono font-bold uppercase tracking-widest text-[#6D28D9] dark:text-[#E94FD1]">
+            <Sparkles size={12} />
+            Your space
+          </span>
+          <h1 className="mt-3 text-4xl sm:text-5xl font-extrabold tracking-tight uppercase bg-gradient-to-r from-[#4338CA] via-[#D6249F] to-[#FF6FB5] bg-clip-text text-transparent">
             Settings
           </h1>
-          <p className="text-xs font-semibold tracking-wide text-[#5B5F72] dark:text-white/70 uppercase mt-2 flex items-center gap-2 min-w-0">
-            <span className="h-1.5 w-1.5 rounded-full animate-ping flex-shrink-0 bg-[#0FB8A6] dark:bg-[#3FE0C5]" />
-            <span className="truncate font-mono normal-case">{user?.name || "Developer"} · {user?.email}</span>
+          <p className="mt-2 text-sm text-[#4A4660] dark:text-white/70">
+            Hey {firstName}, make DevDeck feel like yours.
           </p>
-        </div>
-      </div>
 
-    <form id="settings-form" onSubmit={handleUpdateProfile} className="space-y-6">
-      <Section
-        icon={User}
-        tag="Account"
-        title="Profile"
-        description="How you appear across your workspace."
-      >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Username" icon={User}>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="username"
-              className={inputStyle}
-            />
-          </Field>
-          <Field label="Email (read-only)" icon={Mail}>
-            <input type="email" value={user?.email || ""} disabled className={inputStyle} />
-          </Field>
-        </div>
-      </Section>
-
-      <Section
-        icon={ShieldCheck}
-        tag="Security"
-        title="Password"
-        description="Leave these blank to keep your current password. Changing it signs out your other sessions."
-      >
-        <div className="space-y-4">
-          <Field label="Current password" icon={Key}>
-            <PasswordInput
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Current password"
-              autoComplete="current-password"
-            />
-          </Field>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="New password" icon={Key}>
-              <PasswordInput
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
-                autoComplete="new-password"
-              />
-            </Field>
-            <Field label="Confirm password" icon={Key}>
-              <PasswordInput
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repeat new password"
-                autoComplete="new-password"
-              />
-            </Field>
-          </div>
-          {passwordError && (
-            <p className="text-xs text-rose-500 font-medium" role="alert">{passwordError}</p>
-          )}
-        </div>
-      </Section>
-
-      <Section
-        icon={Palette}
-        tag="Appearance"
-        title="Theme & text size"
-        description="Theme applies instantly. Text size is saved with your account."
-      >
-        <div className="space-y-6">
-          <div>
-            <span className={labelStyle}>Theme</span>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { id: "light", label: "Light", icon: Sun },
-                { id: "dark", label: "Dark", icon: Moon },
-              ].map(({ id, label, icon: Icon }) => {
-                const active = theme === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setTheme(id)}
-                    aria-pressed={active}
-                    className={`h-11 inline-flex items-center justify-center gap-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                      active
-                        ? "bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#35338F] dark:to-[#5A4BD1] text-white border-transparent shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
-                        : "border-[#6D4AFF]/15 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.07]"
-                    }`}
-                  >
-                    <Icon size={15} />
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div>
-            <span className={labelStyle}>Text size</span>
-            <div className="grid grid-cols-3 gap-3">
-              {FONT_SIZES.map(({ id, label, px }) => {
-                const active = selectedFontSize === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setSelectedFontSize(id)}
-                    aria-pressed={active}
-                    className={`py-3 rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                      active
-                        ? "bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#35338F] dark:to-[#5A4BD1] text-white border-transparent shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
-                        : "border-[#6D4AFF]/15 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.07]"
-                    }`}
-                  >
-                    <span className="font-semibold leading-none" style={{ fontSize: px + 6 }}>Aa</span>
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-widest">{label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-4 rounded-xl border border-[#6D4AFF]/15 dark:border-white/[0.08] bg-white/70 dark:bg-[#12141C]/90 p-4">
-              <span className="block text-[10px] font-mono font-bold uppercase tracking-widest text-[#0B7F6E] dark:text-[#9CA3B5]/60 mb-2">
-                Snippet · Preview
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className={pillStyle}>
+              <span className="relative flex h-2 w-2 flex-shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#0FB8A6] opacity-60 dark:bg-[#3FE0C5]" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#0FB8A6] dark:bg-[#3FE0C5]" />
               </span>
-              <p
-                className="font-semibold tracking-tight text-[#1E1B3A] dark:text-white"
-                style={{ fontSize: previewPx }}
-              >
-                useDebounce hook
-              </p>
-              <p className="mt-1 text-[#5F5B7A] dark:text-[#9CA3B5]" style={{ fontSize: previewPx - 2 }}>
-                Delays a fast-changing value so search only fires once you stop typing.
-              </p>
-              <code
-                className="mt-3 block rounded-lg bg-[#6D4AFF]/[0.06] dark:bg-black/40 px-3 py-2 font-mono text-[#6D28D9] dark:text-[#3FE0C5]"
-                style={{ fontSize: previewPx - 3 }}
-              >
-                const q = useDebounce(query, 300);
-              </code>
+              <span className="truncate">{user?.name || "Developer"}</span>
+            </span>
+            <span className={pillStyle}>
+              <Mail size={12} className="flex-shrink-0" />
+              <span className="truncate">{user?.email}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Two columns on wide screens: account stuff on the left, looks on the right */}
+      <form
+        id="settings-form"
+        onSubmit={handleUpdateProfile}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start"
+      >
+        <div className="space-y-6 min-w-0">
+          <Section
+            icon={User}
+            tag="Account"
+            title="Profile"
+            description="How you appear across your workspace."
+            accent="pink"
+          >
+            <div className="space-y-4">
+              <Field label="Username" icon={User}>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="username"
+                  className={inputStyle}
+                />
+              </Field>
+              <Field label="Email (read-only)" icon={Mail}>
+                <input type="email" value={user?.email || ""} disabled className={inputStyle} />
+              </Field>
+            </div>
+          </Section>
+
+          <Section
+            icon={ShieldCheck}
+            tag="Security"
+            title="Password"
+            description="Leave these blank to keep your current password. Changing it signs out your other sessions."
+            accent="teal"
+          >
+            <div className="space-y-4">
+              <Field label="Current password" icon={Key}>
+                <PasswordInput
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Current password"
+                  autoComplete="current-password"
+                />
+              </Field>
+              <Field label="New password" icon={Key}>
+                <PasswordInput
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  autoComplete="new-password"
+                />
+              </Field>
+              <Field label="Confirm password" icon={Key}>
+                <PasswordInput
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat new password"
+                  autoComplete="new-password"
+                />
+              </Field>
+              {passwordError && (
+                <p className="text-xs text-rose-500 font-medium" role="alert">{passwordError}</p>
+              )}
+            </div>
+          </Section>
+        </div>
+
+        <Section
+          icon={Palette}
+          tag="Appearance"
+          title="Theme & text size"
+          description="Theme applies instantly. Text size is saved with your account."
+          accent="violet"
+        >
+          <div className="space-y-6">
+            <div>
+              <span className={labelStyle}>Theme</span>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { id: "light", label: "Light", icon: Sun },
+                  { id: "dark", label: "Dark", icon: Moon },
+                ].map(({ id, label, icon: Icon }) => {
+                  const active = theme === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setTheme(id)}
+                      aria-pressed={active}
+                      className={`h-11 inline-flex items-center justify-center gap-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                        active
+                          ? "bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#35338F] dark:to-[#5A4BD1] text-white border-transparent shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
+                          : "border-[#6D4AFF]/15 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.07]"
+                      }`}
+                    >
+                      <Icon size={15} />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <span className={labelStyle}>Text size</span>
+              <div className="grid grid-cols-3 gap-3">
+                {FONT_SIZES.map(({ id, label, px }) => {
+                  const active = selectedFontSize === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setSelectedFontSize(id)}
+                      aria-pressed={active}
+                      className={`py-3 rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                        active
+                          ? "bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#35338F] dark:to-[#5A4BD1] text-white border-transparent shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
+                          : "border-[#6D4AFF]/15 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.07]"
+                      }`}
+                    >
+                      <span className="font-semibold leading-none" style={{ fontSize: px + 6 }}>Aa</span>
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest">{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-      </Section>
+        </Section>
 
-      {profileError && (
-        <div
-          role="alert"
-          className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs font-semibold text-rose-500"
-        >
-          <AlertTriangle size={15} />
-          {profileError}
-        </div>
-      )}
-    </form>
-
-    <section className="relative overflow-hidden rounded-2xl border border-rose-500/30 dark:border-rose-500/30 bg-rose-500/[0.06] dark:bg-rose-950/20 backdrop-blur-xl p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-rose-500/10 text-rose-500">
-            <AlertTriangle size={18} />
-          </span>
-          <div>
-            <span className="block text-[10px] font-mono font-bold uppercase tracking-widest text-rose-500/80">
-              Danger zone
-            </span>
-            <h2 className="text-base font-semibold text-[#1E1B3A] dark:text-white">Delete account</h2>
-            <p className="text-xs text-[#5F5B7A] dark:text-[#9CA3B5] mt-0.5">
-              Permanently removes your account and everything saved in your workspace.
-            </p>
+        {profileError && (
+          <div
+            role="alert"
+            className="lg:col-span-2 flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs font-semibold text-rose-500"
+          >
+            <AlertTriangle size={15} />
+            {profileError}
           </div>
+        )}
+      </form>
+
+      {/* Danger zone: a more solid card and a filled button so it reads clearly on any wallpaper */}
+      <section className="relative overflow-hidden rounded-2xl border border-rose-500/40 border-l-4 border-l-rose-500 bg-white/80 dark:bg-rose-950/50 backdrop-blur-xl shadow-xl shadow-rose-500/10 p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white">
+              <AlertTriangle size={18} />
+            </span>
+            <div>
+              <span className="block text-[10px] font-mono font-bold uppercase tracking-widest text-rose-600 dark:text-rose-400">
+                Danger zone
+              </span>
+              <h2 className="text-base font-semibold text-[#1E1B3A] dark:text-white">Delete account</h2>
+              <p className="text-xs text-[#4A4660] dark:text-white/70 mt-0.5">
+                Permanently removes your account and everything saved in your workspace.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDeleteStep(1)}
+            className="h-10 inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white px-4 text-xs font-bold uppercase tracking-wider shadow-lg shadow-rose-600/30 transition-all active:scale-95 cursor-pointer flex-shrink-0"
+          >
+            <Trash2 size={14} strokeWidth={2.5} />
+            Delete account
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setDeleteStep(1)}
-          className="h-10 inline-flex items-center justify-center gap-2 rounded-xl border border-rose-500/40 text-rose-500 hover:bg-rose-500 hover:text-white px-4 text-xs font-bold uppercase tracking-wider transition-all active:scale-95 cursor-pointer flex-shrink-0"
-        >
-          <Trash2 size={14} strokeWidth={2.5} />
-          Delete account
-        </button>
-      </div>
-    </section>
+      </section>
 
       {/* Save bar only shows once something has changed */}
       <div
@@ -460,7 +485,7 @@ export default function SettingsPage() {
           hasChanges || saved ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0 pointer-events-none"
         }`}
       >
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 rounded-2xl border border-white/40 dark:border-white/10 bg-white/90 dark:bg-black/70 backdrop-blur-2xl px-4 py-3 shadow-2xl">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 rounded-2xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/50 backdrop-blur-xl px-4 py-3 shadow-2xl">
           {saved && !hasChanges ? (
             <span className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 size={16} />
