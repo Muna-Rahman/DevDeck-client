@@ -2,18 +2,19 @@
 
 import React, { useEffect, useState } from "react";
 
-// Accent per built-in category
+// Built-in categories use the DevDeck brand colours (same ones as the tabs, buttons and glows)
 const ACCENTS = {
   links: "#2FD1FF",
   repos: "#8B5CF6",
   snippets: "#E94FD1",
-  notes: "#22C55E",
-  apis: "#F97316",
+  notes: "#3FE0C5",
+  apis: "#FF6FB5",
   ideas: "#FFB84D",
 };
 
-// Custom categories get a stable colour from this palette, picked from their name
-const CUSTOM_PALETTE = ["#EC4899", "#06B6D4", "#EAB308", "#A855F7", "#94A3B8", "#F43F5E", "#84CC16", "#6366F1"];
+// Custom categories get a softer tint from the same brand family, picked from their name
+// so a category keeps its colour everywhere
+const CUSTOM_PALETTE = ["#C084FC", "#5EEAD4", "#FF8FA3", "#FFD580", "#7AA2FF", "#F0ABFC"];
 
 export function accentFor(id) {
   if (ACCENTS[id]) return ACCENTS[id];

@@ -12,6 +12,10 @@ import { LogoGithub } from "@gravity-ui/icons";
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+// How long to wait after the last keystroke before searching
+const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_RESULT_LIMIT = 8;
+
 // Small icon per result type, purely cosmetic in the dropdown.
 const typeIcon = (type) => {
   switch (type) {
@@ -55,8 +59,6 @@ export default function Navbar() {
   const [isSearching, setIsSearching] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const searchWrapRef = useRef(null);
-  const debounceRef = useRef(null);
-  const requestIdRef = useRef(0);
 
   useEffect(() => {
     setMounted(true);
@@ -75,12 +77,9 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced parallel search across cards + snippets. There's no server
-  // search endpoint, so we pull each collection and filter client-side —
-  // still debounced so we're not re-fetching on every keystroke.
+  // Debounced search. The server does the matching, so we only send the
+  // text and get a few results back instead of downloading everything.
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
     const query = searchQuery.trim();
     if (!query) {
       setSearchResults([]);
@@ -89,71 +88,33 @@ export default function Navbar() {
     }
 
     setIsSearching(true);
-    debounceRef.current = setTimeout(async () => {
-      const thisRequestId = ++requestIdRef.current;
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    const timer = setTimeout(async () => {
       try {
-        const [cardsRes, snippetsRes] = await Promise.all([
-          fetch(`${backendUrl}/api/cards`, { credentials: "include" }),
-          fetch(`${backendUrl}/api/snippets`, { credentials: "include" }),
-        ]);
+        const res = await fetch(
+          `${backendUrl}/api/resources/search?q=${encodeURIComponent(query)}&limit=${SEARCH_RESULT_LIMIT}`,
+          { credentials: "include", signal }
+        );
+        const data = res.ok ? await res.json() : [];
 
-        const cardsData = cardsRes.ok ? await cardsRes.json() : [];
-        const snippetsData = snippetsRes.ok ? await snippetsRes.json() : [];
-
-        // Stale response guard — ignore results from a request that isn't
-        // the latest one fired (fast typers can otherwise get flicker).
-        if (thisRequestId !== requestIdRef.current) return;
-
-        const lowerQuery = query.toLowerCase();
-
-        const matches = (title, extra) =>
-          (title || "").toLowerCase().includes(lowerQuery) ||
-          (extra || []).some((v) => (v || "").toLowerCase().includes(lowerQuery));
-
-        const cardMatches = cardsData
-          .filter((c) =>
-            matches(c.title || c.content?.title, [
-              c.metadata?.description,
-              c.content?.notes,
-              c.metadata?.url,
-              c.content?.url,
-              ...(Array.isArray(c.tags) ? c.tags : []),
-            ])
-          )
-          .map((c) => ({
-            id: c._id || c.id,
-            title: c.title || c.content?.title || c.metadata?.url || "Untitled Card",
-            type: c.type,
-            isSnippet: false,
-          }));
-
-        const snippetMatches = snippetsData
-          .filter((s) =>
-            matches(s.title, [
-              s.description,
-              s.code,
-              s.language,
-              ...(Array.isArray(s.tags) ? s.tags : []),
-            ])
-          )
-          .map((s) => ({
-            id: s._id || s.id,
-            title: s.title || "Untitled Snippet",
-            type: "Snippet",
-            isSnippet: true,
-          }));
-
-        setSearchResults([...cardMatches, ...snippetMatches].slice(0, 8));
+        // The query changed while we waited, so these results are old
+        if (signal.aborted) return;
+        setSearchResults(Array.isArray(data) ? data : []);
       } catch (err) {
+        if (err.name === "AbortError") return;
         console.error("Global search failed:", err);
-        if (thisRequestId === requestIdRef.current) setSearchResults([]);
+        setSearchResults([]);
       } finally {
-        if (thisRequestId === requestIdRef.current) setIsSearching(false);
+        if (!signal.aborted) setIsSearching(false);
       }
-    }, 300);
+    }, SEARCH_DEBOUNCE_MS);
 
+    // Typing again (or unmounting) cancels the wait and any request in flight
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
+      clearTimeout(timer);
+      controller.abort();
     };
   }, [searchQuery]);
 
