@@ -1,10 +1,15 @@
 "use client";
 
 import React from 'react';
+import { usePathname } from "next/navigation";
 import SidebarContainer from "@/components/SidebarContainer";
 import Navbar from "@/components/Navbar";
 
 export default function DashboardLayout({ children }) {
+  const pathname = usePathname();
+  // settings has its own back button, so no top navbar there
+  const hideNavbar = pathname?.startsWith("/settings");
+
   return (
     <div className="flex h-screen w-screen overflow-hidden relative font-sans antialiased text-[#1A1D29] dark:text-[#F5F6FA] transition-colors duration-300">
       
@@ -43,13 +48,15 @@ export default function DashboardLayout({ children }) {
       <div className="flex flex-col flex-1 min-w-0 h-full relative z-10 overflow-hidden">
         
         {/* Floating Header Navbar Module Integration */}
-        <div className="w-full fixed top-0 left-0 right-0 z-20">
-          <Navbar />
-        </div>
+        {!hideNavbar && (
+          <div className="w-full fixed top-0 left-0 right-0 z-20">
+            <Navbar />
+          </div>
+        )}
         
         {/* Core Layout Workspace Target Area */}
         <main 
-          className="flex-1 overflow-y-auto px-6 md:px-12 pb-16 pt-28 min-w-0"
+          className={`flex-1 overflow-y-auto px-6 md:px-12 pb-16 min-w-0 ${hideNavbar ? "pt-8" : "pt-28"}`}
         >
           <div className="max-w-[1440px] mx-auto w-full">
             {children}

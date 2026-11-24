@@ -51,10 +51,115 @@ const ACCENTS = {
   violet: "bg-[#6D4AFF]/15 text-[#5B3FE0] dark:bg-[#8B7CFF]/15 dark:text-[#A99CFF]",
 };
 
-function Section({ icon: Icon, tag, title, description, accent = "pink", children }) {
+// Keyframes live here so the page stays one file
+const MOTION_CSS = `
+@keyframes settings-rise { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes settings-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes settings-shine { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+@keyframes settings-twinkle { 0%, 100% { opacity: 0.25; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
+@keyframes settings-spin { to { transform: rotate(360deg); } }
+@keyframes settings-pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+@keyframes settings-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+.settings-rise { animation: settings-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.settings-float { animation: settings-float 7s ease-in-out infinite; }
+.settings-float-slow { animation: settings-float 9s ease-in-out infinite reverse; }
+.settings-shine { background-size: 200% auto; animation: settings-shine 6s ease-in-out infinite; }
+.settings-twinkle { animation: settings-twinkle 2.4s ease-in-out infinite; }
+.settings-spin { animation: settings-spin 14s linear infinite; }
+.settings-pop { animation: settings-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .settings-rise, .settings-float, .settings-float-slow, .settings-shine, .settings-twinkle, .settings-spin, .settings-pop { animation: none; }
+}
+`;
+
+// Day/night switch: the knob slides, the sun spins and the stars come out at night
+function ThemeToggle({ isDark, onToggle }) {
   return (
-    <section className={`${cardStyle} p-6 hover:-translate-y-0.5`}>
-      <div className="flex items-start gap-3 mb-6">
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isDark}
+      aria-label="Toggle dark mode"
+      onClick={onToggle}
+      className="group relative my-auto h-20 w-full overflow-hidden rounded-full border border-black/10 dark:border-white/15 shadow-inner cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#6D4AFF] dark:focus-visible:ring-[#FF6FB5]"
+    >
+      <span className="absolute inset-0 bg-gradient-to-r from-[#EEF0F5] to-[#D8DAE4]" />
+      <span
+        className={`absolute inset-0 bg-gradient-to-r from-[#05060A] to-[#1B1640] transition-opacity duration-500 ${
+          isDark ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <span className="settings-twinkle absolute right-28 top-4 h-1 w-1 rounded-full bg-white" />
+        <span className="settings-twinkle absolute right-10 top-6 h-1.5 w-1.5 rounded-full bg-white [animation-delay:0.6s]" />
+        <span className="settings-twinkle absolute bottom-5 right-20 h-1 w-1 rounded-full bg-white [animation-delay:1.2s]" />
+        <span className="settings-twinkle absolute bottom-4 right-8 h-1 w-1 rounded-full bg-white [animation-delay:1.8s]" />
+      </span>
+
+      <span
+        className={`absolute left-6 top-1/2 -translate-y-1/2 text-xs font-extrabold uppercase tracking-wider text-[#1A1D29] transition-all duration-500 ${
+          isDark ? "-translate-x-4 opacity-0" : "opacity-100"
+        }`}
+      >
+        Day mode
+      </span>
+      <span
+        className={`absolute right-6 top-1/2 -translate-y-1/2 text-xs font-extrabold uppercase tracking-wider text-white transition-all duration-500 ${
+          isDark ? "opacity-100" : "translate-x-4 opacity-0"
+        }`}
+      >
+        Night mode
+      </span>
+
+      <span
+        className={`absolute top-2 flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#1A1D29] shadow-lg transition-[left] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95 ${
+          isDark ? "left-2" : "left-[calc(100%-4.5rem)]"
+        }`}
+      >
+        <span className="relative flex h-8 w-8 items-center justify-center">
+          <span
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
+              isDark ? "rotate-90 scale-0 opacity-0" : "rotate-0 scale-100 opacity-100"
+            }`}
+          >
+            <Sun size={30} strokeWidth={1.5} className="settings-spin" />
+          </span>
+          <span
+            className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
+              isDark ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-0 opacity-0"
+            }`}
+          >
+            <Moon size={28} strokeWidth={1.5} />
+          </span>
+        </span>
+        <Sparkles
+          size={12}
+          className={`settings-twinkle absolute right-2.5 top-2.5 transition-opacity duration-500 ${
+            isDark ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      </span>
+    </button>
+  );
+}
+
+// Soft color glow in each card's corner
+const GLOWS = {
+  pink: "bg-[#E94FD1]/30",
+  teal: "bg-[#3FE0C5]/25",
+  violet: "bg-[#8B7CFF]/30",
+};
+
+function Section({ icon: Icon, tag, title, description, accent = "pink", className = "", delay = 0, children }) {
+  return (
+    <section
+      className={`${cardStyle} settings-rise flex flex-col p-5 sm:p-6 hover:-translate-y-1 ${className}`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div
+        aria-hidden="true"
+        className={`pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full blur-2xl ${GLOWS[accent]}`}
+      />
+      <div className="relative flex items-start gap-3 mb-5">
         <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl ${ACCENTS[accent]}`}>
           <Icon size={18} />
         </span>
@@ -68,7 +173,7 @@ function Section({ icon: Icon, tag, title, description, accent = "pink", childre
           )}
         </div>
       </div>
-      {children}
+      <div className="relative flex flex-1 flex-col">{children}</div>
     </section>
   );
 }
@@ -250,10 +355,10 @@ export default function SettingsPage() {
   }
 
   const user = session?.user;
-  const firstName = (user?.name || "there").split(" ")[0];
 
   return (
-    <div className="w-full flex flex-col relative z-10 space-y-6 min-w-0 max-w-5xl mx-auto pb-20">
+    <div className="w-full flex flex-col relative z-10 space-y-6 min-w-0 max-w-5xl mx-auto pb-2">
+      <style>{MOTION_CSS}</style>
       {/* Softens the wallpaper on this page only, the other pages keep it sharp */}
       <div
         aria-hidden="true"
@@ -269,30 +374,30 @@ export default function SettingsPage() {
         Back
       </button>
 
-      <div className={`${cardStyle} p-6 sm:p-8`}>
-        {/* A couple of blurry color blobs to give the header some life */}
+      <div className={`${cardStyle} settings-rise p-6 sm:p-8`}>
+        {/* Blurry color blobs for the header */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-12 -top-16 h-48 w-48 rounded-full bg-[#E94FD1]/30 blur-3xl"
+          className="settings-float pointer-events-none absolute -right-12 -top-16 h-48 w-48 rounded-full bg-[#E94FD1]/30 blur-3xl"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-20 right-24 h-44 w-44 rounded-full bg-[#3FE0C5]/25 blur-3xl"
+          className="settings-float-slow pointer-events-none absolute -bottom-20 right-24 h-44 w-44 rounded-full bg-[#3FE0C5]/25 blur-3xl"
         />
 
-        <div className="relative">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/50 dark:border-white/10 bg-white/50 dark:bg-white/10 px-3 py-1 text-[10px] font-mono font-bold uppercase tracking-widest text-[#6D28D9] dark:text-[#E94FD1]">
-            <Sparkles size={12} />
-            Your space
-          </span>
-          <h1 className="mt-3 text-4xl sm:text-5xl font-extrabold tracking-tight uppercase bg-gradient-to-r from-[#4338CA] via-[#D6249F] to-[#FF6FB5] bg-clip-text text-transparent">
-            Settings
-          </h1>
-          <p className="mt-2 text-sm text-[#4A4660] dark:text-white/70">
-            Hey {firstName}, make DevDeck feel like yours.
-          </p>
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/50 dark:border-white/10 bg-white/50 dark:bg-white/10 px-3 py-1 text-[10px] font-mono font-bold uppercase tracking-widest text-[#6D28D9] dark:text-[#E94FD1]">
+              <Sparkles size={12} className="settings-twinkle" />
+              Your space
+            </span>
+            <h1 className="settings-shine mt-3 text-4xl sm:text-5xl font-extrabold tracking-tight uppercase bg-gradient-to-r from-[#4338CA] via-[#D6249F] to-[#FF6FB5] bg-clip-text text-transparent">
+              Settings
+            </h1>
+            <p className="mt-2 text-sm text-[#4A4660] dark:text-white/70">Change what you need, then save.</p>
+          </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2 sm:flex-col sm:items-end">
             <span className={pillStyle}>
               <span className="relative flex h-2 w-2 flex-shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#0FB8A6] opacity-60 dark:bg-[#3FE0C5]" />
@@ -308,44 +413,94 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Two columns on wide screens: account stuff on the left, looks on the right */}
+      {/* Card grid: three across, then password and danger zone */}
       <form
         id="settings-form"
         onSubmit={handleUpdateProfile}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5"
       >
-        <div className="space-y-6 min-w-0">
-          <Section
-            icon={User}
-            tag="Account"
-            title="Profile"
-            description="How you appear across your workspace."
-            accent="pink"
-          >
-            <div className="space-y-4">
-              <Field label="Username" icon={User}>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="username"
-                  className={inputStyle}
-                />
-              </Field>
-              <Field label="Email (read-only)" icon={Mail}>
-                <input type="email" value={user?.email || ""} disabled className={inputStyle} />
-              </Field>
-            </div>
-          </Section>
+        <Section
+          icon={User}
+          tag="Account"
+          title="Profile"
+          description="Change your username."
+          accent="pink"
+          className="sm:col-span-2 lg:col-span-2"
+          delay={100}
+        >
+          <div className="space-y-4">
+            <Field label="Username" icon={User}>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="username"
+                className={inputStyle}
+              />
+            </Field>
+            <Field label="Email (read-only)" icon={Mail}>
+              <input type="email" value={user?.email || ""} disabled className={inputStyle} />
+            </Field>
+          </div>
+        </Section>
 
-          <Section
-            icon={ShieldCheck}
-            tag="Security"
-            title="Password"
-            description="Leave these blank to keep your current password. Changing it signs out your other sessions."
-            accent="teal"
-          >
-            <div className="space-y-4">
+        <Section
+          icon={Palette}
+          tag="Appearance"
+          title="Theme"
+          description="Pick a look."
+          accent="violet"
+          className="lg:col-span-2"
+          delay={200}
+        >
+          <div className="flex flex-1 flex-col">
+            <ThemeToggle isDark={theme === "dark"} onToggle={() => setTheme(theme === "dark" ? "light" : "dark")} />
+          </div>
+        </Section>
+
+        <Section
+          icon={Type}
+          tag="Appearance"
+          title="Text size"
+          description="Pick a size."
+          accent="teal"
+          className="lg:col-span-2"
+          delay={300}
+        >
+          <div className="flex flex-1 flex-col gap-3">
+            {FONT_SIZES.map(({ id, label, px }) => {
+              const active = selectedFontSize === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setSelectedFontSize(id)}
+                  aria-pressed={active}
+                  className={`flex min-h-[56px] flex-1 items-center justify-between rounded-xl border px-4 transition-all cursor-pointer hover:scale-[1.02] ${
+                    active
+                      ? "bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#35338F] dark:to-[#5A4BD1] text-white border-transparent shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
+                      : "border-[#6D4AFF]/15 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.07]"
+                  }`}
+                >
+                  <span className={`font-semibold leading-none ${active ? "settings-pop" : ""}`} style={{ fontSize: px + 6 }}>Aa</span>
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+        <Section
+          icon={ShieldCheck}
+          tag="Security"
+          title="Password"
+          description="Leave blank to keep the old one."
+          accent="teal"
+          className="sm:col-span-2 lg:col-span-4"
+          delay={400}
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
               <Field label="Current password" icon={Key}>
                 <PasswordInput
                   value={currentPassword}
@@ -354,108 +509,33 @@ export default function SettingsPage() {
                   autoComplete="current-password"
                 />
               </Field>
-              <Field label="New password" icon={Key}>
-                <PasswordInput
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  autoComplete="new-password"
-                />
-              </Field>
-              <Field label="Confirm password" icon={Key}>
-                <PasswordInput
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat new password"
-                  autoComplete="new-password"
-                />
-              </Field>
-              {passwordError && (
-                <p className="text-xs text-rose-500 font-medium" role="alert">{passwordError}</p>
-              )}
             </div>
-          </Section>
-        </div>
-
-        <Section
-          icon={Palette}
-          tag="Appearance"
-          title="Theme & text size"
-          description="Theme applies instantly. Text size is saved with your account."
-          accent="violet"
-        >
-          <div className="space-y-6">
-            <div>
-              <span className={labelStyle}>Theme</span>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: "light", label: "Light", icon: Sun },
-                  { id: "dark", label: "Dark", icon: Moon },
-                ].map(({ id, label, icon: Icon }) => {
-                  const active = theme === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setTheme(id)}
-                      aria-pressed={active}
-                      className={`h-11 inline-flex items-center justify-center gap-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                        active
-                          ? "bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#35338F] dark:to-[#5A4BD1] text-white border-transparent shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
-                          : "border-[#6D4AFF]/15 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.07]"
-                      }`}
-                    >
-                      <Icon size={15} />
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div>
-              <span className={labelStyle}>Text size</span>
-              <div className="grid grid-cols-3 gap-3">
-                {FONT_SIZES.map(({ id, label, px }) => {
-                  const active = selectedFontSize === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setSelectedFontSize(id)}
-                      aria-pressed={active}
-                      className={`py-3 rounded-xl border flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                        active
-                          ? "bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#35338F] dark:to-[#5A4BD1] text-white border-transparent shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
-                          : "border-[#6D4AFF]/15 dark:border-white/10 bg-white/60 dark:bg-white/[0.03] text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.07]"
-                      }`}
-                    >
-                      <span className="font-semibold leading-none" style={{ fontSize: px + 6 }}>Aa</span>
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-widest">{label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <Field label="New password" icon={Key}>
+              <PasswordInput
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
+              />
+            </Field>
+            <Field label="Confirm password" icon={Key}>
+              <PasswordInput
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repeat new password"
+                autoComplete="new-password"
+              />
+            </Field>
+            {passwordError && (
+              <p className="text-xs text-rose-500 font-medium sm:col-span-2" role="alert">{passwordError}</p>
+            )}
           </div>
         </Section>
 
-        {profileError && (
-          <div
-            role="alert"
-            className="lg:col-span-2 flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs font-semibold text-rose-500"
-          >
-            <AlertTriangle size={15} />
-            {profileError}
-          </div>
-        )}
-      </form>
-
-      {/* Danger zone: a more solid card and a filled button so it reads clearly on any wallpaper */}
-      <section className="relative overflow-hidden rounded-2xl border border-rose-500/40 border-l-4 border-l-rose-500 bg-white/80 dark:bg-rose-950/50 backdrop-blur-xl shadow-xl shadow-rose-500/10 p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Danger zone: solid card and filled button so it stays readable on the wallpaper */}
+        <section style={{ animationDelay: "500ms" }} className="settings-rise group relative flex flex-col overflow-hidden rounded-2xl border border-rose-500/40 border-l-4 border-l-rose-500 bg-white/80 dark:bg-rose-950/50 backdrop-blur-xl shadow-xl shadow-rose-500/10 p-5 sm:p-6 sm:col-span-2 lg:col-span-2">
           <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-rose-500 text-white group-hover:[animation:settings-wiggle_0.5s_ease-in-out]">
               <AlertTriangle size={18} />
             </span>
             <div>
@@ -464,42 +544,58 @@ export default function SettingsPage() {
               </span>
               <h2 className="text-base font-semibold text-[#1E1B3A] dark:text-white">Delete account</h2>
               <p className="text-xs text-[#4A4660] dark:text-white/70 mt-0.5">
-                Permanently removes your account and everything saved in your workspace.
+                Removes your account and all your data.
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setDeleteStep(1)}
-            className="h-10 inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white px-4 text-xs font-bold uppercase tracking-wider shadow-lg shadow-rose-600/30 transition-all active:scale-95 cursor-pointer flex-shrink-0"
+            className="mt-5 h-10 w-full lg:mt-auto inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white px-4 text-xs font-bold uppercase tracking-wider shadow-lg shadow-rose-600/30 transition-all active:scale-95 cursor-pointer"
           >
             <Trash2 size={14} strokeWidth={2.5} />
             Delete account
           </button>
-        </div>
-      </section>
+        </section>
 
-      {/* Save bar only shows once something has changed */}
+        {profileError && (
+          <div
+            role="alert"
+            className="col-span-full flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs font-semibold text-rose-500"
+          >
+            <AlertTriangle size={15} />
+            {profileError}
+          </div>
+        )}
+      </form>
+
+      {/* Floating pill that sticks to the bottom of the content, only shows once something changed */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-40 px-4 pb-4 transition-all duration-300 ${
-          hasChanges || saved ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0 pointer-events-none"
+        className={`sticky bottom-4 z-40 flex justify-center transition-all duration-300 ${
+          hasChanges || saved ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0 pointer-events-none"
         }`}
       >
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 rounded-2xl border border-white/50 dark:border-white/10 bg-white/60 dark:bg-black/50 backdrop-blur-xl px-4 py-3 shadow-2xl">
+        <div className="flex w-full max-w-xl items-center justify-between gap-3 rounded-full border border-white/50 dark:border-white/10 bg-white/70 dark:bg-black/60 py-2 pl-5 pr-2 shadow-2xl backdrop-blur-xl">
           {saved && !hasChanges ? (
-            <span className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <span className="settings-pop flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 size={16} />
-              Settings saved
+              Saved
             </span>
           ) : (
-            <span className="text-xs font-mono text-[#6B6788] dark:text-[#9CA3B5]">Unsaved changes</span>
+            <span className="flex items-center gap-2 text-xs font-mono text-[#6B6788] dark:text-[#9CA3B5]">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+              </span>
+              Unsaved changes
+            </span>
           )}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={handleDiscard}
               disabled={!hasChanges || isUpdating}
-              className="h-10 px-4 rounded-xl text-xs font-bold uppercase tracking-wider text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.08] dark:hover:bg-white/[0.06] transition-all disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+              className="h-10 rounded-full px-4 text-xs font-bold uppercase tracking-wider text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.08] dark:hover:bg-white/[0.06] transition-all disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
             >
               Discard
             </button>
@@ -507,10 +603,10 @@ export default function SettingsPage() {
               type="submit"
               form="settings-form"
               disabled={isUpdating || !hasChanges}
-              className="h-10 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#D6249F] dark:to-[#FF6FB5] px-5 text-xs font-bold uppercase tracking-wider text-white shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)] hover:opacity-95 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-10 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#D6249F] dark:to-[#FF6FB5] px-5 text-xs font-bold uppercase tracking-wider text-white shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)] hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               <Save size={15} strokeWidth={2.5} />
-              {isUpdating ? "Saving..." : "Save changes"}
+              {isUpdating ? "Saving..." : "Save"}
             </button>
           </div>
         </div>
