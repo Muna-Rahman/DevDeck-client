@@ -81,26 +81,26 @@ function ThemeToggle({ isDark, onToggle }) {
       aria-checked={isDark}
       aria-label="Toggle dark mode"
       onClick={onToggle}
-      className="group relative my-auto h-20 w-full overflow-hidden rounded-full border border-black/10 dark:border-white/15 shadow-inner cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#6D4AFF] dark:focus-visible:ring-[#FF6FB5]"
+      className="group relative h-20 w-full overflow-hidden rounded-full border border-[#6D4AFF]/20 dark:border-[#8B7CFF]/30 shadow-inner cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#6D4AFF] dark:focus-visible:ring-[#FF6FB5]"
     >
-      <span className="absolute inset-0 bg-gradient-to-r from-[#EEF0F5] to-[#D8DAE4]" />
+      <span className="absolute inset-0 bg-gradient-to-r from-[#F6F1FF] via-[#E9DEFF] to-[#FFD6EC]" />
       <span
-        className={`absolute inset-0 bg-gradient-to-r from-[#05060A] to-[#1B1640] transition-opacity duration-500 ${
+        className={`absolute inset-0 bg-gradient-to-r from-[#07061A] via-[#161238] to-[#4C2A9A] transition-opacity duration-500 ${
           isDark ? "opacity-100" : "opacity-0"
         }`}
       >
         <span className="settings-twinkle absolute right-28 top-4 h-1 w-1 rounded-full bg-white" />
-        <span className="settings-twinkle absolute right-10 top-6 h-1.5 w-1.5 rounded-full bg-white [animation-delay:0.6s]" />
-        <span className="settings-twinkle absolute bottom-5 right-20 h-1 w-1 rounded-full bg-white [animation-delay:1.2s]" />
-        <span className="settings-twinkle absolute bottom-4 right-8 h-1 w-1 rounded-full bg-white [animation-delay:1.8s]" />
+        <span className="settings-twinkle absolute right-10 top-6 h-1.5 w-1.5 rounded-full bg-[#FFD6EC] [animation-delay:0.6s]" />
+        <span className="settings-twinkle absolute bottom-5 right-20 h-1 w-1 rounded-full bg-[#FFD6EC] [animation-delay:1.2s]" />
+        <span className="settings-twinkle absolute bottom-4 right-8 h-1 w-1 rounded-full bg-[#FFD6EC] [animation-delay:1.8s]" />
       </span>
 
       <span
-        className={`absolute left-6 top-1/2 -translate-y-1/2 text-xs font-extrabold uppercase tracking-wider text-[#1A1D29] transition-all duration-500 ${
+        className={`absolute left-6 top-1/2 -translate-y-1/2 text-xs font-extrabold uppercase tracking-wider text-[#2E2470] transition-all duration-500 ${
           isDark ? "-translate-x-4 opacity-0" : "opacity-100"
         }`}
       >
-        Day mode
+        Light mode
       </span>
       <span
         className={`absolute right-6 top-1/2 -translate-y-1/2 text-xs font-extrabold uppercase tracking-wider text-white transition-all duration-500 ${
@@ -111,7 +111,7 @@ function ThemeToggle({ isDark, onToggle }) {
       </span>
 
       <span
-        className={`absolute top-2 flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#1A1D29] shadow-lg transition-[left] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95 ${
+        className={`absolute top-2 flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#4338CA] shadow-lg shadow-[#6D4AFF]/30 transition-[left] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-105 group-active:scale-95 ${
           isDark ? "left-2" : "left-[calc(100%-4.5rem)]"
         }`}
       >
@@ -131,12 +131,7 @@ function ThemeToggle({ isDark, onToggle }) {
             <Moon size={28} strokeWidth={1.5} />
           </span>
         </span>
-        <Sparkles
-          size={12}
-          className={`settings-twinkle absolute right-2.5 top-2.5 transition-opacity duration-500 ${
-            isDark ? "opacity-100" : "opacity-0"
-          }`}
-        />
+        <Sparkles size={12} className="settings-twinkle absolute right-2.5 top-2.5 text-[#D6249F]" />
       </span>
     </button>
   );
@@ -259,7 +254,11 @@ export default function SettingsPage() {
     setPasswordError("");
     setProfileError("");
 
-    if (password || confirmPassword) {
+    if (currentPassword || password || confirmPassword) {
+      if (!password) {
+        setPasswordError("Enter a new password.");
+        return;
+      }
       if (!currentPassword) {
         setPasswordError("Current password is required to set a new password.");
         return;
@@ -276,18 +275,23 @@ export default function SettingsPage() {
 
     setIsUpdating(true);
     try {
-      if (username !== session?.user?.name) {
-        const { error: nameErr } = await authClient.updateUser({ name: username });
-        if (nameErr) throw new Error(nameErr.message || "Failed to update username");
-      }
-
+      // Password goes first, so a wrong current password stops the whole save
       if (password && currentPassword) {
         const { error: passErr } = await authClient.changePassword({
           currentPassword,
           newPassword: password,
           revokeOtherSessions: true,
         });
-        if (passErr) throw new Error(passErr.message || "Failed to change password");
+        if (passErr) {
+          console.error("Change password error:", passErr);
+          setPasswordError(passErr.message || "Could not change password.");
+          return;
+        }
+      }
+
+      if (username !== session?.user?.name) {
+        const { error: nameErr } = await authClient.updateUser({ name: username });
+        if (nameErr) throw new Error(nameErr.message || "Failed to update username");
       }
 
       const settingsRes = await fetch(
@@ -428,7 +432,7 @@ export default function SettingsPage() {
           className="sm:col-span-2 lg:col-span-2"
           delay={100}
         >
-          <div className="space-y-4">
+          <div className="flex flex-1 flex-col gap-4">
             <Field label="Username" icon={User}>
               <input
                 type="text"
@@ -438,9 +442,11 @@ export default function SettingsPage() {
                 className={inputStyle}
               />
             </Field>
-            <Field label="Email (read-only)" icon={Mail}>
-              <input type="email" value={user?.email || ""} disabled className={inputStyle} />
-            </Field>
+            <div className="mt-auto">
+              <Field label="Email (read-only)" icon={Mail}>
+                <input type="email" value={user?.email || ""} disabled className={inputStyle} />
+              </Field>
+            </div>
           </div>
         </Section>
 
@@ -453,7 +459,7 @@ export default function SettingsPage() {
           className="lg:col-span-2"
           delay={200}
         >
-          <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 items-center">
             <ThemeToggle isDark={theme === "dark"} onToggle={() => setTheme(theme === "dark" ? "light" : "dark")} />
           </div>
         </Section>
@@ -569,48 +575,46 @@ export default function SettingsPage() {
         )}
       </form>
 
-      {/* Floating pill that sticks to the bottom of the content, only shows once something changed */}
-      <div
-        className={`sticky bottom-4 z-40 flex justify-center transition-all duration-300 ${
-          hasChanges || saved ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0 pointer-events-none"
-        }`}
-      >
-        <div className="flex w-full max-w-xl items-center justify-between gap-3 rounded-full border border-white/50 dark:border-white/10 bg-white/70 dark:bg-black/60 py-2 pl-5 pr-2 shadow-2xl backdrop-blur-xl">
-          {saved && !hasChanges ? (
-            <span className="settings-pop flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 size={16} />
-              Saved
-            </span>
-          ) : (
-            <span className="flex items-center gap-2 text-xs font-mono text-[#6B6788] dark:text-[#9CA3B5]">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-70" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+      {/* Small pill pinned to the right, only rendered once something changed */}
+      {(hasChanges || saved) && (
+        <div className="settings-rise pointer-events-none sticky bottom-4 z-40 flex justify-end">
+          <div className="pointer-events-auto flex w-fit max-w-full items-center gap-4 rounded-full border border-white/50 dark:border-white/10 bg-white/80 dark:bg-black/60 py-1.5 pl-4 pr-1.5 shadow-lg backdrop-blur-md">
+            {saved && !hasChanges ? (
+              <span className="settings-pop flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 size={16} />
+                Saved
               </span>
-              Unsaved changes
-            </span>
-          )}
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleDiscard}
-              disabled={!hasChanges || isUpdating}
-              className="h-10 rounded-full px-4 text-xs font-bold uppercase tracking-wider text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.08] dark:hover:bg-white/[0.06] transition-all disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
-            >
-              Discard
-            </button>
-            <button
-              type="submit"
-              form="settings-form"
-              disabled={isUpdating || !hasChanges}
-              className="h-10 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#D6249F] dark:to-[#FF6FB5] px-5 text-xs font-bold uppercase tracking-wider text-white shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)] hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              <Save size={15} strokeWidth={2.5} />
-              {isUpdating ? "Saving..." : "Save"}
-            </button>
+            ) : (
+              <span className="flex items-center gap-2 text-xs font-mono text-[#6B6788] dark:text-[#9CA3B5]">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-70" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400" />
+                </span>
+                Unsaved changes
+              </span>
+            )}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleDiscard}
+                disabled={!hasChanges || isUpdating}
+                className="h-10 rounded-full px-4 text-xs font-bold uppercase tracking-wider text-[#6B6788] dark:text-[#9CA3B5] hover:bg-[#6D4AFF]/[0.08] dark:hover:bg-white/[0.06] transition-all disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
+              >
+                Discard
+              </button>
+              <button
+                type="submit"
+                form="settings-form"
+                disabled={isUpdating || !hasChanges}
+                className="h-10 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#D6249F] dark:to-[#FF6FB5] px-5 text-xs font-bold uppercase tracking-wider text-white shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)] hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                <Save size={15} strokeWidth={2.5} />
+                {isUpdating ? "Saving..." : "Save"}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {deleteStep > 0 && (
         <div

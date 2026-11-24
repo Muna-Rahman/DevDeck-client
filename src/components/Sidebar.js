@@ -171,14 +171,14 @@ export default function Sidebar() {
   const rowClass = (active) =>
     `drawer-row group w-full flex items-center gap-3 pl-2 pr-3 py-2 rounded-2xl text-sm font-medium transition-all duration-200 cursor-pointer text-left ${
       active
-        ? "bg-gradient-to-r from-[#4338CA] to-[#6D4AFF] dark:from-[#35338F] dark:to-[#5A4BD1] text-white shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
-        : "text-[#3A3656] dark:text-[#C9C6E0] hover:bg-[#6D4AFF]/[0.07] dark:hover:bg-white/[0.06]"
+        ? "border border-white/30 bg-gradient-to-r from-[#4338CA]/85 to-[#6D4AFF]/85 dark:from-[#35338F]/85 dark:to-[#5A4BD1]/85 backdrop-blur-md text-white shadow-[0_10px_22px_-10px_rgba(79,70,229,0.8)]"
+        : "border border-transparent text-[#3A3656] dark:text-[#C9C6E0] hover:border-white/60 dark:hover:border-white/10 hover:bg-white/50 dark:hover:bg-white/[0.08] hover:backdrop-blur-md"
     }`;
   const chipClass = (active) =>
     `flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl transition-colors duration-200 ${
       active
         ? "bg-[#2FA8FF] text-white"
-        : "bg-[#6D4AFF]/10 text-[#6B6788] dark:bg-white/[0.07] dark:text-[#9A97B5] group-hover:text-[#6D28D9] dark:group-hover:text-white"
+        : "border border-white/50 dark:border-white/10 bg-white/50 dark:bg-white/[0.08] backdrop-blur-md text-[#6B6788] dark:text-[#9A97B5] group-hover:text-[#6D28D9] dark:group-hover:text-white"
     }`;
   const countClass = (active) =>
     `text-[10px] font-mono ${active ? "text-white/80" : "text-[#8A86A6] dark:text-white/40"}`;
@@ -194,7 +194,7 @@ export default function Sidebar() {
       <div
         onClick={closeSidebar}
         aria-hidden="true"
-        className={`fixed inset-0 z-[55] bg-[#0B0E14]/55 backdrop-blur-[2px] transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[55] bg-[#0B0E14]/35 backdrop-blur-[3px] transition-opacity duration-300 ${
           isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       />
@@ -203,7 +203,7 @@ export default function Sidebar() {
         inert={!isSidebarOpen}
         aria-hidden={!isSidebarOpen}
         aria-label="Workspace navigation"
-        className="drawer-panel fixed top-0 -left-10 z-[60] h-full w-[22rem] max-w-[calc(85vw+2.5rem)] pl-10 flex flex-col rounded-r-[28px] border-r border-[#6D4AFF]/15 dark:border-white/[0.07] bg-gradient-to-b from-white to-[#F3F0FF] dark:from-[#26233B] dark:to-[#1C1A2D] shadow-[24px_0_60px_-20px_rgba(30,27,58,0.35)] dark:shadow-[24px_0_60px_-20px_rgba(0,0,0,0.8)] select-none"
+        className="drawer-panel fixed top-0 -left-10 z-[60] h-full w-[22rem] max-w-[calc(85vw+2.5rem)] pl-10 flex flex-col rounded-r-[28px] border-r border-white/60 dark:border-white/10 bg-white/55 dark:bg-[#1C1A2D]/55 backdrop-blur-2xl backdrop-saturate-150 shadow-[24px_0_60px_-20px_rgba(30,27,58,0.35)] dark:shadow-[24px_0_60px_-20px_rgba(0,0,0,0.8)] select-none"
       >
         <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden p-5">
 
@@ -219,7 +219,7 @@ export default function Sidebar() {
             <button
               onClick={closeSidebar}
               aria-label="Close menu"
-              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-[#6B6788] dark:text-[#9A97B5] hover:bg-[#6D4AFF]/[0.08] dark:hover:bg-white/[0.08] transition-colors cursor-pointer"
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-[#6B6788] dark:text-[#9A97B5] hover:bg-white/50 dark:hover:bg-white/[0.1] transition-colors cursor-pointer"
             >
               <X size={16} />
             </button>
@@ -317,14 +317,14 @@ export default function Sidebar() {
           <div className="mt-auto pt-5 space-y-2">
             <button
               onClick={handleCreateCategory}
-              className="drawer-row w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#7C3AED] via-[#C026D3] to-[#E94FD1] px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_-12px_rgba(192,38,211,0.7)] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 cursor-pointer"
+              className="drawer-row w-full flex items-center justify-center gap-2 rounded-2xl border border-white/30 bg-gradient-to-r from-[#7C3AED]/85 via-[#C026D3]/85 to-[#E94FD1]/85 backdrop-blur-md px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_-12px_rgba(192,38,211,0.7),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 cursor-pointer"
               style={{ "--i": 6 }}
             >
               <FolderPlus size={18} />
               <span className="whitespace-nowrap">Create Category</span>
             </button>
 
-            <div className="drawer-row border-t border-[#6D4AFF]/10 dark:border-white/[0.07] pt-2" style={{ "--i": 7 }}>
+            <div className="drawer-row border-t border-white/50 dark:border-white/[0.08] pt-2" style={{ "--i": 7 }}>
               <Link href="/settings" className={rowClass(isActive("/settings")).replace("drawer-row ", "")}>
                 <span className={chipClass(isActive("/settings"))}>
                   <Settings size={16} className="group-hover:rotate-45 transition-transform duration-300 ease-out" />

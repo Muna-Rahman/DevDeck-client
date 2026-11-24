@@ -193,7 +193,7 @@ export default function Navbar() {
         </div>
 
         {/* Global Search Input Bar */}
-        <div className="hidden sm:flex relative max-w-sm w-full mx-4" ref={searchWrapRef}>
+        <div className="hidden sm:flex relative min-w-0 max-w-sm w-full mx-4" ref={searchWrapRef}>
           <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[#5B5F72] dark:text-[#9CA3B5]">
             {isSearching ? <Loader2 size={16} strokeWidth={2.5} className="animate-spin" /> : <Search size={16} strokeWidth={2.5} />}
           </div>
@@ -254,10 +254,10 @@ export default function Navbar() {
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-3.5">
+        <div className="flex flex-shrink-0 items-center gap-3.5">
           <button
             onClick={() => router.push("/cards?openModal=true")}
-            className="hidden sm:inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-5 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="hidden sm:inline-flex h-10 flex-shrink-0 whitespace-nowrap items-center justify-center rounded-xl bg-gradient-to-r from-[#E94FD1] to-[#FF6FB5] dark:from-[#D6249F] px-5 text-xs font-semibold uppercase tracking-wider text-white shadow-[0_0_15px_rgba(233,79,209,0.25)] hover:opacity-95 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Plus size={14} strokeWidth={3} />
             <span>Add Card</span>
@@ -275,12 +275,12 @@ export default function Navbar() {
             <div className="relative" ref={dropdownRef}>
               <button 
                 onClick={() => setDropdownOpen(!dropdownOpen)} 
-                className="flex items-center outline-none cursor-pointer transition-transform active:scale-95"
+                className="flex h-9 w-9 flex-shrink-0 items-center outline-none cursor-pointer transition-transform active:scale-95"
               >
                 <img
                   src={session.user.image || `https://www.gravatar.com/avatar/${session.user.email}?d=identicon`}
                   alt="User Profile"
-                  className="h-9 w-9 rounded-full border-2 border-[#FF6FB5] dark:border-[#E94FD1] object-cover"
+                  className="h-9 w-9 flex-shrink-0 rounded-full border-2 border-[#FF6FB5] dark:border-[#E94FD1] object-cover"
                 />
               </button>
               
